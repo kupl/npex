@@ -21,6 +21,6 @@ public abstract class SkipLoopStrategy extends SkipStrategy {
     if (loop == null)
       return false;
     CtElement loopHead = Utils.getLoopHeadElement(loop);
-    return loopHead.getElements(new SameFilter(nullExp)).isEmpty();
+    return loopHead == null || loopHead.getElements(new SameFilter(nullExp)).isEmpty();
   }
 }
