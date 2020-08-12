@@ -5,6 +5,8 @@ import java.util.List;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtThisAccess;
+import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtElement;
 
 public class InitPointerStrategy extends AbstractStrategy {
@@ -16,6 +18,8 @@ public class InitPointerStrategy extends AbstractStrategy {
   }
 
   public boolean isApplicable(CtExpression<?> nullExp) {
+    if (!(nullExp instanceof CtVariableAccess || nullExp instanceof CtThisAccess))
+      return false;
     return !initializer.getInitializerExpressions(nullExp).isEmpty();
   }
 
