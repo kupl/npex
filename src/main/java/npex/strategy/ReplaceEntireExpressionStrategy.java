@@ -2,10 +2,11 @@ package npex.strategy;
 
 import spoon.reflect.code.CtExpression;
 
-public class ReplaceSinkExprStrategy extends AbstractReplaceStrategy {
-  public ReplaceSinkExprStrategy(ValueInitializer initializer) {
+public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
+
+  public ReplaceEntireExpressionStrategy(ValueInitializer initializer) {
     super(initializer);
-    this.name = "ReplaceSinkExpr" + initializer.getName();
+    this.name = "ReplaceEntireExpression" + initializer.getName();
   }
 
   public CtExpression<?> extractExprToReplace(CtExpression<?> nullExp) {

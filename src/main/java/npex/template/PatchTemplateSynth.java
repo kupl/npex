@@ -16,7 +16,7 @@ import spoon.reflect.factory.Factory;
 public class PatchTemplateSynth implements PatchTemplate {
   final String ID;
   final CtExpression<?> nullExp;
-  final CtStatement nullBlockStmt;
+  final CtElement nullBlockStmt;
 
   final SkipRange range;
   final Factory factory;
@@ -24,7 +24,7 @@ public class PatchTemplateSynth implements PatchTemplate {
   final CtClass<?> targetClass;
   CtMethod<?> patchedMethod = null;
 
-  public PatchTemplateSynth(String ID, CtExpression<?> nullExp, CtStatement nullBlockStmt, CtElement skipFrom,
+  public PatchTemplateSynth(String ID, CtExpression<?> nullExp, CtElement nullBlockStmt, CtElement skipFrom,
       CtElement skipTo) {
     this.ID = ID;
     this.nullExp = nullExp;
@@ -48,7 +48,7 @@ public class PatchTemplateSynth implements PatchTemplate {
     return patchedMethod != null ? patchedMethod : (patchedMethod = implement());
   }
 
-  public final SourceChange<CtMethod<?>> getSourceChange() {
+  public SourceChange<CtMethod<?>> getSourceChange() {
     CtMethod<?> originalMethod = nullExp.getParent(CtMethod.class);
     return new SourceChange<>(originalMethod, this.apply(), this.ifStmt);
   }
@@ -68,9 +68,9 @@ public class PatchTemplateSynth implements PatchTemplate {
     if (range.kind == Kind.Normal) {
       range.replaceSkipRange(ifStmt);
       if (nullBlockStmt != null)
-        ifStmt.setElseStatement(nullBlockStmt);
+        ifStmt.setElseStatement((CtStatement) nullBlockStmt);
     } else {
-      ifStmt.setThenStatement(nullBlockStmt);
+      ifStmt.setThenStatement((CtStatement) nullBlockStmt);
       range.getSkipFromStmt().insertBefore(ifStmt);
     }
 

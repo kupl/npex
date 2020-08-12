@@ -8,8 +8,9 @@ import org.junit.Test;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
+import npex.strategy.ReplaceEntireExpressionStrategy;
 import npex.strategy.ReplacePointerStrategy;
-import npex.strategy.ReplaceSinkExprStrategy;
+import npex.strategy.SkipBlockStrategy;
 import npex.strategy.SkipBreakStrategy;
 import npex.strategy.SkipContinueStrategy;
 import npex.strategy.SkipReturnStrategy;
@@ -32,15 +33,19 @@ public class DriverTest {
     MavenPatchExtractor mvn = new MavenPatchExtractor("/home/junhee/npex/benchmarks-bears/Bears-169-buggy");
     CtExpression<?> nullExp = (CtExpression<?>) Utils.resolveNullPointer(mvn.getFactory(),
         "/home/junhee/npex/benchmarks-bears/Bears-169-buggy/npe.json");
-    List<PatchStrategy> strategies = new ArrayList<PatchStrategy>();
+
+    List<PatchStrategy> strategies = new ArrayList<>();
     strategies.add(new SkipBreakStrategy());
     strategies.add(new SkipContinueStrategy());
     strategies.add(new SkipSinkStatementStrategy());
     strategies.add(new SkipReturnStrategy());
+    strategies.add(new SkipBlockStrategy());
     strategies.add(new InitPointerStrategy(new VarInitializer()));
+    strategies.add(new InitPointerStrategy(new ObjectInitializer()));
+    strategies.add(new ReplacePointerStrategy(new VarInitializer()));
     strategies.add(new ReplacePointerStrategy(new ObjectInitializer()));
-    strategies.add(new ReplaceSinkExprStrategy(new VarInitializer()));
-    strategies.add(new ReplaceSinkExprStrategy(new ObjectInitializer()));
+    strategies.add(new ReplaceEntireExpressionStrategy(new VarInitializer()));
+    strategies.add(new ReplaceEntireExpressionStrategy(new ObjectInitializer()));
 
     List<PatchTemplate> templates = new ArrayList<PatchTemplate>();
     strategies.forEach(stgy -> {

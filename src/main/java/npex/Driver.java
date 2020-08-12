@@ -13,8 +13,9 @@ import npex.buggycode.NullHandle;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
+import npex.strategy.ReplaceEntireExpressionStrategy;
 import npex.strategy.ReplacePointerStrategy;
-import npex.strategy.ReplaceSinkExprStrategy;
+import npex.strategy.SkipBlockStrategy;
 import npex.strategy.SkipBreakStrategy;
 import npex.strategy.SkipContinueStrategy;
 import npex.strategy.SkipReturnStrategy;
@@ -41,16 +42,17 @@ public class Driver {
     this.projectBugsDirectory = new File(this.projectDataDirectory, "bugs");
     this.extractor = new MavenPatchExtractor(projectRootPath);
 
-    this.strategies.add(new SkipBreakStrategy());
-    this.strategies.add(new SkipContinueStrategy());
-    this.strategies.add(new SkipSinkStatementStrategy());
-    this.strategies.add(new SkipReturnStrategy());
-    this.strategies.add(new InitPointerStrategy(new VarInitializer()));
-    this.strategies.add(new InitPointerStrategy(new ObjectInitializer()));
-    this.strategies.add(new ReplacePointerStrategy(new VarInitializer()));
-    this.strategies.add(new ReplacePointerStrategy(new ObjectInitializer()));
-    this.strategies.add(new ReplaceSinkExprStrategy(new VarInitializer()));
-    this.strategies.add(new ReplaceSinkExprStrategy(new ObjectInitializer()));
+    strategies.add(new SkipBreakStrategy());
+    strategies.add(new SkipContinueStrategy());
+    strategies.add(new SkipSinkStatementStrategy());
+    strategies.add(new SkipReturnStrategy());
+    strategies.add(new SkipBlockStrategy());
+    strategies.add(new InitPointerStrategy(new VarInitializer()));
+    strategies.add(new InitPointerStrategy(new ObjectInitializer()));
+    strategies.add(new ReplacePointerStrategy(new VarInitializer()));
+    strategies.add(new ReplacePointerStrategy(new ObjectInitializer()));
+    strategies.add(new ReplaceEntireExpressionStrategy(new VarInitializer()));
+    strategies.add(new ReplaceEntireExpressionStrategy(new ObjectInitializer()));
   }
 
   private List<BuggyCode> generateBuggyCodesApplied() {
@@ -115,7 +117,6 @@ public class Driver {
     });
 
   }
-
 
   public void run() {
     logger.info("@@ Generating buggy codes");

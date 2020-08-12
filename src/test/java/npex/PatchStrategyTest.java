@@ -11,8 +11,8 @@ import npex.buggycode.BuggyCode;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
+import npex.strategy.ReplaceEntireExpressionStrategy;
 import npex.strategy.ReplacePointerStrategy;
-import npex.strategy.ReplaceSinkExprStrategy;
 import npex.strategy.SkipBlockStrategy;
 import npex.strategy.SkipBreakStrategy;
 import npex.strategy.SkipContinueStrategy;
@@ -82,18 +82,8 @@ public class PatchStrategyTest extends BuggyCodeTest {
   }
 
   @Test
-  public void testReplaceSinkExprVar() {
-    testStrategy(new ReplaceSinkExprStrategy(new VarInitializer()));
-  }
-
-  @Test
-  public void testReplaceSinkExprObj() {
-    testStrategy(new ReplaceSinkExprStrategy(new ObjectInitializer()));
-  }
-
-  @Test
   public void testReplaceEntirerExprVar() {
-    /* TODO */
-    // testStrategy(new ReplacePointerStrategy(new VarInitializer()));
+    testStrategy(new ReplaceEntireExpressionStrategy(new VarInitializer()));
+    testStrategy(new ReplaceEntireExpressionStrategy(new ObjectInitializer()));
   }
 }
