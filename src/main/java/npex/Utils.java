@@ -16,7 +16,7 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtTargetedExpression;
-import spoon.reflect.code.CtVariableAccess;
+import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.CtWhile;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
@@ -52,8 +52,7 @@ public class Utils {
       if (!expr.getPosition().isValidPosition() || expr.getPosition().getLine() != line)
         continue;
 
-      if (expr instanceof CtVariableAccess
-          && derefField.equals(((CtVariableAccess<?>) expr).getVariable().getSimpleName()))
+      if (expr instanceof CtVariableRead && derefField.equals(((CtVariableRead<?>) expr).getVariable().getSimpleName()))
         return expr;
 
       if (expr instanceof CtFieldAccess && derefField.equals(((CtFieldAccess<?>) expr).getVariable().getSimpleName())) {
@@ -72,7 +71,6 @@ public class Utils {
 
   public static <T extends CtElement> T findMatchedElement(CtElement at, CtElement element)
       throws NoSuchElementException {
-    System.out.println(element);
     return (T) StreamSupport.stream(at.asIterable().spliterator(), false).filter(x -> x.equals(element)).findFirst()
         .get();
   }
