@@ -3,13 +3,12 @@ package npex;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
 import npex.buggycode.BuggyCode;
-import npex.buggycode.NullHandle;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
@@ -21,113 +20,59 @@ import npex.strategy.SkipContinueStrategy;
 import npex.strategy.SkipReturnStrategy;
 import npex.strategy.SkipSinkStatementStrategy;
 import npex.strategy.VarInitializer;
-import npex.template.PatchTemplate;
-import npex.template.SourceChange;
-import spoon.reflect.code.CtExpression;
 
 public class Driver {
   final private File projectRoot;
-  final private String projectName;
   final private File projectDataDirectory;
   final private File projectBugsDirectory;
+  final private String projectName;
   final private MavenPatchExtractor extractor;
-  final private List<PatchStrategy> strategies = new ArrayList<PatchStrategy>();
+  final private PatchStrategy[] strategies;
   protected Logger logger = Logger.getLogger(Driver.class);
 
-  public Driver(String projectRootPath, String learningDataDirectory) throws Exception {
+  public Driver(final String projectRootPath, final String learningDataDirectory) {
     this.projectRoot = new File(projectRootPath);
     this.projectName = projectRoot.getName();
     this.projectDataDirectory = new File(learningDataDirectory + "/" + this.projectName);
-    this.projectDataDirectory.mkdirs();
     this.projectBugsDirectory = new File(this.projectDataDirectory, "bugs");
-    this.extractor = new MavenPatchExtractor(projectRootPath);
+    this.projectBugsDirectory.mkdirs();
 
-    strategies.add(new SkipBreakStrategy());
-    strategies.add(new SkipContinueStrategy());
-    strategies.add(new SkipSinkStatementStrategy());
-    strategies.add(new SkipReturnStrategy());
-    strategies.add(new SkipBlockStrategy());
-    strategies.add(new InitPointerStrategy(new VarInitializer()));
-    strategies.add(new InitPointerStrategy(new ObjectInitializer()));
-    strategies.add(new ReplacePointerStrategy(new VarInitializer()));
-    strategies.add(new ReplacePointerStrategy(new ObjectInitializer()));
-    strategies.add(new ReplaceEntireExpressionStrategy(new VarInitializer()));
-    strategies.add(new ReplaceEntireExpressionStrategy(new ObjectInitializer()));
+    this.strategies = new PatchStrategy[] { new SkipBreakStrategy(), new SkipContinueStrategy(),
+        new SkipSinkStatementStrategy(), new SkipReturnStrategy(), new SkipBlockStrategy(),
+        new InitPointerStrategy(new VarInitializer()), new InitPointerStrategy(new ObjectInitializer()),
+        new ReplacePointerStrategy(new VarInitializer()), new ReplacePointerStrategy(new ObjectInitializer()),
+        new ReplaceEntireExpressionStrategy(new VarInitializer()),
+        new ReplaceEntireExpressionStrategy(new ObjectInitializer()) };
+    this.extractor = new MavenPatchExtractor(projectRootPath, new ArrayList<>(Arrays.asList(strategies)));
   }
 
-  private List<BuggyCode> generateBuggyCodesApplied() {
-    List<NullHandle> nullHandles = extractor.extractNullHandles();
-    List<BuggyCode> buggyCodes = nullHandles.stream().map(x -> new BuggyCode(this.projectName, x))
-        .filter(x -> x.hasNullPointerIdentifiable() && x.isAccessPathResolved() && !x.isBugInConstructor())
-        .collect(Collectors.toList());
-    buggyCodes.forEach(x -> {
-      try {
-        logger.info("Generating buggy code " + x.getID());
-        x.stripNullHandle();
-      } catch (Exception e) {
-        logger.error("-- Exception occurs in stripNullHandle");
-        logger.error("-- " + e.toString());
-      }
-    });
+  private void doBuggyCode(final BuggyCode buggy) {
+    /* Prepare directory for the buggy code */
+    try {
+      final File bugDirectoryFile = new File(this.projectBugsDirectory, buggy.getID());
+      bugDirectoryFile.mkdirs();
+      final File buggySourceFile = new File(bugDirectoryFile, "buggy.java");
+      buggy.getSourceChange().writeChangeToSourceCode(buggySourceFile);
 
-    return buggyCodes;
-  }
+      final File patchesDir = new File(bugDirectoryFile, "patches");
+      patchesDir.mkdirs();
 
-  private List<PatchTemplate> generatePatches(BuggyCode buggy) {
-    logger.info("Generating patches for buggy code: " + buggy.getID());
-    List<PatchTemplate> templates = new ArrayList<PatchTemplate>();
-    CtExpression<?> nullPointer = buggy.getNullPointer();
-    templates.add(buggy.generateDeveloperPatch());
-
-    this.strategies.forEach(stgy -> {
-      if (stgy.isApplicable(nullPointer)) {
-        logger.info(String.format("Strategy %s is applicable!", stgy.getName()));
-        templates.add(stgy.generate(nullPointer));
-      } else {
-        logger.info(String.format("Strategy %s is not applicable!", stgy.getName()));
-      }
-      ;
-    });
-
-    return templates;
-  }
-
-  private void doBuggyCode(BuggyCode buggy) throws IOException {
-    /* Create directory for the buggy code */
-    File bugDirectoryFile = new File(this.projectBugsDirectory, buggy.getID());
-    bugDirectoryFile.mkdirs();
-    File buggySourceFile = new File(bugDirectoryFile, "buggy.java");
-    buggy.getSourceChange().writeChangeToSourceCode(buggySourceFile);
-
-    File patchesDir = new File(bugDirectoryFile, "patches");
-    patchesDir.mkdirs();
-
-    generatePatches(buggy).forEach(patch -> {
-      File patchDir = new File(patchesDir, patch.getID());
-      patchDir.mkdirs();
-      try {
-        File patchSourceFile = new File(patchDir, "patch.java");
-        File jsonOutFile = new File(patchDir, "patch.json");
-        SourceChange<?> change = patch.getSourceChange();
-        change.writeChangeToSourceCode(patchSourceFile);
-        change.writeChangeToJson(this.projectRoot.toString(), jsonOutFile);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    });
-
+      extractor.generatePatchTemplates(buggy).forEach(patch -> {
+        try {
+          final File patchDir = new File(patchesDir, patch.getID());
+          patch.store(projectRoot.getAbsolutePath(), patchDir);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      });
+    } catch (Exception e) {
+    }
   }
 
   public void run() {
-    logger.info("@@ Generating buggy codes");
-    List<BuggyCode> buggyCodes = generateBuggyCodesApplied();
-    logger.info("@@ Generating buggy codes comple");
+    final List<BuggyCode> buggyCodes = extractor.extractBuggyCodes();
     buggyCodes.forEach(buggy -> {
-      try {
-        doBuggyCode(buggy);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      doBuggyCode(buggy);
     });
   }
 }

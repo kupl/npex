@@ -1,11 +1,13 @@
 package npex.strategy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.commons.lang3.NotImplementedException;
 
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtReturn;
-import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.Factory;
@@ -52,7 +54,9 @@ public class SkipReturnStrategy extends SkipStrategy {
   }
 
   @Override
-  protected CtStatement createNullBlockStmt(CtExpression<?> nullExp) {
-    return createReturnStmt(nullExp.getParent(CtMethod.class));
+  protected List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
+    ArrayList<CtElement> ret = new ArrayList<>();
+    ret.add(nullExp.getParent(CtMethod.class));
+    return ret;
   }
 }

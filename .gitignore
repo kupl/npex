@@ -33,3 +33,6 @@ buildNumber.properties
 
 spooned/
 logs/
+
+
+**/*.log

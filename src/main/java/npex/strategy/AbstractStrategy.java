@@ -1,5 +1,8 @@
 package npex.strategy;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 
 import npex.Utils;
@@ -31,13 +34,14 @@ public abstract class AbstractStrategy implements PatchStrategy {
     return Utils.getEnclosingStatement(nullExp);
   }
 
-  public PatchTemplate generate(CtExpression<?> nullExp) {
+  public List<PatchTemplate> generate(CtExpression<?> nullExp) {
     final CtElement skipFrom = this.createSkipFrom(nullExp);
     final CtElement skipTo = this.createSkipTo(nullExp);
-    final CtElement nullBlockStmt = createNullBlockStmt(nullExp);
     final String patchID = this.getPatchID(skipFrom, skipTo);
-    return new PatchTemplateSynth(patchID, nullExp, nullBlockStmt, skipFrom, skipTo);
+    final List<CtElement> nullBlockStmts = createNullBlockStmts(nullExp);
+    return nullBlockStmts.stream().map(s -> new PatchTemplateSynth(patchID, nullExp, s, skipFrom, skipTo))
+        .collect(Collectors.toList());
   }
 
-  abstract CtElement createNullBlockStmt(CtExpression<?> nullExp);
+  abstract List<CtElement> createNullBlockStmts(CtExpression<?> nullExp);
 }

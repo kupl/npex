@@ -3,6 +3,8 @@ package npex.buggycode;
 import java.io.File;
 import java.util.NoSuchElementException;
 
+import org.apache.log4j.Logger;
+
 import npex.Utils;
 import npex.template.PatchTemplateDeveloper;
 import npex.template.SourceChange;
@@ -14,15 +16,24 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 
 public class BuggyCode {
-  final private CtClass<?> klass;
+  private CtClass<?> klass;
   final private CtBlock<?> buggyBlock;
   final private CtBlock<?> orgBlock;
   final private File orgSourceFile;
   final private NullHandle nullHandle;
 
+  static Logger logger = Logger.getLogger(BuggyCode.class);
+
   public BuggyCode(String projectName, NullHandle nullHandle) {
     this.nullHandle = nullHandle;
-    this.klass = nullHandle.getStatement().getParent(CtClass.class).clone();
+    try {
+      this.klass = nullHandle.getStatement().getParent(CtClass.class).clone();
+    } catch (Exception e) {
+      System.out.println(nullHandle.getNullPointer());
+      System.out.println("NullHandle Statement!");
+      System.out.println(nullHandle.getStatement());
+      this.klass = nullHandle.getNullPointer().getParent(CtClass.class).clone();
+    }
     this.orgBlock = nullHandle.getStatement().getParent(CtBlock.class);
     this.buggyBlock = Utils.findMatchedElement(this.klass, orgBlock);
     this.orgSourceFile = Utils.getSourceFile(nullHandle.getNullPointer());
@@ -43,8 +54,17 @@ public class BuggyCode {
     return this.nullHandle;
   }
 
-  public void stripNullHandle() throws ArrayIndexOutOfBoundsException {
-    this.nullHandle.stripNullHandle(this.klass);
+  public BuggyCode stripNullHandle() throws ArrayIndexOutOfBoundsException {
+    try {
+      nullHandle.stripNullHandle(klass);
+      return this;
+    } catch (ArrayIndexOutOfBoundsException e) {
+      logger.fatal("Could not strip nullhandle (ArrayIndexOutOfBounds): " + nullHandle.toString());
+      return null;
+    } catch (NoSuchElementException e) {
+      logger.fatal("Could not strip nullhandle (NoSuchElement): " + nullHandle.toString());
+      return null;
+    }
   }
 
   public String getID() {

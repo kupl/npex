@@ -3,14 +3,16 @@ package npex;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.apache.log4j.Logger;
+import org.apache.commons.cli.ParseException;
 
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
@@ -24,76 +26,78 @@ import npex.strategy.SkipReturnStrategy;
 import npex.strategy.SkipSinkStatementStrategy;
 import npex.strategy.VarInitializer;
 import npex.template.PatchTemplate;
-import npex.template.SourceChange;
 import spoon.reflect.code.CtExpression;
 
 public class Main {
-  static Logger logger = Logger.getLogger(Main.class);
+  static PatchStrategy[] strategies = new PatchStrategy[] { new SkipBreakStrategy(), new SkipContinueStrategy(),
+      new SkipSinkStatementStrategy(), new SkipReturnStrategy(), new SkipBlockStrategy(),
+      new InitPointerStrategy(new VarInitializer()), new InitPointerStrategy(new ObjectInitializer()),
+      new ReplacePointerStrategy(new VarInitializer()), new ReplacePointerStrategy(new ObjectInitializer()),
+      new ReplaceEntireExpressionStrategy(new VarInitializer()),
+      new ReplaceEntireExpressionStrategy(new ObjectInitializer()) };
 
   public static void main(String[] args) {
     Options options = new Options();
     Option opt_patch = new Option("patch", true, "Generate patches for given NPE");
+    Option opt_extract = new Option("extract", true, "Extract buggy codes from existing null handles");
     opt_patch.setArgs(2);
+    opt_extract.setArgs(2);
 
     options.addOption(opt_patch);
+    options.addOption(opt_extract);
     CommandLineParser parser = new DefaultParser();
     CommandLine line;
-
     try {
       line = parser.parse(options, args);
+    } catch (ParseException e) {
+      e.printStackTrace();
+      return;
+    }
+
+    if (line.hasOption("patch")) {
       String[] values = line.getOptionValues("patch");
-      MavenPatchExtractor mvn = new MavenPatchExtractor(values[0]);
-      CtExpression<?> nullExp = (CtExpression<?>) Utils.resolveNullPointer(mvn.getFactory(), values[1]);
+      MavenPatchExtractor mvn = new MavenPatchExtractor(values[0], new ArrayList<>(Arrays.asList(strategies)));
+      List<PatchTemplate> templates = new ArrayList<>();
+      try {
+        CtExpression<?> nullExp = (CtExpression<?>) Utils.resolveNullPointer(mvn.getFactory(), values[1]);
+        for (PatchStrategy stgy : strategies) {
+          if (stgy.isApplicable(nullExp)) {
+            System.out.println(String.format("Strategy %s is applicable!", stgy.getName()));
+            List<PatchTemplate> generated = stgy.generate(nullExp);
+            System.out.println(String.format("-- %d templates generated.", generated.size()));
+            templates.addAll(generated);
+          } else
+            System.out.println(String.format("Strategy %s is not applicable!", stgy.getName()));
+        }
+      } catch (IOException e) {
+        System.out.println("Could not open npe.json");
+        return;
+      } catch (NoSuchElementException e) {
+        System.out.println("Could not resolve null pointer expression");
+        return;
+      }
 
-      List<PatchStrategy> strategies = new ArrayList<PatchStrategy>();
-      strategies.add(new SkipBreakStrategy());
-      strategies.add(new SkipContinueStrategy());
-      strategies.add(new SkipSinkStatementStrategy());
-      strategies.add(new SkipReturnStrategy());
-      strategies.add(new SkipBlockStrategy());
-      strategies.add(new InitPointerStrategy(new VarInitializer()));
-      strategies.add(new InitPointerStrategy(new ObjectInitializer()));
-      strategies.add(new ReplacePointerStrategy(new VarInitializer()));
-      strategies.add(new ReplacePointerStrategy(new ObjectInitializer()));
-      strategies.add(new ReplaceEntireExpressionStrategy(new VarInitializer()));
-      strategies.add(new ReplaceEntireExpressionStrategy(new ObjectInitializer()));
-
-      List<PatchTemplate> templates = new ArrayList<PatchTemplate>();
-      strategies.forEach(stgy -> {
-        if (stgy.isApplicable(nullExp)) {
-          System.out.println(String.format("Strategy %s is applicable!", stgy.getName()));
-          templates.add(stgy.generate(nullExp));
-        } else
-          System.out.println(String.format("Strategy %s is not applicable!", stgy.getName()));
-      });
-
-      File projectRoot = new File(values[0]);
-      File patchesDir = new File(projectRoot, "patches");
+      File patchesDir = new File(values[0], "patches");
       patchesDir.mkdirs();
-
       templates.forEach(patch -> {
         File patchDir = new File(patchesDir, patch.getID());
-        patchDir.mkdirs();
         System.out.println("ID: " + patch.getID());
         System.out.println("Before: " + patch.getBlock());
         patch.apply();
         System.out.println("After: " + patch.getBlock());
         try {
-          SourceChange<?> change = patch.getSourceChange();
-          change.writeChangeToSourceCode(new File(patchDir, "patch.java"));
-          change.writeChangeToJson(projectRoot.getAbsolutePath(), new File(patchDir, "patch.json"));
-        } catch (NullPointerException e) {
-          e.printStackTrace();
-          logger.fatal(e.toString());
-          logger.fatal("Could not generate source change (Constructor?)");
+          patch.store(values[0], patchDir);
         } catch (IOException e) {
-          logger.fatal(e.toString());
-          logger.fatal("IO exception occurs in writing source and json");
+          e.printStackTrace();
+          return;
         }
       });
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
 
+    } else if (line.hasOption("extract")) {
+      System.out.println("Extract!");
+      String[] values = line.getOptionValues("extract");
+      Driver driver = new Driver(values[0], values[1]);
+      driver.run();
+    }
   }
 }

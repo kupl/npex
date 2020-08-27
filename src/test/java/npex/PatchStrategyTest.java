@@ -37,8 +37,8 @@ public class PatchStrategyTest extends BuggyCodeTest {
 
   protected List<PatchTemplate> generatePatchTemplates(BuggyCode buggy) {
     CtExpression<?> nullExp = buggy.getNullPointer();
-    return this.strategies.stream().filter(stgy -> stgy.isApplicable(nullExp)).map(stgy -> stgy.generate(nullExp))
-        .collect(Collectors.toList());
+    return this.strategies.stream().filter(stgy -> stgy.isApplicable(nullExp))
+        .flatMap(stgy -> stgy.generate(nullExp).stream()).collect(Collectors.toList());
   }
 
   public void testStrategy(PatchStrategy strategy) {
@@ -46,10 +46,14 @@ public class PatchStrategyTest extends BuggyCodeTest {
       CtExpression<?> nullExp = buggy.getNullPointer();
       if (strategy.isApplicable(nullExp)) {
         logger.info(String.format("Strategy: %s is Applicable!", strategy.getName()));
-        PatchTemplate template = strategy.generate(nullExp);
-        template.apply();
-        logger.info("Patch by " + strategy.getName());
-        logger.info(template.getBlock());
+        System.out.println("Type of NullExp" + nullExp.getClass().toString());
+        List<PatchTemplate> generated = strategy.generate(nullExp);
+        logger.info(String.format("-- %d templates generated.", generated.size()));
+        generated.forEach(t -> {
+          t.apply();
+          logger.info("Patch by " + strategy.getName());
+          logger.info(t.getBlock());
+        });
       } else {
         logger.info(strategy.getName() + " is not applicable!");
       }

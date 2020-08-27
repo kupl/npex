@@ -2,14 +2,12 @@ package npex;
 
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.junit.Before;
 import org.junit.Test;
 
 import npex.buggycode.BuggyCode;
-import npex.buggycode.NullHandle;
 import npex.buggycode.NullHandleTernary;
 import npex.template.PatchTemplateDeveloper;
 import spoon.reflect.code.CtExpression;
@@ -17,22 +15,13 @@ import spoon.reflect.code.CtExpression;
 public class BuggyCodeTest {
   protected Logger logger = Logger.getLogger(BuggyCodeTest.class);
 
-  protected List<NullHandle> nullHandles;
   protected List<BuggyCode> buggyCodes;
 
   @Before
   public void setup() {
-    try {
-      MavenPatchExtractor extractor = new MavenPatchExtractor(
-          "/media/4tb/npex/npex_data/benchmarks/sling-org-apache-sling-tracer/");
-      this.buggyCodes = extractor.extractNullHandles().stream()
-          .map(n -> new BuggyCode("sling-org-apache-sling-tracer", n))
-          .filter(x -> x.hasNullPointerIdentifiable() && x.isAccessPathResolved() && !x.isBugInConstructor())
-          .peek(x -> x.stripNullHandle()).collect(Collectors.toList());
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
-
+    MavenPatchExtractor extractor = new MavenPatchExtractor(
+        "/media/4tb/npex/npex_data/benchmarks/sling-org-apache-sling-tracer/");
+    this.buggyCodes = extractor.extractBuggyCodes();
   }
 
   protected void testWithBuggy(Consumer<BuggyCode> consumer) {
@@ -41,6 +30,7 @@ public class BuggyCodeTest {
 
   private Consumer<BuggyCode> generateBuggyBlockConsumer = buggy -> {
     CtExpression<?> nullPointer = buggy.getNullPointer();
+    logger.info("Null Handle Type: " + buggy.getNullHandle().getClass());
     logger.info("Null Pointer: " + nullPointer);
     logger.info("Original Block: ");
     logger.info(buggy.getOriginalBlock());
@@ -81,5 +71,4 @@ public class BuggyCodeTest {
     this.buggyCodes.stream().filter(buggy -> (buggy.getNullHandle() instanceof NullHandleTernary))
         .forEach(generateBuggyBlockConsumer);
   }
-
 }

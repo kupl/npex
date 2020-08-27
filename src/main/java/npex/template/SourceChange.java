@@ -86,4 +86,11 @@ public class SourceChange<T extends CtElement> {
 
     writer.close();
   }
+
+  void store(String projectRootPath, File outputDir) throws IOException {
+    outputDir.mkdirs();
+    writeChangeToSourceCode(new File(outputDir, "patch.java"));
+    writeChangeToJson(projectRootPath, new File(outputDir, "patch.json"));
+  }
+
 }

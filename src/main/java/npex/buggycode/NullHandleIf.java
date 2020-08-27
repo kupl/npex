@@ -1,5 +1,7 @@
 package npex.buggycode;
 
+import java.util.NoSuchElementException;
+
 import npex.Utils;
 import spoon.javadoc.internal.Pair;
 import spoon.reflect.code.CtBlock;
@@ -39,7 +41,7 @@ public class NullHandleIf extends NullHandle {
     return false;
   }
 
-  public void stripNullHandle(CtClass<?> klass) throws ArrayIndexOutOfBoundsException {
+  public void stripNullHandle(CtClass<?> klass) throws ArrayIndexOutOfBoundsException, NoSuchElementException {
     boolean isElseBlockEmpty = branches.b != null ? branches.b.getStatements().isEmpty() : true;
     int pos = parentBlock.getStatements().indexOf(handle);
     CtBlock<?> blk = Utils.findMatchedElement(klass, parentBlock);

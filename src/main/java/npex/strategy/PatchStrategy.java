@@ -1,5 +1,7 @@
 package npex.strategy;
 
+import java.util.List;
+
 import npex.template.PatchTemplate;
 import spoon.reflect.code.CtExpression;
 
@@ -8,5 +10,5 @@ public interface PatchStrategy {
 
     boolean isApplicable(CtExpression<?> nullExp);
 
-    PatchTemplate generate(CtExpression<?> nullExp);
+    List<PatchTemplate> generate(CtExpression<?> nullExp);
 }

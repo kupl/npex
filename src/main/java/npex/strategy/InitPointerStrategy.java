@@ -1,10 +1,10 @@
 package npex.strategy;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtElement;
@@ -30,10 +30,9 @@ public class InitPointerStrategy extends AbstractStrategy {
     return assignment;
   }
 
-  protected <T> CtStatement createInitializeStatement(CtExpression<T> nullExp) {
+  protected <T> List<CtElement> createInitializeStatements(CtExpression<T> nullExp) {
     List<CtExpression<? extends T>> values = initializer.getInitializerExpressions(nullExp);
-    CtExpression<? extends T> value = values.get(0);
-    return createAssignment(nullExp.clone(), value);
+    return values.stream().map(v -> createAssignment(nullExp.clone(), v)).collect(Collectors.toList());
   }
 
   @Override
@@ -41,7 +40,7 @@ public class InitPointerStrategy extends AbstractStrategy {
     return null;
   }
 
-  CtStatement createNullBlockStmt(CtExpression<?> nullExp) {
-    return createInitializeStatement(nullExp);
+  List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
+    return createInitializeStatements(nullExp);
   }
 }

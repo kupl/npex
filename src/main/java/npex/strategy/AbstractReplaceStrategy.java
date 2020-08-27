@@ -1,5 +1,9 @@
 package npex.strategy;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
 
 import npex.template.PatchTemplate;
@@ -41,19 +45,24 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
     return extractExprToReplace(nullExp);
   }
 
-  CtElement createNullBlockStmt(CtExpression<?> nullExp) {
+  List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
     CtExpression<?> exprToReplace = extractExprToReplace(nullExp);
-    CtExpression<?> value = initializer.getInitializerExpressions(exprToReplace).get(0).clone();
-    return value;
+    ArrayList<CtElement> l = new ArrayList<>();
+    for (CtExpression<?> value : initializer.getInitializerExpressions(exprToReplace)) {
+      l.add(value);
+    }
+    return l;
   }
 
   @Override
-  public PatchTemplate generate(CtExpression<?> nullExp) {
+  public List<PatchTemplate> generate(CtExpression<?> nullExp) {
     final CtExpression<?> skipFrom = (CtExpression<?>) this.createSkipFrom(nullExp);
     final CtExpression<?> skipTo = (CtExpression<?>) this.createSkipTo(nullExp);
-    final CtExpression<?> nullBlockStmt = (CtExpression<?>) createNullBlockStmt(nullExp);
     final String patchID = this.getPatchID(skipFrom, skipTo);
-    return new PatchTemplateTernary(patchID, nullExp, nullBlockStmt, skipFrom, skipTo);
+    final List<CtElement> nullBlockStmt = createNullBlockStmts(nullExp);
+    return nullBlockStmt.stream()
+        .map(s -> new PatchTemplateTernary(patchID, nullExp, (CtExpression<?>) s, skipFrom, skipTo))
+        .collect(Collectors.toList());
   }
 
   abstract public CtExpression<?> extractExprToReplace(CtExpression<?> nullExp);

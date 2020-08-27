@@ -1,8 +1,10 @@
 package npex.strategy;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLoop;
-import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtElement;
 
 public class SkipBreakStrategy extends SkipLoopStrategy {
@@ -11,8 +13,10 @@ public class SkipBreakStrategy extends SkipLoopStrategy {
   }
 
   @Override
-  protected CtStatement createNullBlockStmt(CtExpression<?> nullExp) {
-    return nullExp.getFactory().createBreak();
+  protected List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
+    ArrayList<CtElement> ret = new ArrayList<>();
+    ret.add(nullExp.getFactory().createBreak());
+    return ret;
   }
 
   @Override
