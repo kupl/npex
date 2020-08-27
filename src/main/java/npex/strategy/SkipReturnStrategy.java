@@ -1,11 +1,8 @@
 package npex.strategy;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.NotImplementedException;
-
-import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.declaration.CtElement;
@@ -25,13 +22,12 @@ public class SkipReturnStrategy extends SkipStrategy {
     if (sinkMethod == null) {
       return false;
     }
-    try {
-      System.out.println(DefaultValueTable.getValueString(sinkMethod.getType()));
-    } catch (NotImplementedException e) {
-      System.out.println(e);
-      return false;
+
+    CtTypeReference<?> typ = sinkMethod.getType();
+    if (DefaultValueTable.hasDefaultValue(typ)) {
+      logger.info("Return typ is: " + typ);
     }
-    return true;
+    return DefaultValueTable.hasDefaultValue(typ);
   }
 
   @Override
@@ -39,24 +35,19 @@ public class SkipReturnStrategy extends SkipStrategy {
     return nullExp.getParent(CtMethod.class);
   }
 
-  protected <R> CtReturn<R> createReturnStmt(CtMethod<R> sinkMethod) {
+  protected <R> List<CtReturn<R>> createReturnStmts(CtMethod<R> sinkMethod) {
     Factory factory = sinkMethod.getFactory();
-    CtReturn<R> retStmt = factory.createReturn();
     final CtTypeReference<R> retTyp = sinkMethod.getType();
-    if (retTyp.getSimpleName() == "void") {
+
+    return DefaultValueTable.getDefaultValues(retTyp).stream().map(e -> {
+      CtReturn<R> retStmt = factory.createReturn();
+      retStmt.setReturnedExpression(e);
       return retStmt;
-    }
-
-    CtCodeSnippetExpression<R> exprSnippet = factory.createCodeSnippetExpression();
-    exprSnippet.setValue(String.format(DefaultValueTable.getValueString(retTyp)));
-
-    return retStmt.setReturnedExpression(exprSnippet.compile());
+    }).collect(Collectors.toList());
   }
 
   @Override
   protected List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    ArrayList<CtElement> ret = new ArrayList<>();
-    ret.add(createReturnStmt(nullExp.getParent(CtMethod.class)));
-    return ret;
+    return createReturnStmts(nullExp.getParent(CtMethod.class));
   }
 }
