@@ -59,7 +59,7 @@ public class Main {
       MavenPatchExtractor mvn = new MavenPatchExtractor(values[0], new ArrayList<>(Arrays.asList(strategies)));
       List<PatchTemplate> templates = new ArrayList<>();
       try {
-        CtExpression<?> nullExp = (CtExpression<?>) Utils.resolveNullPointer(mvn.getFactory(), values[1]);
+        CtExpression<?> nullExp = NPEInfo.readFromJSON(mvn.getFactory(), values[1]).resolve();
         for (PatchStrategy stgy : strategies) {
           if (stgy.isApplicable(nullExp)) {
             System.out.println(String.format("Strategy %s is applicable!", stgy.getName()));

@@ -59,7 +59,7 @@ public class MavenPatchExtractor {
     List<BuggyCode> buggyCodes = new ArrayList<>();
     for (NullHandle handle : this.extractNullHandles()) {
       try {
-        BuggyCode bug = new BuggyCode(this.projectName, handle);
+        BuggyCode bug = new BuggyCode(projectRootPath, handle);
         if (bug.hasNullPointerIdentifiable() && bug.isAccessPathResolved() && !bug.isBugInConstructor()
             && bug.stripNullHandle() != null) {
           buggyCodes.add(bug);

@@ -48,6 +48,6 @@ public class SkipReturnStrategy extends SkipStrategy {
 
   @Override
   protected List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    return createReturnStmts(nullExp.getParent(CtMethod.class));
+    return (List<CtElement>) createReturnStmts(nullExp.getParent(CtMethod.class));
   }
 }

@@ -1,10 +1,12 @@
 package npex.buggycode;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.NoSuchElementException;
 
 import org.apache.log4j.Logger;
 
+import npex.NPEInfo;
 import npex.Utils;
 import npex.template.PatchTemplateDeveloper;
 import npex.template.SourceChange;
@@ -21,17 +23,16 @@ public class BuggyCode {
   final private CtBlock<?> orgBlock;
   final private File orgSourceFile;
   final private NullHandle nullHandle;
+  final private File projectDir;
 
   static Logger logger = Logger.getLogger(BuggyCode.class);
 
-  public BuggyCode(String projectName, NullHandle nullHandle) {
+  public BuggyCode(String projectPath, NullHandle nullHandle) throws IOException {
+    this.projectDir = new File(projectPath);
     this.nullHandle = nullHandle;
     try {
       this.klass = nullHandle.getStatement().getParent(CtClass.class).clone();
     } catch (Exception e) {
-      System.out.println(nullHandle.getNullPointer());
-      System.out.println("NullHandle Statement!");
-      System.out.println(nullHandle.getStatement());
       this.klass = nullHandle.getNullPointer().getParent(CtClass.class).clone();
     }
     this.orgBlock = nullHandle.getStatement().getParent(CtBlock.class);
@@ -112,4 +113,15 @@ public class BuggyCode {
   public CtBlock<?> getBuggyBlock() {
     return this.buggyBlock;
   }
+
+  public NPEInfo getNPEInfo() {
+    String filepath = projectDir.toURI().relativize(orgSourceFile.toURI()).getPath();
+    CtExpression<?> nullPointer = getNullPointer();
+    int line = nullPointer.getPosition().getLine();
+    String deref_field = NPEInfo.resolveDerefField(nullPointer);
+    CtMethod<?> sink_method = buggyBlock.getParent(CtMethod.class);
+    CtClass<?> sink_class = klass;
+    return new NPEInfo(filepath, line, deref_field, sink_method, sink_class);
+  }
+
 }

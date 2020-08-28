@@ -36,6 +36,7 @@ public class BuggyCodeTest {
     logger.info(buggy.getOriginalBlock());
     logger.info("Buggy Block: ");
     logger.info(buggy.getBuggyBlock());
+    logger.info(buggy.getNPEInfo().toString());
   };
 
   @Test

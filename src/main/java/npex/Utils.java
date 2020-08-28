@@ -1,28 +1,15 @@
 package npex;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.NoSuchElementException;
 import java.util.stream.StreamSupport;
 
-import org.json.JSONObject;
-
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtForEach;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.code.CtTargetedExpression;
-import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.CtWhile;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.factory.Factory;
-import spoon.reflect.visitor.filter.NamedElementFilter;
-import spoon.reflect.visitor.filter.TypeFilter;
 
 public class Utils {
   public static CtStatement getEnclosingStatement(CtElement el) {
@@ -36,37 +23,6 @@ public class Utils {
       el = parent;
     }
     throw new IllegalArgumentException("this should not happen");
-  }
-
-  public static CtExpression<?> resolveNullPointer(Factory factory, String jsonPath)
-      throws IOException, NoSuchElementException {
-    String contents = new String(Files.readAllBytes(Paths.get(jsonPath)));
-    JSONObject jsonObject = new JSONObject(contents);
-    int line = jsonObject.getInt("line");
-    String sinkClassName = jsonObject.getString("npe_class");
-    String derefField = jsonObject.getString("deref_field");
-    CtClass<?> klass = factory.getModel().getElements(new NamedElementFilter<>(CtClass.class, sinkClassName)).get(0);
-    System.out.println(klass.getSimpleName());
-    System.out.println(klass);
-    for (CtExpression<?> expr : klass.getElements(new TypeFilter<>(CtExpression.class))) {
-      if (!expr.getPosition().isValidPosition() || expr.getPosition().getLine() != line)
-        continue;
-
-      if (expr instanceof CtVariableRead && derefField.equals(((CtVariableRead<?>) expr).getVariable().getSimpleName()))
-        return expr;
-
-      if (expr instanceof CtFieldAccess && derefField.equals(((CtFieldAccess<?>) expr).getVariable().getSimpleName())) {
-        return expr.getParent(CtTargetedExpression.class).getTarget();
-      }
-
-      if (expr instanceof CtInvocation) {
-        if (((CtInvocation<?>) expr).getExecutable().getSignature().contains(derefField))
-          return expr;
-        continue;
-      }
-    }
-
-    throw new NoSuchElementException();
   }
 
   public static <T extends CtElement> T findMatchedElement(CtElement at, CtElement element)

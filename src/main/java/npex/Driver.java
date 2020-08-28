@@ -61,6 +61,9 @@ public class Driver {
         try {
           final File patchDir = new File(patchesDir, patch.getID());
           patch.store(projectRoot.getAbsolutePath(), patchDir);
+          File outFile = new File(bugDirectoryFile, "npe.json");
+          NPEInfo npe = buggy.getNPEInfo();
+          npe.writeToJSON(outFile);
         } catch (IOException e) {
           e.printStackTrace();
         }
