@@ -2,6 +2,7 @@ package npex.buggycode;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.NoSuchElementException;
 
 import org.apache.log4j.Logger;
@@ -11,6 +12,8 @@ import npex.Utils;
 import npex.template.PatchTemplateDeveloper;
 import npex.template.SourceChange;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtComment;
+import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtConstructor;
@@ -25,6 +28,7 @@ public class BuggyCode {
   final private NullHandle nullHandle;
   final private File projectDir;
 
+  private final String nullExpComment = "NPEX_NULL_EXP";
   static Logger logger = Logger.getLogger(BuggyCode.class);
 
   public BuggyCode(String projectPath, NullHandle nullHandle) throws IOException {
@@ -96,6 +100,10 @@ public class BuggyCode {
   }
 
   public SourceChange<?> getSourceChange() {
+    CtExpression<?> nullExp = getNullPointer();
+    CtComment comment = nullExp.getFactory().createComment(nullExpComment, CommentType.BLOCK);
+    nullExp.setComments(Collections.singletonList(comment));
+
     CtMethod<?> parentMethod = this.orgBlock.getParent(CtMethod.class);
     Class<? extends CtElement> klass = parentMethod != null ? CtMethod.class : CtConstructor.class;
     return new SourceChange<>(this.orgBlock.getParent(klass), this.buggyBlock.getParent(klass),
