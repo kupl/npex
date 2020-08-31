@@ -33,7 +33,7 @@ public class NPEInfo {
     String filepath = js.getString("filepath");
     int line = js.getInt("line");
     String deref_field = js.getString("deref_field");
-    String sink_class_name = js.getString("sink_class");
+    String sink_class_name = js.getString("npe_class");
     CtClass<?> sink_class = factory.getModel().getElements(new NamedElementFilter<>(CtClass.class, sink_class_name))
         .get(0);
     CtMethod<?> sink_method = null;
@@ -54,7 +54,7 @@ public class NPEInfo {
     js.put("line", line);
     js.put("deref_field", deref_field);
     js.put("sink_method", sink_method.getSimpleName());
-    js.put("sink_class", sink_class.getSimpleName());
+    js.put("npe_class", sink_class.getSimpleName());
 
     FileWriter writer = new FileWriter(outFile);
     writer.write(js.toString(4));

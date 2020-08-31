@@ -47,28 +47,15 @@ public class Driver {
   }
 
   private void doBuggyCode(final BuggyCode buggy) {
-    /* Prepare directory for the buggy code */
     try {
       final File bugDirectoryFile = new File(this.projectBugsDirectory, buggy.getID());
       bugDirectoryFile.mkdirs();
       final File buggySourceFile = new File(bugDirectoryFile, "buggy.java");
+      File outFile = new File(bugDirectoryFile, "npe.json");
+      buggy.getNPEInfo().writeToJSON(outFile);
       buggy.getSourceChange().writeChangeToSourceCode(buggySourceFile);
-
-      final File patchesDir = new File(bugDirectoryFile, "patches");
-      patchesDir.mkdirs();
-
-      extractor.generatePatchTemplates(buggy).forEach(patch -> {
-        try {
-          final File patchDir = new File(patchesDir, patch.getID());
-          patch.store(projectRoot.getAbsolutePath(), patchDir);
-          File outFile = new File(bugDirectoryFile, "npe.json");
-          NPEInfo npe = buggy.getNPEInfo();
-          npe.writeToJSON(outFile);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      });
-    } catch (Exception e) {
+    } catch (IOException e) {
+      logger.fatal(String.format("%s: Failed to generate npe.json and buggy source", buggy.getID()));
     }
   }
 
