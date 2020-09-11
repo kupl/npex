@@ -16,9 +16,9 @@ public class SkipReturnStrategy extends SkipStrategy {
   }
 
   @Override
-  public boolean isApplicable(CtExpression<?> nullExp) {
+  public boolean _isApplicable(CtExpression<?> nullExp) {
     CtMethod<?> sinkMethod = nullExp.getParent(CtMethod.class);
-    /* Sink in the constructor */
+    /* sink in the constructor */
     if (sinkMethod == null) {
       return false;
     }

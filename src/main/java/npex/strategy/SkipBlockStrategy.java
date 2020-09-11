@@ -9,7 +9,7 @@ public class SkipBlockStrategy extends SkipStrategy {
     this.name = "SkipBlock";
   }
 
-  public boolean isApplicable(CtExpression<?> nullExp) {
+  public boolean _isApplicable(CtExpression<?> nullExp) {
     return nullExp.getParent(CtBlock.class).getParent(CtBlock.class) != null;
   }
 
