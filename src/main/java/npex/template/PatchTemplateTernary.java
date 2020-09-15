@@ -70,8 +70,12 @@ public class PatchTemplateTernary implements PatchTemplate {
 
   public CtMethod<?> implement() {
     CtExpression<?> target = Utils.findMatchedElement(targetClass, skipExpr);
-    CtConditional<?> ternary = createTernary(nullBlockStmt, target);
-    target.replace(ternary);
+    if (nullExp.toString().equals("null")) {
+      target.replace(nullBlockStmt);
+    } else {
+      target.replace(createTernary(nullBlockStmt, target));
+
+    }
     patchedStatement = target.getParent(CtStatement.class);
     return target.getParent(CtMethod.class);
   }

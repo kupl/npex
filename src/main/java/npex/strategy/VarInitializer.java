@@ -21,22 +21,20 @@ public class VarInitializer extends ValueInitializer {
     return "Var";
   }
 
-  public <T> List<CtVariableAccess<? extends T>> getVarAccesses(CtMethod<?> method, CtExpression<T> nullExp) {
+  <T> List<CtVariableAccess<? extends T>> getVarAccesses(CtMethod<?> method, CtTypeReference<T> typ) {
     List<CtStatement> bodyStmts = method.getBody().getStatements();
-    CtTypeReference<T> typ = nullExp.getType();
     List<CtVariableAccess<? extends T>> variables = bodyStmts.stream()
         .flatMap(s -> s.getElements(new TypeFilter<CtVariableAccess<? extends T>>(CtVariableAccess.class)).stream())
-        .filter(v -> v.getType().isSubtypeOf(typ)).distinct().filter(v -> !v.toString().equals(nullExp.toString()))
-        .peek(x -> logger.info(
-            String.format("-- VariableAccessFound: %s, Typ: %s, %s", x, x.getType(), x.getType().isSubtypeOf(typ))))
-        .collect(Collectors.toList());
+        .filter(v -> v.getType().isSubtypeOf(typ)).distinct().collect(Collectors.toList());
     return variables;
   }
 
-  public <T> List<CtExpression<? extends T>> getInitializerExpressions(CtExpression<T> nullExp) {
+  public <T> List<CtExpression<? extends T>> getInitializerExpressions(CtExpression<?> nullExp,
+      CtTypeReference<T> typ) {
     CtMethod<?> method = nullExp.getParent(CtMethod.class);
     try {
-      List<CtVariableAccess<? extends T>> varAccesses = getVarAccesses(method, nullExp);
+      List<CtVariableAccess<? extends T>> varAccesses = getVarAccesses(method, typ);
+      varAccesses.remove(nullExp);
       return varAccesses.stream().collect(Collectors.toList());
     } catch (Exception e) {
       logger.error("NullExprClass: " + nullExp.getParent(CtClass.class));

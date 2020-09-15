@@ -4,28 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
-
 import npex.template.PatchTemplate;
 import npex.template.PatchTemplateTernary;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.path.CtRole;
 
 abstract public class AbstractReplaceStrategy extends AbstractStrategy {
   final protected ValueInitializer initializer;
-  final protected Logger logger = Logger.getLogger(AbstractStrategy.class);
 
   public AbstractReplaceStrategy(ValueInitializer initializer) {
     this.initializer = initializer;
   }
 
-  @Override
   public boolean isApplicable(CtExpression<?> nullExp) {
-    if (nullExp.getRoleInParent().equals(CtRole.ARGUMENT)) {
-      return false;
-    }
-
     CtExpression<?> exprToReplace = extractExprToReplace(nullExp);
     try {
       return !initializer.getInitializerExpressions(exprToReplace).isEmpty();
@@ -65,5 +56,5 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
         .collect(Collectors.toList());
   }
 
-  abstract public CtExpression<?> extractExprToReplace(CtExpression<?> nullExp);
+  abstract CtExpression<?> extractExprToReplace(CtExpression<?> nullExp);
 }

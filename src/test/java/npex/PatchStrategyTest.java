@@ -12,6 +12,7 @@ import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
 import npex.strategy.ReplaceEntireExpressionStrategy;
+import npex.strategy.ReplaceNullLiteralStrategy;
 import npex.strategy.ReplacePointerStrategy;
 import npex.strategy.SkipBlockStrategy;
 import npex.strategy.SkipBreakStrategy;
@@ -21,6 +22,7 @@ import npex.strategy.SkipSinkStatementStrategy;
 import npex.strategy.VarInitializer;
 import npex.template.PatchTemplate;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.declaration.CtClass;
 
 public class PatchStrategyTest extends BuggyCodeTest {
   protected List<PatchStrategy> strategies = new ArrayList<PatchStrategy>();
@@ -41,12 +43,13 @@ public class PatchStrategyTest extends BuggyCodeTest {
         .flatMap(stgy -> stgy.generate(nullExp).stream()).collect(Collectors.toList());
   }
 
-  public void testStrategy(PatchStrategy strategy) {
+  void testStrategy(PatchStrategy strategy) {
     testWithBuggy(buggy -> {
       CtExpression<?> nullExp = buggy.getNullPointer();
       if (strategy.isApplicable(nullExp)) {
         logger.info(String.format("Strategy: %s is Applicable!", strategy.getName()));
-        System.out.println("Type of NullExp" + nullExp.getClass().toString());
+        logger.info("Type of NullExp " + nullExp.getClass().toString());
+        logger.info("Parent class of NullExp " + nullExp.getParent(CtClass.class).getSimpleName());
         List<PatchTemplate> generated = strategy.generate(nullExp);
         logger.info(String.format("-- %d templates generated.", generated.size()));
         generated.forEach(t -> {
@@ -89,5 +92,11 @@ public class PatchStrategyTest extends BuggyCodeTest {
   public void testReplaceEntirerExprVar() {
     testStrategy(new ReplaceEntireExpressionStrategy(new VarInitializer()));
     testStrategy(new ReplaceEntireExpressionStrategy(new ObjectInitializer()));
+  }
+
+  @Test
+  public void testReplaceNullLiteral() {
+    testStrategy(new ReplaceNullLiteralStrategy(new VarInitializer()));
+    testStrategy(new ReplaceNullLiteralStrategy(new ObjectInitializer()));
   }
 }

@@ -18,8 +18,13 @@ public class InitPointerStrategy extends AbstractStrategy {
   }
 
   public boolean isApplicable(CtExpression<?> nullExp) {
+    /* We cannot initialize a null-literal itself! */
+    if (nullExp.toString().equals("null"))
+      return false;
+
     if (!(nullExp instanceof CtVariableAccess || nullExp instanceof CtThisAccess))
       return false;
+
     return !initializer.getInitializerExpressions(nullExp).isEmpty();
   }
 

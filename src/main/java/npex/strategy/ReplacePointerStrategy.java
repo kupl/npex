@@ -8,7 +8,7 @@ public class ReplacePointerStrategy extends AbstractReplaceStrategy {
     this.name = "ReplacePointer" + initializer.getName();
   }
 
-  public CtExpression<?> extractExprToReplace(CtExpression<?> nullExp) {
+  CtExpression<?> extractExprToReplace(CtExpression<?> nullExp) {
     return nullExp;
   }
 }

@@ -9,7 +9,7 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
     this.name = "ReplaceEntireExpression" + initializer.getName();
   }
 
-  public CtExpression<?> extractExprToReplace(CtExpression<?> nullExp) {
+  CtExpression<?> extractExprToReplace(CtExpression<?> nullExp) {
     return nullExp.getParent(CtExpression.class);
   }
 }
