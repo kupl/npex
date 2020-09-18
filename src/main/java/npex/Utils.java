@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.NoSuchElementException;
 import java.util.stream.StreamSupport;
 
+import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtForEach;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtStatement;
@@ -18,7 +19,7 @@ public class Utils {
       if (parent == null) {
         return (CtStatement) el;
       }
-      if (parent.getPosition().getLine() != el.getPosition().getLine())
+      if (parent.getPosition().getLine() != el.getPosition().getLine() || parent instanceof CtBlock)
         return (CtStatement) el;
       el = parent;
     }
