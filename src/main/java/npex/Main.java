@@ -14,6 +14,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+import npex.errortracer.ErrorTracerDriver;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
@@ -40,11 +41,14 @@ public class Main {
     Options options = new Options();
     Option opt_patch = new Option("patch", true, "Generate patches for given NPE");
     Option opt_extract = new Option("extract", true, "Extract buggy codes from existing null handles");
+    Option opt_trace = new Option("trace", true, "Instrument call tracer");
     opt_patch.setArgs(2);
     opt_extract.setArgs(2);
+    opt_trace.setArgs(1);
 
     options.addOption(opt_patch);
     options.addOption(opt_extract);
+    options.addOption(opt_trace);
     CommandLineParser parser = new DefaultParser();
     CommandLine line;
     try {
@@ -93,10 +97,19 @@ public class Main {
         }
       });
 
-    } else if (line.hasOption("extract")) {
+      return;
+    }
+    if (line.hasOption("extract")) {
       System.out.println("Extract!");
       String[] values = line.getOptionValues("extract");
       Driver driver = new Driver(values[0], values[1]);
+      driver.run();
+
+      return;
+    }
+    if (line.hasOption("trace")) {
+      String[] values = line.getOptionValues("trace");
+      ErrorTracerDriver driver = new ErrorTracerDriver(values[0]);
       driver.run();
     }
   }
