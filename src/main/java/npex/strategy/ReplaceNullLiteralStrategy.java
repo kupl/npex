@@ -29,7 +29,7 @@ public class ReplaceNullLiteralStrategy extends AbstractReplaceStrategy {
 
   @Override
   List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    return getInitializers(nullExp, nullExp.getParent(CtAssignment.class));
+    return (List<CtElement>) getInitializers(nullExp, nullExp.getParent(CtAssignment.class));
   }
 
 }
