@@ -1,5 +1,7 @@
 package npex.errortracer;
 
+import java.io.File;
+
 import org.apache.log4j.Logger;
 
 import spoon.reflect.declaration.CtMethod;
@@ -7,8 +9,8 @@ import spoon.reflect.declaration.CtMethod;
 public class MethodEntryLoggerProcessor extends AbstractLoggerProcessor<CtMethod<?>> {
   protected Logger logger = Logger.getLogger(InvocationLoggerProcessor.class);
 
-  public MethodEntryLoggerProcessor() {
-    super("ENTRY");
+  public MethodEntryLoggerProcessor(File projectRoot) {
+    super(projectRoot, "ENTRY");
   }
 
   @Override

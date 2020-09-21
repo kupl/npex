@@ -1,5 +1,7 @@
 package npex.errortracer;
 
+import java.io.File;
+
 import org.apache.log4j.Logger;
 
 import spoon.reflect.code.CtStatement;
@@ -9,8 +11,8 @@ import spoon.reflect.reference.CtExecutableReference;
 public class ConstructorEntryLoggerProcessor extends AbstractLoggerProcessor<CtConstructor<?>> {
   protected Logger logger = Logger.getLogger(InvocationLoggerProcessor.class);
 
-  public ConstructorEntryLoggerProcessor() {
-    super("ENTRY");
+  public ConstructorEntryLoggerProcessor(File projectRoot) {
+    super(projectRoot, "ENTRY");
   }
 
   boolean isInitializerInvocation(CtStatement stmt) {

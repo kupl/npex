@@ -1,5 +1,7 @@
 package npex.errortracer;
 
+import java.io.File;
+
 import spoon.SpoonException;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtInvocation;
@@ -7,8 +9,8 @@ import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtStatement;
 
 public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtInvocation<?>> {
-  public InvocationLoggerProcessor() {
-    super("CALLSITE");
+  public InvocationLoggerProcessor(File projectRoot) {
+    super(projectRoot, "CALLSITE");
   }
 
   boolean handleSingleBlockLambda(CtStatement s, CtStatement snippet) {

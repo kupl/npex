@@ -30,8 +30,8 @@ public class ErrorTracerDriver {
     env.setOutputDestinationHandler(new InplaceOutputHandler(projectRoot, launcher.getEnvironment()));
     env.setAutoImports(false);
 
-    AbstractProcessor<?> methodEntryProcessor = new MethodEntryLoggerProcessor();
-    AbstractProcessor<?> invoProcessor = new InvocationLoggerProcessor();
+    AbstractProcessor<?> methodEntryProcessor = new MethodEntryLoggerProcessor(projectRoot);
+    AbstractProcessor<?> invoProcessor = new InvocationLoggerProcessor(projectRoot);
     launcher.addProcessor(methodEntryProcessor);
     launcher.addProcessor(invoProcessor);
 
