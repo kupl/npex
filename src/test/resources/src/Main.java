@@ -5,10 +5,12 @@ import src.p3.C;
 import java.util.Vector;
 
 public class Main {
+	private class B {
+	}
+
 	public static void main(String[] args) {
 		try {
-			@SuppressWarnings("unused")
-			Vector<?> v = null;
+			B b = null;
 			m1();
 		} catch (Exception ignored) {
 		}
@@ -32,7 +34,15 @@ public class Main {
 		}
 
 		while (true) {
-		    System.out.println(args.toString());
-        }
+			System.out.println(args.toString());
+		}
+	}
+
+	public void m2(String[] args) {
+		Vector<?> v = null;
+		String str = null;
+		if (args == null) {
+			;
+		}
 	}
 }
