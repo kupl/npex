@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtTargetedExpression;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtClass;
@@ -77,6 +78,12 @@ public class NPEInfo {
 
       if (expr instanceof CtInvocation) {
         if (((CtInvocation<?>) expr).getExecutable().getSignature().contains(deref_field))
+          return expr;
+        continue;
+      }
+
+      if (expr instanceof CtLiteral) {
+        if (((CtLiteral<?>) expr).toString().equals("null"))
           return expr;
         continue;
       }
