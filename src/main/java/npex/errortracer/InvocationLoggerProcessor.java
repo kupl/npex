@@ -21,6 +21,7 @@ public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtInvocat
     CtLambda<?> lambda = getFactory().createLambda();
 
     blk.addStatement(snippet);
+
     blk.addStatement((CtStatement) lambdaOrg.getExpression().clone());
     lambda.setBody(blk);
     lambdaOrg.replace(lambda);
@@ -35,7 +36,7 @@ public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtInvocat
     try {
       enclStmt.insertBefore(tracer);
     } catch (SpoonException exn) {
-      if (handleSingleBlockLambda(enclStmt, tracer)) {
+      if (handleSingleBlockLambda(enclStmt, tracer.clone())) {
         return;
       }
       if (exn.getLocalizedMessage().contains("before a super or this")) {
