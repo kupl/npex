@@ -1,6 +1,5 @@
 package npex.strategy;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,11 +37,7 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
 
   List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
     CtExpression<?> exprToReplace = extractExprToReplace(nullExp);
-    ArrayList<CtElement> l = new ArrayList<>();
-    for (CtExpression<?> value : initializer.getInitializerExpressions(exprToReplace)) {
-      l.add(value);
-    }
-    return l;
+    return initializer.getReplaceableExpressions(exprToReplace);
   }
 
   @Override

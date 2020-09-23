@@ -25,7 +25,7 @@ public class ReplaceNullLiteralStrategy extends AbstractReplaceStrategy {
   }
 
   <T> List<CtExpression<? extends T>> getInitializers(CtExpression<?> nullExp, CtLocalVariable<T> decl) {
-    return initializer.getInitializerExpressions(nullExp, decl.getType());
+    return initializer.getReplaceableExpressions(nullExp);
   }
 
   @Override
