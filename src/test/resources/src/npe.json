@@ -1,9 +1,0 @@
-{
-    "entry_method": "initializeHeader",
-    "filepath": "./Java_exn1.java",
-    "line": 38,
-    "npe_method": "main",
-    "sink_field": "g",
-    "deref_field": "f",
-    "identify_succeed": true,
-}
