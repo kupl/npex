@@ -12,7 +12,6 @@ import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
 import npex.strategy.ReplaceEntireExpressionStrategy;
-import npex.strategy.ReplaceNullLiteralStrategy;
 import npex.strategy.ReplacePointerStrategy;
 import npex.strategy.SkipBlockStrategy;
 import npex.strategy.SkipBreakStrategy;
@@ -94,9 +93,4 @@ public class PatchStrategyTest extends BuggyCodeTest {
     testStrategy(new ReplaceEntireExpressionStrategy(new ObjectInitializer()));
   }
 
-  @Test
-  public void testReplaceNullLiteral() {
-    testStrategy(new ReplaceNullLiteralStrategy(new VarInitializer()));
-    testStrategy(new ReplaceNullLiteralStrategy(new ObjectInitializer()));
-  }
 }

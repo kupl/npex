@@ -9,6 +9,7 @@ import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtVariableAccess;
 import spoon.reflect.declaration.CtElement;
 
+@SuppressWarnings("rawtypes")
 public class InitPointerStrategy extends AbstractStrategy {
   final protected ValueInitializer initializer;
 
@@ -18,14 +19,7 @@ public class InitPointerStrategy extends AbstractStrategy {
   }
 
   public boolean isApplicable(CtExpression<?> nullExp) {
-    /* We cannot initialize a null-literal itself! */
-    if (nullExp.toString().equals("null"))
-      return false;
-
-    if (!(nullExp instanceof CtVariableAccess || nullExp instanceof CtThisAccess))
-      return false;
-
-    return !initializer.getInitializerExpressions(nullExp).isEmpty();
+    return nullExp instanceof CtVariableAccess || nullExp instanceof CtThisAccess;
   }
 
   protected <T, A extends T> CtAssignment<T, A> createAssignment(CtExpression<T> nullExp, CtExpression<A> value) {
@@ -35,8 +29,9 @@ public class InitPointerStrategy extends AbstractStrategy {
     return assignment;
   }
 
+  @SuppressWarnings("unchecked")
   protected <T> List<CtElement> createInitializeStatements(CtExpression<T> nullExp) {
-    List<CtExpression<? extends T>> values = initializer.getInitializerExpressions(nullExp);
+    List<CtExpression<? extends T>> values = initializer.getTypeCompatibleExpressions(nullExp, nullExp.getType());
     return values.stream().map(v -> createAssignment(nullExp.clone(), v)).collect(Collectors.toList());
   }
 

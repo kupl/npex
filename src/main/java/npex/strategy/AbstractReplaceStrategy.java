@@ -15,16 +15,6 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
     this.initializer = initializer;
   }
 
-  public boolean isApplicable(CtExpression<?> nullExp) {
-    CtExpression<?> exprToReplace = extractExprToReplace(nullExp);
-    try {
-      return !initializer.getInitializerExpressions(exprToReplace).isEmpty();
-    } catch (Exception e) {
-      logger.fatal(String.format("Cannot initialize expression %s with other values", exprToReplace, e));
-      return false;
-    }
-  }
-
   @Override
   protected CtExpression<?> createSkipFrom(CtExpression<?> nullExp) {
     return extractExprToReplace(nullExp);
@@ -33,11 +23,6 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
   @Override
   protected CtExpression<?> createSkipTo(CtExpression<?> nullExp) {
     return extractExprToReplace(nullExp);
-  }
-
-  List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    CtExpression<?> exprToReplace = extractExprToReplace(nullExp);
-    return initializer.getReplaceableExpressions(exprToReplace);
   }
 
   @Override
