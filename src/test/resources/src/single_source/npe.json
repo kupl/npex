@@ -1,0 +1,8 @@
+{
+    "filepath": "./Main.java",
+    "line": 39,
+    "npe_method": "m2",
+    "sink_field": "g",
+    "deref_field": "a",
+    "npe_class": "Main"
+}
