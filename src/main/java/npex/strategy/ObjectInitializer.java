@@ -1,7 +1,6 @@
 package npex.strategy;
 
 import java.util.Collections;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import spoon.reflect.code.CtConstructorCall;
@@ -22,9 +21,5 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
     }
 
     return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
-  }
-
-  protected Predicate<CtConstructorCall> isAccessible(CtTypeReference typ) {
-    return c -> c.getType().canAccess(typ);
   }
 }
