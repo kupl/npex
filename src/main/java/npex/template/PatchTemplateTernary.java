@@ -26,6 +26,7 @@ public class PatchTemplateTernary implements PatchTemplate {
 
   final Factory factory;
   final CtClass<?> targetClass;
+  final CtMethod<?> targetMethod;
   static Logger logger = Logger.getLogger(PatchTemplateTernary.class);
 
   public PatchTemplateTernary(String ID, CtExpression<?> nullExp, CtExpression<?> nullBlockStmt,
@@ -36,6 +37,7 @@ public class PatchTemplateTernary implements PatchTemplate {
     this.nullBlockStmt = nullBlockStmt;
     this.patchedStatement = skipFrom.getParent(CtStatement.class);
     this.targetClass = nullExp.getParent(CtClass.class).clone();
+    this.targetMethod = nullExp.getParent(CtMethod.class).clone();
     this.factory = nullExp.getFactory();
     skipExpr = skipFrom;
   }
@@ -69,11 +71,15 @@ public class PatchTemplateTernary implements PatchTemplate {
   }
 
   public CtMethod<?> implement() {
-    CtExpression<?> target = Utils.findMatchedElement(targetClass, skipExpr);
+    CtExpression<?> target = Utils.findMatchedElement(targetMethod, skipExpr);
     if (nullExp.toString().equals("null")) {
       target.replace(nullBlockStmt);
     } else {
+      logger.fatal(skipExpr);
+      logger.fatal(nullBlockStmt);
+      logger.fatal(target);
       target.replace(createTernary(nullBlockStmt, target));
+      logger.fatal(target);
 
     }
     patchedStatement = target.getParent(CtStatement.class);
