@@ -3,12 +3,12 @@ package npex.errortracer;
 import java.io.File;
 
 import spoon.SpoonException;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtBlock;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtStatement;
 
-public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtInvocation<?>> {
+public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtAbstractInvocation<?>> {
   public InvocationLoggerProcessor(File projectRoot) {
     super(projectRoot, "CALLSITE");
   }
@@ -29,7 +29,7 @@ public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtInvocat
   }
 
   @Override
-  public void process(CtInvocation<?> e) {
+  public void process(CtAbstractInvocation<?> e) {
     CtStatement tracer = createPrintStatement(e);
     CtStatement enclStmt = npex.Utils.getEnclosingStatement(e);
 
@@ -48,12 +48,12 @@ public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtInvocat
     }
   }
 
-  String getElementName(CtInvocation<?> e) {
+  String getElementName(CtAbstractInvocation<?> e) {
     return e.getExecutable().getSimpleName();
   }
 
-  boolean _isToBeProcessed(CtInvocation<?> e) {
-    return !e.getExecutable().isConstructor();
+  boolean _isToBeProcessed(CtAbstractInvocation<?> e) {
+    return !e.toString().matches("^super[(].*[)]$");
   }
 
 }
