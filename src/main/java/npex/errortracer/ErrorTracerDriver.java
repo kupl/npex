@@ -4,9 +4,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import spoon.Launcher;
-import spoon.MavenLauncher;
-import spoon.MavenLauncher.SOURCE_TYPE;
+import npex.AbstractDriver;
 import spoon.compiler.Environment;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.declaration.CtModule;
@@ -14,19 +12,13 @@ import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtType;
 import spoon.support.DefaultOutputDestinationHandler;
 
-public class ErrorTracerDriver {
-  final private File projectRoot;
-  final private MavenLauncher launcher;
-  final Environment env;
-
+public class ErrorTracerDriver extends AbstractDriver {
   public ErrorTracerDriver(final String projectRootPath) {
-    this.projectRoot = new File(projectRootPath);
-    this.launcher = new MavenLauncher(projectRoot.toString(), SOURCE_TYPE.ALL_SOURCE);
-    this.env = this.launcher.getEnvironment();
-    this.setLauncher();
+    super(projectRootPath);
   }
 
-  void setLauncher() {
+  protected void setupLauncher() {
+    Environment env = this.launcher.getEnvironment();
     env.setOutputDestinationHandler(new InplaceOutputHandler(projectRoot, launcher.getEnvironment()));
     env.setAutoImports(false);
 
@@ -34,15 +26,10 @@ public class ErrorTracerDriver {
     AbstractProcessor<?> invoProcessor = new InvocationLoggerProcessor(projectRoot);
     launcher.addProcessor(methodEntryProcessor);
     launcher.addProcessor(invoProcessor);
-
   }
 
   public void run() {
     launcher.run();
-  }
-
-  public Launcher getLauncher() {
-    return this.launcher;
   }
 
   private class InplaceOutputHandler extends DefaultOutputDestinationHandler {
@@ -52,7 +39,12 @@ public class ErrorTracerDriver {
 
     @Override
     public Path getOutputPath(CtModule module, CtPackage pack, CtType type) {
-      return Paths.get(type.getPosition().getFile().toString());
+      try {
+        return Paths.get(type.getPosition().getFile().getParent(), getFileName(pack, type));
+      } catch (NullPointerException e) {
+        logger.fatal(e.getMessage());
+        return Paths.get("./wrong_address.java");
+      }
     }
   }
 }
