@@ -29,10 +29,10 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
   public List<PatchTemplate> generate(CtExpression<?> nullExp) {
     final CtExpression<?> skipFrom = (CtExpression<?>) this.createSkipFrom(nullExp);
     final CtExpression<?> skipTo = (CtExpression<?>) this.createSkipTo(nullExp);
-    final String patchID = this.getPatchID(skipFrom, skipTo);
     final List<CtElement> nullBlockStmt = createNullBlockStmts(nullExp);
     return nullBlockStmt.stream()
-        .map(s -> new PatchTemplateTernary(patchID, nullExp, (CtExpression<?>) s, skipFrom, skipTo))
+        .map(
+            s -> new PatchTemplateTernary(getPatchID(skipFrom, skipTo), nullExp, (CtExpression<?>) s, skipFrom, skipTo))
         .collect(Collectors.toList());
   }
 

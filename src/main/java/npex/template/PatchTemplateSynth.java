@@ -26,7 +26,7 @@ public class PatchTemplateSynth implements PatchTemplate {
 
   public PatchTemplateSynth(String ID, CtExpression<?> nullExp, CtElement nullBlockStmt, CtElement skipFrom,
       CtElement skipTo) {
-    this.ID = ID;
+    this.ID = String.format("%s", ID);
     this.nullExp = nullExp;
     this.nullBlockStmt = nullBlockStmt;
 

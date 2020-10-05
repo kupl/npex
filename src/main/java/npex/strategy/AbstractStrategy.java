@@ -16,6 +16,8 @@ public abstract class AbstractStrategy implements PatchStrategy {
 
   protected Logger logger = Logger.getLogger(AbstractStrategy.class);
 
+  protected int idx = 0;
+
   final public String getName() {
     return this.name;
   }
@@ -23,7 +25,8 @@ public abstract class AbstractStrategy implements PatchStrategy {
   final protected String getPatchID(CtElement from, CtElement to) {
     final int lineFrom = from.getPosition().getLine();
     final int lineTo = (to != null) ? to.getPosition().getLine() : lineFrom;
-    return String.format("%s_%d-%d", this.getName(), lineFrom, lineTo);
+    idx += 1;
+    return String.format("%s_%d-%d_%d", this.getName(), lineFrom, lineTo, idx);
   }
 
   protected CtElement createSkipFrom(CtExpression<?> nullExp) {
@@ -37,9 +40,9 @@ public abstract class AbstractStrategy implements PatchStrategy {
   public List<PatchTemplate> generate(CtExpression<?> nullExp) {
     final CtElement skipFrom = this.createSkipFrom(nullExp);
     final CtElement skipTo = this.createSkipTo(nullExp);
-    final String patchID = this.getPatchID(skipFrom, skipTo);
     final List<CtElement> nullBlockStmts = createNullBlockStmts(nullExp);
-    return nullBlockStmts.stream().map(s -> new PatchTemplateSynth(patchID, nullExp, s, skipFrom, skipTo))
+    return nullBlockStmts.stream()
+        .map(s -> new PatchTemplateSynth(getPatchID(skipFrom, skipTo), nullExp, s, skipFrom, skipTo))
         .collect(Collectors.toList());
   }
 

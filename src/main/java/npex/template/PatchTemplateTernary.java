@@ -31,7 +31,7 @@ public class PatchTemplateTernary implements PatchTemplate {
 
   public PatchTemplateTernary(String ID, CtExpression<?> nullExp, CtExpression<?> nullBlockStmt,
       CtExpression<?> skipFrom, CtExpression<?> skipTo) {
-    this.ID = ID;
+    this.ID = String.format("%s", ID);
 
     this.nullExp = nullExp;
     this.nullBlockStmt = nullBlockStmt;
@@ -75,12 +75,7 @@ public class PatchTemplateTernary implements PatchTemplate {
     if (nullExp.toString().equals("null")) {
       target.replace(nullBlockStmt);
     } else {
-      logger.fatal(skipExpr);
-      logger.fatal(nullBlockStmt);
-      logger.fatal(target);
       target.replace(createTernary(nullBlockStmt, target));
-      logger.fatal(target);
-
     }
     patchedStatement = target.getParent(CtStatement.class);
     return target.getParent(CtMethod.class);

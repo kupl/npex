@@ -31,7 +31,7 @@ public class MavenPatchExtractor {
   }
 
   public MavenPatchExtractor(final String mavenProjectPath, List<PatchStrategy> strategies) {
-    launcher = new MavenLauncher(mavenProjectPath, SOURCE_TYPE.APP_SOURCE);
+    launcher = new MavenLauncher(mavenProjectPath, SOURCE_TYPE.ALL_SOURCE);
 
     launcher.run();
     this.strategies = strategies;
