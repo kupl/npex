@@ -5,6 +5,7 @@ import java.util.List;
 
 import npex.Utils;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.visitor.filter.SameFilter;
@@ -20,6 +21,10 @@ public abstract class SkipStrategy extends AbstractStrategy {
       return false;
     }
 
+    /* Lambda is tricky */
+    if (nullExp.getParent(CtLambda.class) != null) {
+      return false;
+    }
     /* Do not skip if null expr is a loop-head element */
     CtLoop loop = nullExp.getParent(CtLoop.class);
     if (loop != null) {
@@ -27,7 +32,6 @@ public abstract class SkipStrategy extends AbstractStrategy {
       if (loopHead != null && !loopHead.getElements(new SameFilter(nullExp)).isEmpty())
         return false;
     }
-
     return _isApplicable(nullExp);
   }
 
