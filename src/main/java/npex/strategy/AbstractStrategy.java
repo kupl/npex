@@ -30,11 +30,11 @@ public abstract class AbstractStrategy implements PatchStrategy {
   }
 
   protected CtElement createSkipFrom(CtExpression<?> nullExp) {
-    return Utils.getEnclosingStatement(nullExp);
+    return Utils.getNearestSkippableStatement(nullExp);
   }
 
   protected CtElement createSkipTo(CtExpression<?> nullExp) {
-    return Utils.getEnclosingStatement(nullExp);
+    return Utils.getNearestSkippableStatement(nullExp);
   }
 
   public List<PatchTemplate> generate(CtExpression<?> nullExp) {

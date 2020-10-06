@@ -9,14 +9,35 @@ import spoon.reflect.code.CtForEach;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtWhile;
+import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 
 public class Utils {
+  public static CtStatement getNearestSkippableStatement(CtElement el) {
+    if (el instanceof CtStatement && el.getParent() instanceof CtBlock)
+      return (CtStatement) el;
+
+    CtStatement parent;
+    while ((parent = el.getParent(CtStatement.class)) != null) {
+      if (parent.getParent() instanceof CtBlock) {
+        return (CtStatement) parent;
+      }
+      el = parent;
+    }
+
+    throw new IllegalArgumentException("this should not happen");
+  }
+
   public static CtStatement getEnclosingStatement(CtElement el) {
+    System.out.println("getEnclosingStatment on " + el);
     while (el != null) {
+      System.out.println("Looping on " + el);
       CtStatement parent = el.getParent(CtStatement.class);
       if (parent == null) {
+        return (CtStatement) el;
+      }
+      if (parent.getPosition() instanceof NoSourcePosition) {
         return (CtStatement) el;
       }
       if (parent.getPosition().getLine() != el.getPosition().getLine() || parent instanceof CtBlock)
