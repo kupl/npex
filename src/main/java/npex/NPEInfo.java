@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
@@ -23,6 +24,7 @@ import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.NamedElementFilter;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 public class NPEInfo {
   String filepath;
@@ -32,14 +34,15 @@ public class NPEInfo {
   CtClass<?> npe_class;
   CtInvocation<?> callee;
 
-  public static NPEInfo readFromJSON(Factory factory, String jsonPath) throws IOException {
+  public static NPEInfo readFromJSON(Factory factory, String jsonPath) throws IOException, NoSuchElementException {
     JSONObject js = new JSONObject(new String(Files.readAllBytes(Paths.get(jsonPath))));
     String filepath = js.getString("filepath");
     int line = js.getInt("line");
     String deref_field = js.getString("deref_field");
     String npe_class_name = js.getString("npe_class");
     CtClass<?> npe_class = factory.getModel().getElements(new NamedElementFilter<>(CtClass.class, npe_class_name))
-        .get(0);
+        .stream().filter(c -> c.getPosition().getFile().toString().contains(filepath)).findFirst().get();
+
     CtMethod<?> npe_method = null;
     return new NPEInfo(filepath, line, deref_field, npe_method, npe_class);
   }
@@ -70,6 +73,7 @@ public class NPEInfo {
     npe_class.accept(scanner);
 
     for (CtExpression expr : scanner.getExpressions()) {
+      System.out.println(expr);
       if (expr instanceof CtVariableRead
           && deref_field.equals(((CtVariableRead<?>) expr).getVariable().getSimpleName()))
         return expr;
@@ -125,6 +129,9 @@ public class NPEInfo {
     @Override
     public void scan(CtElement e) {
       super.scan(e);
+      if (e instanceof CtExpression) {
+        System.out.println(e + ", " + e.getPosition());
+      }
       if (e instanceof CtExpression && isLineMatched(e)) {
         expressions.add((CtExpression) e);
       }
