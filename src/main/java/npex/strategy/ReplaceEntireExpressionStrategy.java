@@ -21,6 +21,7 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   }
 
   List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    return initializer.getTypeCompatibleExpressions(nullExp, nullExp.getType());
+    return initializer.getTypeCompatibleExpressions(extractExprToReplace(nullExp),
+        extractExprToReplace(nullExp).getType());
   }
 }
