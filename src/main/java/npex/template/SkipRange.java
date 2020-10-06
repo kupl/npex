@@ -19,10 +19,12 @@ public class SkipRange {
   public final Kind kind;
 
   enum Kind {
-    Return, Break, Continue, Nothing, Normal
+    Loop, Return, Break, Continue, Nothing, Normal
   }
 
-  private static Kind getKind(CtElement to) {
+  private static Kind getKind(CtElement from, CtElement to) {
+    if (from instanceof CtLoop && to instanceof CtLoop)
+      return Kind.Loop;
     if (to instanceof CtMethod<?>)
       return Kind.Return;
     else if (to instanceof CtLoop)
@@ -43,7 +45,7 @@ public class SkipRange {
   public SkipRange(CtClass<?> targetClass, CtElement from, CtElement to) {
     this.from = Utils.findMatchedElement(targetClass, from);
     this.to = (to != null) ? Utils.findMatchedElement(targetClass, to) : null;
-    this.kind = getKind(to);
+    this.kind = getKind(from, to);
   }
 
   public CtStatement getSkipFromStmt() {
@@ -51,7 +53,7 @@ public class SkipRange {
   }
 
   public void replaceSkipRange(CtIf ifStmt) throws IllegalArgumentException, SpoonException {
-    if (kind != Kind.Normal)
+    if (!(kind == Kind.Normal || kind == Kind.Loop))
       throw new IllegalArgumentException();
 
     if (from.equals(to) && from instanceof CtBlock) {

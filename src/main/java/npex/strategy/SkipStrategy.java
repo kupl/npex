@@ -1,6 +1,6 @@
 package npex.strategy;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import npex.Utils;
@@ -11,7 +11,7 @@ import spoon.reflect.visitor.filter.SameFilter;
 
 public abstract class SkipStrategy extends AbstractStrategy {
   protected List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    return new ArrayList<CtElement>();
+    return Collections.singletonList(null);
   }
 
   public final boolean isApplicable(CtExpression<?> nullExp) {

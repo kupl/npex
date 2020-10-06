@@ -64,8 +64,9 @@ public class PatchTemplateSynth implements PatchTemplate {
   }
 
   CtMethod<?> implement() {
-    ifStmt.setCondition(createNullCond(range.kind != Kind.Normal));
-    if (range.kind == Kind.Normal) {
+    boolean isNullCheck = range.kind != Kind.Normal && range.kind != Kind.Loop;
+    ifStmt.setCondition(createNullCond(isNullCheck));
+    if (range.kind == Kind.Normal || range.kind == Kind.Loop) {
       range.replaceSkipRange(ifStmt);
       if (nullBlockStmt != null)
         ifStmt.setElseStatement((CtStatement) nullBlockStmt);
