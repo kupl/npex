@@ -1,6 +1,8 @@
 package npex.strategy;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -12,7 +14,10 @@ import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtTargetedExpression;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.declaration.CtTypeInformation;
 import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -26,7 +31,14 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
 
   @SuppressWarnings("unchecked")
   public <S> List<CtExpression<? extends S>> getTypeCompatibleExpressions(CtExpression expr, CtTypeReference<S> typ) {
-    return (List<CtExpression<? extends S>>) this.enumerate(expr, t -> t.getType().isSubtypeOf(typ));
+    Predicate<T> filter = ty -> {
+      try {
+        return ty.getType().isSubtypeOf(typ);
+      } catch (Exception e) {
+        return false;
+      }
+    };
+    return (List<CtExpression<? extends S>>) this.enumerate(expr, filter);
   }
 
   public List<T> getReplaceableExpressions(CtExpression expr) throws IllegalArgumentException {
