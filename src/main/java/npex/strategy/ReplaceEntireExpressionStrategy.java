@@ -13,6 +13,8 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   }
 
   public boolean isApplicable(CtExpression nullExp) {
+    if (extractExprToReplace(nullExp).getType().toString().equals("void"))
+      return false;
     return !nullExp.toString().equals("null") && (nullExp.getParent(CtExpression.class) != null);
   }
 
