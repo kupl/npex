@@ -15,7 +15,7 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
 
   protected Stream<CtConstructorCall> enumerate(CtExpression expr) {
     CtTypeReference typ = expr.getType();
-    if (typ == null || !typ.isClass() || typ.isInterface()
+    if (typ == null || !typ.isClass() || typ.isPrimitive() || typ.isInterface()
         || typ.getDeclaration() != null && typ.getDeclaration().isAbstract()) {
       return Stream.empty();
     }

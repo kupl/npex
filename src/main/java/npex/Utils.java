@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtForEach;
@@ -33,16 +34,14 @@ public class Utils {
   }
 
   public static CtExpression getOutermostExpression(CtExpression e) {
-    while ((e.getParent(CtExpression.class)) != null) {
+    while (e.getParent() instanceof CtExpression && !(e.getParent() instanceof CtBinaryOperator)) {
       e = e.getParent(CtExpression.class);
     }
     return e;
   }
 
   public static CtStatement getEnclosingStatement(CtElement el) {
-    System.out.println("getEnclosingStatment on " + el);
     while (el != null) {
-      System.out.println("Looping on " + el);
       CtStatement parent = el.getParent(CtStatement.class);
       if (parent == null) {
         return (CtStatement) el;

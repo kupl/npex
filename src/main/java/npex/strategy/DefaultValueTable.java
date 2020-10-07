@@ -30,6 +30,7 @@ public final class DefaultValueTable {
     return table.getOrDefault(typ.getSimpleName(), Collections.singletonList("null")).stream().map(s -> {
       CtCodeSnippetExpression<T> exp = typ.getFactory().createCodeSnippetExpression();
       exp.setValue(s);
+      exp.setType(typ);
       return exp;
     }).collect(Collectors.toList());
   }

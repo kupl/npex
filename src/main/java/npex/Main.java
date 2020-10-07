@@ -10,14 +10,16 @@ import java.util.NoSuchElementException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import npex.errortracer.ErrorTracerDriver;
+import npex.errortracerjp.ErrorTracerDriverJP;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
 import npex.strategy.PatchStrategy;
+import npex.strategy.PrimitiveInitializer;
 import npex.strategy.ReplaceEntireExpressionStrategy;
 import npex.strategy.ReplacePointerStrategy;
 import npex.strategy.SkipBlockStrategy;
@@ -34,11 +36,13 @@ public class Main {
       new SkipSinkStatementStrategy(), new SkipReturnStrategy(), new SkipBlockStrategy(),
       new InitPointerStrategy(new VarInitializer()), new InitPointerStrategy(new ObjectInitializer()),
       new ReplacePointerStrategy(new VarInitializer()), new ReplacePointerStrategy(new ObjectInitializer()),
-      new ReplaceEntireExpressionStrategy(new VarInitializer()),
-      new ReplaceEntireExpressionStrategy(new ObjectInitializer()) };
+      new ReplacePointerStrategy(new PrimitiveInitializer()), new ReplaceEntireExpressionStrategy(new VarInitializer()),
+      new ReplaceEntireExpressionStrategy(new ObjectInitializer()),
+      new ReplaceEntireExpressionStrategy(new PrimitiveInitializer()) };
 
   public static void main(String[] args) {
     Options options = new Options();
+    Option opt_help = new Option("help", false, "print help message");
     Option opt_patch = new Option("patch", true, "Generate patches for given NPE");
     Option opt_extract = new Option("extract", true, "Extract buggy codes from existing null handles");
     Option opt_trace = new Option("trace", true, "Instrument call tracer");
@@ -46,24 +50,30 @@ public class Main {
     opt_extract.setArgs(2);
     opt_trace.setArgs(1);
 
+    options.addOption(opt_help);
     options.addOption(opt_patch);
     options.addOption(opt_extract);
     options.addOption(opt_trace);
     CommandLineParser parser = new DefaultParser();
     CommandLine line;
+
     try {
       line = parser.parse(options, args);
     } catch (ParseException e) {
       e.printStackTrace();
-      return;
+      throw new IllegalArgumentException();
     }
 
-    if (line.hasOption("patch")) {
+    if (line.hasOption("help")) {
+      HelpFormatter formatter = new HelpFormatter();
+      formatter.printHelp("npex-synthesizer", options);
+    } else if (line.hasOption("patch")) {
       String[] values = line.getOptionValues("patch");
       MavenPatchExtractor mvn = new MavenPatchExtractor(values[0], new ArrayList<>(Arrays.asList(strategies)));
       List<PatchTemplate> templates = new ArrayList<>();
       try {
         CtExpression<?> nullExp = NPEInfo.readFromJSON(mvn.getFactory(), values[1]).resolve();
+        System.out.println("NPE Expression resolved: " + nullExp);
         for (PatchStrategy stgy : strategies) {
           if (stgy.isApplicable(nullExp)) {
             System.out.println(String.format("Strategy %s is applicable!", stgy.getName()));
@@ -77,7 +87,7 @@ public class Main {
         System.out.println("Could not open npe.json");
         return;
       } catch (NoSuchElementException e) {
-        System.out.println("Could not resolve null pointer expression");
+        System.out.println("Could not resolve null pointer expression: " + e.getMessage());
         return;
       }
 
@@ -88,6 +98,8 @@ public class Main {
         System.out.println("ID: " + patch.getID());
         System.out.println("Before: " + patch.getBlock());
         patch.apply();
+        System.out.println("PatchBlock type: " + patch.getBlock().getClass());
+        System.out.println(patch.getBlock());
         System.out.println("After: " + patch.getBlock());
         try {
           patch.store(values[0], patchDir);
@@ -109,7 +121,7 @@ public class Main {
     }
     if (line.hasOption("trace")) {
       String[] values = line.getOptionValues("trace");
-      ErrorTracerDriver driver = new ErrorTracerDriver(values[0]);
+      ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0]);
       driver.run();
     }
   }
