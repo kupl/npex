@@ -14,13 +14,6 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   }
 
   public boolean isApplicable(CtExpression nullExp) {
-    if (extractExprToReplace(nullExp).getType().toString().equals("void"))
-      return false;
-
-    if (extractExprToReplace(nullExp).equals(Utils.getNearestSkippableStatement(nullExp))) {
-      return false;
-    }
-
     return !nullExp.toString().equals("null");
   }
 

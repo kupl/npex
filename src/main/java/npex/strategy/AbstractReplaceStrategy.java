@@ -3,6 +3,7 @@ package npex.strategy;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import npex.Utils;
 import npex.template.PatchTemplate;
 import npex.template.PatchTemplateTernary;
 import spoon.reflect.code.CtExpression;
@@ -13,6 +14,16 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
 
   public AbstractReplaceStrategy(ValueInitializer initializer) {
     this.initializer = initializer;
+  }
+
+  public boolean isApplicable(CtExpression nullExp) {
+    if (extractExprToReplace(nullExp).getType().toString().equals("void"))
+      return false;
+
+    if (extractExprToReplace(nullExp).equals(Utils.getNearestSkippableStatement(nullExp))) {
+      return false;
+    }
+    return true;
   }
 
   @Override
