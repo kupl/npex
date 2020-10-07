@@ -5,6 +5,7 @@ import java.util.NoSuchElementException;
 import java.util.stream.StreamSupport;
 
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtForEach;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtStatement;
@@ -27,6 +28,13 @@ public class Utils {
     }
 
     throw new IllegalArgumentException("this should not happen");
+  }
+
+  public static CtExpression getOutermostExpression(CtExpression e) {
+    while ((e.getParent(CtExpression.class)) != null) {
+      e = e.getParent(CtExpression.class);
+    }
+    return e;
   }
 
   public static CtStatement getEnclosingStatement(CtElement el) {
