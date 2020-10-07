@@ -4,11 +4,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javassist.CtConstructor;
 import spoon.reflect.code.CtAssignment;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLocalVariable;
 import spoon.reflect.code.CtRHSReceiver;
 import spoon.reflect.code.CtTargetedExpression;
+import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -47,7 +50,7 @@ public class ReplacePointerStrategy extends AbstractReplaceStrategy {
     CtTypeReference<?> nullExpTyp = !isLiteralNull(nullExp) ? nullExp.getType() : getLHSType(nullExp);
 
     List<CtExpression<?>> typeCompatibleExprs = initializer.getTypeCompatibleExpressions(nullExp, nullExpTyp);
-    if (nullExp.getParent() instanceof CtTargetedExpression) {
+    if (nullExp.getParent() instanceof CtTargetedExpression && !(nullExp.getParent() instanceof CtConstructorCall)) {
       List<CtExpression> replaceableExprs = initializer.getReplaceableExpressions(nullExp);
       return Stream.concat(typeCompatibleExprs.stream(), replaceableExprs.stream()).collect(Collectors.toList());
     }
