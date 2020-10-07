@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtReturn;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.Factory;
@@ -17,17 +18,7 @@ public class SkipReturnStrategy extends SkipStrategy {
 
   @Override
   public boolean _isApplicable(CtExpression<?> nullExp) {
-    CtMethod<?> sinkMethod = nullExp.getParent(CtMethod.class);
-    /* sink in the constructor */
-    if (sinkMethod == null) {
-      return false;
-    }
-
-    CtTypeReference<?> typ = sinkMethod.getType();
-    if (DefaultValueTable.hasDefaultValue(typ)) {
-      logger.info("Return typ is: " + typ);
-    }
-    return DefaultValueTable.hasDefaultValue(typ);
+    return nullExp.getParent(CtConstructor.class) == null;
   }
 
   @Override

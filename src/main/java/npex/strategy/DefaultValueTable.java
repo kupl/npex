@@ -1,6 +1,7 @@
 package npex.strategy;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,15 +27,10 @@ public final class DefaultValueTable {
   }
 
   static <T> List<CtExpression<T>> getDefaultValues(CtTypeReference<T> typ) {
-    if (hasDefaultValue(typ)) {
-      return table.get(typ.getSimpleName()).stream().map(s -> {
-        CtCodeSnippetExpression<T> exp = typ.getFactory().createCodeSnippetExpression();
-        exp.setValue(s);
-        return exp;
-      }).collect(Collectors.toList());
-    }
-
-    return null;
+    return table.getOrDefault(typ.getSimpleName(), Collections.singletonList("null")).stream().map(s -> {
+      CtCodeSnippetExpression<T> exp = typ.getFactory().createCodeSnippetExpression();
+      exp.setValue(s);
+      return exp;
+    }).collect(Collectors.toList());
   }
-
 }
