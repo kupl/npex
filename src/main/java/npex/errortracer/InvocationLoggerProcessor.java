@@ -5,8 +5,10 @@ import java.io.File;
 import spoon.SpoonException;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCodeSnippetStatement;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.reference.CtTypeReference;
 
 public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtAbstractInvocation<?>> {
   public InvocationLoggerProcessor(File projectRoot) {
@@ -21,8 +23,14 @@ public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtAbstrac
     CtLambda<?> lambda = getFactory().createLambda();
 
     blk.addStatement(snippet);
-
-    blk.addStatement((CtStatement) lambdaOrg.getExpression().clone());
+    CtTypeReference<?> typ = lambdaOrg.getExpression().getType();
+    if (typ.toString().equals("void")) {
+      blk.addStatement((CtStatement) lambdaOrg.getExpression().clone());
+    } else {
+      CtCodeSnippetStatement retStmt = snippet.getFactory()
+          .createCodeSnippetStatement(String.format("return %s", lambdaOrg.getExpression()));
+      blk.addStatement(retStmt);
+    }
     lambda.setBody(blk);
     lambdaOrg.replace(lambda);
     return true;
@@ -42,10 +50,16 @@ public class InvocationLoggerProcessor extends AbstractLoggerProcessor<CtAbstrac
       if (exn.getLocalizedMessage().contains("before a super or this")) {
         return;
       }
+
       logger.fatal(exn.getLocalizedMessage());
       logger.fatal(e.toString());
       throw exn;
+    } catch (RuntimeException exn) {
+      if (exn.getLocalizedMessage().contains("not case in a switch")) {
+        return;
+      }
     }
+
   }
 
   String getElementName(CtAbstractInvocation<?> e) {
