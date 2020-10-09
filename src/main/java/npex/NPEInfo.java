@@ -73,7 +73,6 @@ public class NPEInfo {
     npe_class.accept(scanner);
 
     for (CtExpression expr : scanner.getExpressions()) {
-      System.out.println(expr);
       if (expr instanceof CtVariableRead
           && deref_field.equals(((CtVariableRead<?>) expr).getVariable().getSimpleName()))
         return expr;
@@ -129,9 +128,6 @@ public class NPEInfo {
     @Override
     public void scan(CtElement e) {
       super.scan(e);
-      if (e instanceof CtExpression) {
-        System.out.println(e + ", " + e.getPosition());
-      }
       if (e instanceof CtExpression && isLineMatched(e)) {
         expressions.add((CtExpression) e);
       }
