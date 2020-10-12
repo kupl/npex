@@ -15,7 +15,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import npex.errortracer.ErrorTracerDriver;
 import npex.errortracerjp.ErrorTracerDriverJP;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
@@ -122,8 +121,7 @@ public class Main {
     }
     if (line.hasOption("trace")) {
       String[] values = line.getOptionValues("trace");
-      // ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0]);
-      ErrorTracerDriver driver = new ErrorTracerDriver(values[0]);
+      ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0]);
       driver.run();
     }
   }
