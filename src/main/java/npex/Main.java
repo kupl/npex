@@ -48,7 +48,7 @@ public class Main {
     Option opt_trace = new Option("trace", true, "Instrument call tracer");
     opt_patch.setArgs(2);
     opt_extract.setArgs(2);
-    opt_trace.setArgs(1);
+    opt_trace.setArgs(2);
 
     options.addOption(opt_help);
     options.addOption(opt_patch);
@@ -69,10 +69,11 @@ public class Main {
       formatter.printHelp("npex-synthesizer", options);
     } else if (line.hasOption("patch")) {
       String[] values = line.getOptionValues("patch");
-      MavenPatchExtractor mvn = new MavenPatchExtractor(values[0], new ArrayList<>(Arrays.asList(strategies)));
+
+      PatchSynthesizer synthesizer = new PatchSynthesizer(values[0], new ArrayList<>(Arrays.asList(strategies)));
       List<PatchTemplate> templates = new ArrayList<>();
       try {
-        CtExpression<?> nullExp = NPEInfo.readFromJSON(mvn.getFactory(), values[1]).resolve();
+        CtExpression<?> nullExp = NPEInfo.readFromJSON(synthesizer.getFactory(), values[1]).resolve();
         System.out.println("NPE Expression resolved: " + nullExp);
         for (PatchStrategy stgy : strategies) {
           if (stgy.isApplicable(nullExp)) {
@@ -121,7 +122,7 @@ public class Main {
     }
     if (line.hasOption("trace")) {
       String[] values = line.getOptionValues("trace");
-      ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0]);
+      ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0], Integer.parseInt(values[1]));
       driver.run();
     }
   }
