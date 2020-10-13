@@ -11,10 +11,8 @@ import com.github.javaparser.ast.visitor.ModifierVisitor;
 
 import org.apache.log4j.Logger;
 
-import npex.errortracer.AbstractLoggerProcessor;
-
 public class TraceVisitor extends ModifierVisitor<Void> {
-  final protected Logger logger = Logger.getLogger(AbstractLoggerProcessor.class);
+  final protected Logger logger = Logger.getLogger(TraceVisitor.class);
 
   final protected File projectRoot;
 
