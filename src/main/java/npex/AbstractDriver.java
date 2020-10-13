@@ -3,6 +3,9 @@ package npex;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.SuffixFileFilter;
 import org.apache.log4j.Logger;
 
 import spoon.Launcher;
@@ -26,11 +29,14 @@ public abstract class AbstractDriver {
     } else if (new File(projectRoot, "ant").exists() || (new File(projectRoot, "build.xml").exists())) {
       logger.debug("build.xml is found: Parsing ant project ...");
       this.launcher = new Launcher();
-      FileUtils.iterateFiles(projectRoot, new String[] { "java" }, true)
-          .forEachRemaining(src -> launcher.addInputResource(src.getAbsolutePath()));
+      IOFileFilter dirFilter = FileFilterUtils.notFileFilter(
+          FileFilterUtils.or(FileFilterUtils.nameFileFilter("target"), FileFilterUtils.nameFileFilter("spooned"),
+          FileFilterUtils.nameFileFilter("patches")));
+      FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), dirFilter)
+          .forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
     } else {
       this.launcher = new Launcher();
-      FileUtils.listFiles(projectRoot, new String[] { "java" }, false)
+      FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), null)
           .forEach(f -> launcher.addInputResource(f.toString()));
     }
 
