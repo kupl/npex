@@ -46,10 +46,10 @@ public class ErrorTracerDriverJP {
     return results.stream();
   }
 
-  public ErrorTracerDriverJP(final String projectRootPath, int javaLanguageLevel) {
+  public ErrorTracerDriverJP(final String projectRootPath, String javaLanguageLevel) {
     ParserCollectionStrategy collectionStrategy = new ParserCollectionStrategy();
     collectionStrategy.getParserConfiguration()
-        .setLanguageLevel(LanguageLevel.valueOf(String.format("JAVA_%d", javaLanguageLevel)));
+        .setLanguageLevel(LanguageLevel.valueOf(String.format("JAVA_%s", javaLanguageLevel)));
     this.projectRoot = collectionStrategy.collect(Paths.get(projectRootPath));
     this.traceVisitor = new TraceVisitor(new File(projectRootPath));
     this.allCompilationUnits = projectRoot.getSourceRoots().stream().flatMap(root -> collectParsedSources(root))

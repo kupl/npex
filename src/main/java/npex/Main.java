@@ -67,7 +67,10 @@ public class Main {
     if (line.hasOption("help")) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("npex-synthesizer", options);
-    } else if (line.hasOption("patch")) {
+      return;
+    }
+
+    if (line.hasOption("patch")) {
       String[] values = line.getOptionValues("patch");
 
       PatchSynthesizer synthesizer = new PatchSynthesizer(values[0], new ArrayList<>(Arrays.asList(strategies)));
@@ -112,17 +115,18 @@ public class Main {
 
       return;
     }
+
     if (line.hasOption("extract")) {
-      System.out.println("Extract!");
       String[] values = line.getOptionValues("extract");
       Driver driver = new Driver(values[0], values[1]);
       driver.run();
 
       return;
     }
+
     if (line.hasOption("trace")) {
       String[] values = line.getOptionValues("trace");
-      ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0], Integer.parseInt(values[1]));
+      ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0], values[1]);
       driver.run();
     }
   }
