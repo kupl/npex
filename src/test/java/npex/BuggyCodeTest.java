@@ -19,9 +19,9 @@ public class BuggyCodeTest {
 
   @Before
   public void setup() {
-    MavenPatchExtractor extractor = new MavenPatchExtractor(
+    PatchSynthesizer synthesizer = new PatchSynthesizer(
         "/media/4tb/npex/npex_data/benchmarks/sling-org-apache-sling-tracer/");
-    this.buggyCodes = extractor.extractBuggyCodes();
+    this.buggyCodes = synthesizer.extractBuggyCodes();
   }
 
   protected void testWithBuggy(Consumer<BuggyCode> consumer) {

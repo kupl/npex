@@ -26,7 +26,7 @@ public class Driver {
   final private File projectDataDirectory;
   final private File projectBugsDirectory;
   final private String projectName;
-  final private MavenPatchExtractor extractor;
+  final private PatchSynthesizer extractor;
   final private PatchStrategy[] strategies;
   protected Logger logger = Logger.getLogger(Driver.class);
 
@@ -43,7 +43,7 @@ public class Driver {
         new ReplacePointerStrategy(new VarInitializer()), new ReplacePointerStrategy(new ObjectInitializer()),
         new ReplaceEntireExpressionStrategy(new VarInitializer()),
         new ReplaceEntireExpressionStrategy(new ObjectInitializer()) };
-    this.extractor = new MavenPatchExtractor(projectRootPath, new ArrayList<>(Arrays.asList(strategies)));
+    this.extractor = new PatchSynthesizer(projectRootPath, new ArrayList<>(Arrays.asList(strategies)));
   }
 
   private void doBuggyCode(final BuggyCode buggy) {

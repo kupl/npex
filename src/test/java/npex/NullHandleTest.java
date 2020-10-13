@@ -13,8 +13,8 @@ public class NullHandleTest {
 
   @Before
   public void setup() throws Exception {
-    MavenPatchExtractor extractor = new MavenPatchExtractor("/media/4tb/npex/npex_data/benchmarks/maven-release/");
-    this.ternaries = extractor.extractNullHandles();
+    PatchSynthesizer synthesizer = new PatchSynthesizer("/media/4tb/npex/npex_data/benchmarks/maven-release/");
+    this.ternaries = synthesizer.extractNullHandles();
   }
 
   @Test

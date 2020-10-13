@@ -15,7 +15,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import npex.errortracer.ErrorTracerDriver;
 import npex.errortracerjp.ErrorTracerDriverJP;
 import npex.strategy.InitPointerStrategy;
 import npex.strategy.ObjectInitializer;
@@ -49,7 +48,7 @@ public class Main {
     Option opt_trace = new Option("trace", true, "Instrument call tracer");
     opt_patch.setArgs(2);
     opt_extract.setArgs(2);
-    opt_trace.setArgs(1);
+    opt_trace.setArgs(2);
 
     options.addOption(opt_help);
     options.addOption(opt_patch);
@@ -68,12 +67,16 @@ public class Main {
     if (line.hasOption("help")) {
       HelpFormatter formatter = new HelpFormatter();
       formatter.printHelp("npex-synthesizer", options);
-    } else if (line.hasOption("patch")) {
+      return;
+    }
+
+    if (line.hasOption("patch")) {
       String[] values = line.getOptionValues("patch");
-      MavenPatchExtractor mvn = new MavenPatchExtractor(values[0], new ArrayList<>(Arrays.asList(strategies)));
+
+      PatchSynthesizer synthesizer = new PatchSynthesizer(values[0], new ArrayList<>(Arrays.asList(strategies)));
       List<PatchTemplate> templates = new ArrayList<>();
       try {
-        CtExpression<?> nullExp = NPEInfo.readFromJSON(mvn.getFactory(), values[1]).resolve();
+        CtExpression<?> nullExp = NPEInfo.readFromJSON(synthesizer.getFactory(), values[1]).resolve();
         System.out.println("NPE Expression resolved: " + nullExp);
         for (PatchStrategy stgy : strategies) {
           if (stgy.isApplicable(nullExp)) {
@@ -112,18 +115,18 @@ public class Main {
 
       return;
     }
+
     if (line.hasOption("extract")) {
-      System.out.println("Extract!");
       String[] values = line.getOptionValues("extract");
       Driver driver = new Driver(values[0], values[1]);
       driver.run();
 
       return;
     }
+
     if (line.hasOption("trace")) {
       String[] values = line.getOptionValues("trace");
-      // ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0]);
-      ErrorTracerDriver driver = new ErrorTracerDriver(values[0]);
+      ErrorTracerDriverJP driver = new ErrorTracerDriverJP(values[0], values[1]);
       driver.run();
     }
   }

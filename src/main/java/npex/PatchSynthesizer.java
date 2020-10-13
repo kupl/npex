@@ -3,16 +3,12 @@ package npex;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FilenameUtils;
-
 import npex.buggycode.BuggyCode;
 import npex.buggycode.NullHandle;
 import npex.buggycode.NullHandleIf;
 import npex.buggycode.NullHandleTernary;
 import npex.strategy.PatchStrategy;
 import npex.template.PatchTemplate;
-import spoon.MavenLauncher;
-import spoon.MavenLauncher.SOURCE_TYPE;
 import spoon.reflect.code.CtCodeElement;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
@@ -20,23 +16,19 @@ import spoon.reflect.code.CtIf;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-public class MavenPatchExtractor {
-  final MavenLauncher launcher;
-  private final String projectRootPath;
-  private final String projectName;
+public class PatchSynthesizer extends AbstractDriver {
   private final List<PatchStrategy> strategies;
 
-  public MavenPatchExtractor(final String mavenProjectPath) {
-    this(mavenProjectPath, new ArrayList<>());
+  public PatchSynthesizer(final String projectRootPath) {
+    this(projectRootPath, new ArrayList<>());
   }
 
-  public MavenPatchExtractor(final String mavenProjectPath, List<PatchStrategy> strategies) {
-    launcher = new MavenLauncher(mavenProjectPath, SOURCE_TYPE.ALL_SOURCE);
-
-    launcher.run();
+  public PatchSynthesizer(final String projectRootPath, List<PatchStrategy> strategies) {
+    super(projectRootPath);
     this.strategies = strategies;
-    this.projectRootPath = FilenameUtils.getFullPathNoEndSeparator(mavenProjectPath);
-    this.projectName = FilenameUtils.getBaseName(projectRootPath);
+  }
+
+  protected void setupLauncher() {
   }
 
   public ArrayList<NullHandle> extractNullHandles() {
@@ -58,7 +50,7 @@ public class MavenPatchExtractor {
     List<BuggyCode> buggyCodes = new ArrayList<>();
     for (NullHandle handle : this.extractNullHandles()) {
       try {
-        BuggyCode bug = new BuggyCode(projectRootPath, handle);
+        BuggyCode bug = new BuggyCode(projectRoot.getAbsolutePath(), handle);
         if (bug.hasNullPointerIdentifiable() && bug.isAccessPathResolved() && !bug.isBugInConstructor()
             && bug.stripNullHandle() != null) {
           buggyCodes.add(bug);
