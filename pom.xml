@@ -25,6 +25,7 @@
   </properties>
   <modules>
     <module>synthesizer</module>
+    <module>errortracer</module>
   </modules>
   <dependencies>
     <dependency>
