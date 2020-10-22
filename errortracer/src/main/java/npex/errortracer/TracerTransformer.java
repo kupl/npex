@@ -23,11 +23,18 @@ import javassist.expr.NewExpr;
 public class TracerTransformer implements ClassFileTransformer {
   final ClassPool classPool = ClassPool.getDefault();
   final Set<String> projectPackages;
+  final boolean excludeLibraries;
 
   final static Logger logger = LoggerFactory.getLogger(TracerTransformer.class);
 
+  public TracerTransformer() {
+    this.projectPackages = null;
+    this.excludeLibraries = false;
+  }
+
   public TracerTransformer(Set<String> projectPackages) {
     this.projectPackages = projectPackages;
+    this.excludeLibraries = true;
   }
 
   public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
@@ -36,7 +43,7 @@ public class TracerTransformer implements ClassFileTransformer {
 
     try {
       CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
-      if (!projectPackages.contains(ctClass.getPackageName())) {
+      if (excludeLibraries && !projectPackages.contains(ctClass.getPackageName())) {
         return byteCode;
       }
 

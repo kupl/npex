@@ -14,9 +14,12 @@ public class TracerAgent {
 
   public static void premain(String agentArgs, Instrumentation inst) {
     Set<String> packages = new HashSet<>();
-    File rootDir = new File(agentArgs != null ? agentArgs : System.getProperty("user.dir"));
+    if (agentArgs == null) {
+      inst.addTransformer(new TracerTransformer());
+      return;
+    }
 
-    for (File cls : FileUtils.listFiles(rootDir, new String[] { "class" }, true)) {
+    for (File cls : FileUtils.listFiles(new File(agentArgs), new String[] { "class" }, true)) {
       String stripped = cls.getAbsolutePath().replaceAll(".*/target/.*classes/", "");
       try {
         String pkg = stripped.substring(0, stripped.lastIndexOf("/")).replace("/", ".");
