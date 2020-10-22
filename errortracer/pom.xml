@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <artifactId>errortracer</artifactId>
- 
+
   <parent>
     <groupId>npex</groupId>
     <artifactId>npex</artifactId>
@@ -21,13 +21,11 @@
     <plugins>
           <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
+            <version>2.3</version>
                 <configuration>
                     <finalName>instrumentation</finalName>
                     <outputDirectory>${deploy.target.dir}</outputDirectory>
             <archive>
-              <manifest>
-                <mainClass>fully.qualified.MainClass</mainClass>
-              </manifest>
                 <manifestEntries>
                   <premain-class>npex.errortracer.TracerAgent</premain-class>
                 </manifestEntries>
