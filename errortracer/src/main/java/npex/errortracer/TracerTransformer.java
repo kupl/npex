@@ -67,15 +67,15 @@ public class TracerTransformer implements ClassFileTransformer {
     return byteCode;
   }
 
-  private String getLoggingStmt(String tag, String filename, int lineno, String element) {
-    return String.format("System.out.println(\"[%s] Filepath: %s, Line: %d, Element: %s\");", tag, filename, lineno,
-        element);
+  private String getLoggingStmt(String tag, String filename, String pkg, int lineno, String element) {
+    return String.format("System.out.println(\"[%s] Filepath: %s, Package: %s, Line: %d, Element: %s\");", tag,
+        filename, pkg, lineno, element);
   }
 
   private String getLoggingStmt(CtBehavior behavior) {
     MethodInfo info = behavior.getMethodInfo();
-    return getLoggingStmt("ENTRY", behavior.getDeclaringClass().getClassFile().getSourceFile(), info.getLineNumber(0),
-        behavior.getName());
+    return getLoggingStmt("ENTRY", behavior.getDeclaringClass().getClassFile().getSourceFile(),
+        behavior.getDeclaringClass().getPackageName(), info.getLineNumber(0), behavior.getName());
   }
 
   class InvocationTracer extends ExprEditor {
@@ -83,7 +83,8 @@ public class TracerTransformer implements ClassFileTransformer {
       String filename = expr.getFileName();
       int lineno = expr.getLineNumber();
       try {
-        expr.replace(String.format("%s $_ = $proceed($$);", getLoggingStmt("CALLSITE", filename, lineno, element)));
+        expr.replace(String.format("%s $_ = $proceed($$);",
+            getLoggingStmt("CALLSITE", filename, expr.getEnclosingClass().getPackageName(), lineno, element)));
       } catch (CannotCompileException e) {
         logger.error("Could not instrument invocation site of {} on line {} in {}", element, filename, lineno);
       }
