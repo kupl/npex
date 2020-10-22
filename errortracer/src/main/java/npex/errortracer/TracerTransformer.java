@@ -4,6 +4,10 @@ import java.io.ByteArrayInputStream;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -11,12 +15,20 @@ import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.bytecode.MethodInfo;
 import javassist.expr.ConstructorCall;
+import javassist.expr.Expr;
 import javassist.expr.ExprEditor;
 import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 public class TracerTransformer implements ClassFileTransformer {
   final ClassPool classPool = ClassPool.getDefault();
+  final Set<String> projectPackages;
+
+  final static Logger logger = LoggerFactory.getLogger(TracerTransformer.class);
+
+  public TracerTransformer(Set<String> projectPackages) {
+    this.projectPackages = projectPackages;
+  }
 
   public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
       ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
@@ -24,8 +36,9 @@ public class TracerTransformer implements ClassFileTransformer {
 
     try {
       CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
-      if (ctClass.getPackageName() != null)
+      if (!projectPackages.contains(ctClass.getPackageName())) {
         return byteCode;
+      }
 
       /*
        * Instrument call-site first so that we do not trace instrumented print
@@ -42,8 +55,7 @@ public class TracerTransformer implements ClassFileTransformer {
       byteCode = ctClass.toBytecode();
       ctClass.detach();
     } catch (Throwable ex) {
-      System.out.println("Exception: " + ex);
-      ex.printStackTrace();
+      // logger.error("Exception occurs while transforming {}", className, ex);
     }
     return byteCode;
   }
@@ -60,28 +72,29 @@ public class TracerTransformer implements ClassFileTransformer {
   }
 
   class InvocationTracer extends ExprEditor {
+    private void _edit(Expr expr, String element) {
+      String filename = expr.getFileName();
+      int lineno = expr.getLineNumber();
+      try {
+        expr.replace(String.format("%s $_ = $proceed($$);", getLoggingStmt("CALLSITE", filename, lineno, element)));
+      } catch (CannotCompileException e) {
+        logger.error("Could not instrument invocation site of {} on line {} in {}", element, filename, lineno);
+      }
+    }
+
     @Override
     public void edit(MethodCall invo) throws CannotCompileException {
-      String filename = invo.getFileName();
-      int lineno = invo.getLineNumber();
-      String element = invo.getMethodName();
-      invo.replace(String.format("%s $_ = $proceed($$);", getLoggingStmt("CALLSITE", filename, lineno, element)));
+      _edit(invo, invo.getMethodName());
     }
 
     @Override
     public void edit(ConstructorCall cc) throws CannotCompileException {
-      String filename = cc.getFileName();
-      int lineno = cc.getLineNumber();
-      String element = "<init>";
-      cc.replace(String.format("%s $_ = $proceed($$);", getLoggingStmt("CALLSITE", filename, lineno, element)));
+      _edit(cc, "<init>");
     }
 
     @Override
     public void edit(NewExpr newExpr) throws CannotCompileException {
-      String filename = newExpr.getFileName();
-      int lineno = newExpr.getLineNumber();
-      String element = newExpr.getClassName();
-      newExpr.replace(String.format("%s $_ = $proceed($$);", getLoggingStmt("CALLSITE", filename, lineno, element)));
+      _edit(newExpr, newExpr.getClassName());
     }
   }
 }
