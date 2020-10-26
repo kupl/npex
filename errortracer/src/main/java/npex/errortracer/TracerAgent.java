@@ -6,12 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TracerAgent {
-  static final Logger logger = LoggerFactory.getLogger(TracerAgent.class);
-
   public static void premain(String agentArgs, Instrumentation inst) {
     Set<String> packages = new HashSet<>();
     if (agentArgs == null) {
@@ -19,16 +15,18 @@ public class TracerAgent {
       return;
     }
 
-    for (File cls : FileUtils.listFiles(new File(agentArgs), new String[] { "class" }, true)) {
+    String[] args = agentArgs.split(",");
+    for (File cls : FileUtils.listFiles(new File(args[0]), new String[] { "class" }, true)) {
       String stripped = cls.getAbsolutePath().replaceAll(".*/target/.*classes/", "");
       try {
         String pkg = stripped.substring(0, stripped.lastIndexOf("/")).replace("/", ".");
-
         packages.add(pkg);
       } catch (StringIndexOutOfBoundsException e) {
+        e.printStackTrace();
+        System.exit(1);
       }
     }
-    logger.info("Collected packages: {}", packages);
-    inst.addTransformer(new TracerTransformer(packages));
+    System.out.println("Collected packages: " + packages);
+    inst.addTransformer(new TracerTransformer(packages, args[1]));
   }
 }

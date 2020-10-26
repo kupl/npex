@@ -1,18 +1,18 @@
 package npex.errortracer;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtBehavior;
 import javassist.CtClass;
+import javassist.CtMethod;
+import javassist.NotFoundException;
 import javassist.bytecode.MethodInfo;
 import javassist.expr.ConstructorCall;
 import javassist.expr.Expr;
@@ -21,61 +21,91 @@ import javassist.expr.MethodCall;
 import javassist.expr.NewExpr;
 
 public class TracerTransformer implements ClassFileTransformer {
-  final ClassPool classPool = ClassPool.getDefault();
+  static final ClassPool classPool = ClassPool.getDefault();
   final Set<String> projectPackages;
   final boolean excludeLibraries;
-
-  final static Logger logger = LoggerFactory.getLogger(TracerTransformer.class);
+  final String testClassName;
+  final String testMethodName;
 
   public TracerTransformer() {
     this.projectPackages = null;
     this.excludeLibraries = false;
+    this.testClassName = "";
+    this.testMethodName = "";
   }
 
-  public TracerTransformer(Set<String> projectPackages) {
+  public TracerTransformer(Set<String> projectPackages, String testMethodArg) {
     this.projectPackages = projectPackages;
     this.excludeLibraries = true;
+    String[] args = testMethodArg.split("#");
+    this.testClassName = args[0];
+    this.testMethodName = args[1];
   }
 
   public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
       ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
     byte[] byteCode = classfileBuffer;
 
+    CtClass ctClass;
     try {
-      CtClass ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
-      if (excludeLibraries && !projectPackages.contains(ctClass.getPackageName())) {
-        return byteCode;
-      }
+      ctClass = classPool.makeClass(new ByteArrayInputStream(classfileBuffer));
+    } catch (Exception e) {
+      throw new IllegalClassFormatException();
+    }
 
-      /*
-       * Instrument call-site first so that we do not trace instrumented print
-       * invocations as logging purpose.
-       */
+    if (excludeLibraries && !projectPackages.contains(ctClass.getPackageName())) {
+      return byteCode;
+    }
+
+    /*
+     * Instrument call-sites first so that we do not trace instrumented print
+     * invocations as logging purpose.
+     */
+    try {
       for (CtBehavior behavior : ctClass.getDeclaredBehaviors()) {
         behavior.instrument(new InvocationTracer());
       }
 
       for (CtBehavior behavior : ctClass.getDeclaredBehaviors()) {
-        behavior.insertBefore(getLoggingStmt(behavior));
+        MethodInfo info = behavior.getMethodInfo();
+        int lineno = info.getLineNumber(0);
+        String entry = getLoggingStmt("ENTRY", behavior.getDeclaringClass().getClassFile().getSourceFile(),
+            behavior.getDeclaringClass().getPackageName(), lineno, behavior.getName());
+        try {
+          behavior.insertBefore(String.format("npex.errortracer.Trace.add(\"%s\");", entry));
+        } catch (Exception e) {
+          System.out.println("Could not instrument in" + behavior.getName());
+        }
       }
+    } catch (Exception ex) {
+      System.out.println("Could not transform " + ctClass.getName());
+    }
 
+    /* Instrument output statement for the trace at the end of the test-method */
+    if (ctClass.getName().equals(this.testClassName)) {
+      transformTestMethod(ctClass);
+    }
+
+    try {
       byteCode = ctClass.toBytecode();
-      ctClass.detach();
-    } catch (Throwable ex) {
-      // logger.error("Exception occurs while transforming {}", className, ex);
+    } catch (IOException | CannotCompileException e) {
+      e.printStackTrace();
     }
     return byteCode;
   }
 
-  private String getLoggingStmt(String tag, String filename, String pkg, int lineno, String element) {
-    return String.format("System.out.println(\"[%s] Filepath: %s, Package: %s, Line: %d, Element: %s\");", tag,
-        filename, pkg, lineno, element);
+  private void transformTestMethod(CtClass klass) {
+    try {
+      CtMethod mthd = klass.getDeclaredMethod(testMethodName);
+      mthd.insertAfter("npex.errortracer.Trace.print();", true);
+    } catch (NotFoundException | CannotCompileException e) {
+      e.printStackTrace();
+      System.exit(1);
+    }
   }
 
-  private String getLoggingStmt(CtBehavior behavior) {
-    MethodInfo info = behavior.getMethodInfo();
-    return getLoggingStmt("ENTRY", behavior.getDeclaringClass().getClassFile().getSourceFile(),
-        behavior.getDeclaringClass().getPackageName(), info.getLineNumber(0), behavior.getName());
+  private String getLoggingStmt(String tag, String filename, String pkg, int lineno, String element) {
+    return String.format("[%s] Filepath: %s, Package: %s, Line: %d, Element: %s", tag, filename, pkg, lineno, element);
   }
 
   class InvocationTracer extends ExprEditor {
@@ -83,25 +113,25 @@ public class TracerTransformer implements ClassFileTransformer {
       String filename = expr.getFileName();
       int lineno = expr.getLineNumber();
       try {
-        expr.replace(String.format("%s $_ = $proceed($$);",
-            getLoggingStmt("CALLSITE", filename, expr.getEnclosingClass().getPackageName(), lineno, element)));
+        String entry = getLoggingStmt("CALLSITE", filename, expr.getEnclosingClass().getPackageName(), lineno, element);
+        String toBeInserted = String.format("{ npex.errortracer.Trace.add(\"%s\"); $_ = $proceed($$);}", entry);
+        expr.replace(toBeInserted);
       } catch (CannotCompileException e) {
-        logger.error("Could not instrument invocation site of {} on line {} in {}", element, filename, lineno);
       }
     }
 
     @Override
-    public void edit(MethodCall invo) throws CannotCompileException {
+    public void edit(MethodCall invo) {
       _edit(invo, invo.getMethodName());
     }
 
     @Override
-    public void edit(ConstructorCall cc) throws CannotCompileException {
+    public void edit(ConstructorCall cc) {
       _edit(cc, "<init>");
     }
 
     @Override
-    public void edit(NewExpr newExpr) throws CannotCompileException {
+    public void edit(NewExpr newExpr) {
       _edit(newExpr, newExpr.getClassName());
     }
   }
