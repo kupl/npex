@@ -1,11 +1,16 @@
 package npex.errortracer;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+
+import org.apache.commons.io.FileUtils;
 
 import javassist.CannotCompileException;
 import javassist.ClassPool;
@@ -22,24 +27,24 @@ import javassist.expr.NewExpr;
 
 public class TracerTransformer implements ClassFileTransformer {
   static final ClassPool classPool = ClassPool.getDefault();
+  final File projectRoot;
   final Set<String> projectPackages;
   final boolean excludeLibraries;
   final String testClassName;
   final String testMethodName;
 
-  public TracerTransformer() {
-    this.projectPackages = null;
-    this.excludeLibraries = false;
-    this.testClassName = "";
-    this.testMethodName = "";
-  }
-
-  public TracerTransformer(Set<String> projectPackages, String testMethodArg) {
+  public TracerTransformer(File projectRoot, boolean excludeLibraries, Set<String> projectPackages,
+      String testMethodArg) {
+    this.projectRoot = projectRoot;
     this.projectPackages = projectPackages;
-    this.excludeLibraries = true;
+    this.excludeLibraries = excludeLibraries;
     String[] args = testMethodArg.split("#");
     this.testClassName = args[0];
     this.testMethodName = args[1];
+  }
+
+  public TracerTransformer(File projectRoot, Set<String> projectPackages, String testMethodArg) {
+    this(projectRoot, true, projectPackages, testMethodArg);
   }
 
   public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
@@ -62,15 +67,16 @@ public class TracerTransformer implements ClassFileTransformer {
      * invocations as logging purpose.
      */
     try {
+      String relativeSourcePath = resolveRelativeSourcePath(ctClass);
       for (CtBehavior behavior : ctClass.getDeclaredBehaviors()) {
-        behavior.instrument(new InvocationTracer());
+        behavior.instrument(new InvocationTracer(relativeSourcePath));
       }
 
       for (CtBehavior behavior : ctClass.getDeclaredBehaviors()) {
         MethodInfo info = behavior.getMethodInfo();
         int lineno = info.getLineNumber(0);
-        String entry = getLoggingStmt("ENTRY", behavior.getDeclaringClass().getClassFile().getSourceFile(),
-            behavior.getDeclaringClass().getPackageName(), lineno, behavior.getName());
+        String entry = getLoggingStmt("ENTRY", relativeSourcePath, behavior.getDeclaringClass().getPackageName(),
+            lineno, behavior.getName());
         try {
           behavior.insertBefore(String.format("npex.errortracer.Trace.add(\"%s\");", entry));
         } catch (Exception e) {
@@ -78,6 +84,7 @@ public class TracerTransformer implements ClassFileTransformer {
         }
       }
     } catch (Exception ex) {
+      ex.printStackTrace();
       System.out.println("Could not transform " + ctClass.getName());
     }
 
@@ -104,16 +111,40 @@ public class TracerTransformer implements ClassFileTransformer {
     }
   }
 
+  private String resolveRelativeSourcePath(CtClass klass) {
+    String sourceName = klass.getClassFile().getSourceFile();
+    String packageAsDirs = klass.getPackageName().replace('.', '/');
+    String sourcePathWithPackage = String.format("%s/%s", packageAsDirs, sourceName);
+    List<File> found = new ArrayList<>();
+    for (File src : FileUtils.listFiles(projectRoot, new String[] { "java" }, true)) {
+      if (src.getAbsolutePath().endsWith(sourcePathWithPackage)) {
+        found.add(src);
+      }
+    }
+
+    if (found.size() != 1) {
+      System.out.println(String.format("Source file for %s is non-exists or unique!: %s", klass.getName(), found));
+    }
+
+    return projectRoot.toURI().relativize(found.get(0).toURI()).getPath();
+  }
+
   private String getLoggingStmt(String tag, String filename, String pkg, int lineno, String element) {
     return String.format("[%s] Filepath: %s, Package: %s, Line: %d, Element: %s", tag, filename, pkg, lineno, element);
   }
 
   class InvocationTracer extends ExprEditor {
+    final String relativeSourcePath;
+
+    public InvocationTracer(String relativeSourcePath) {
+      this.relativeSourcePath = relativeSourcePath;
+    }
+
     private void _edit(Expr expr, String element) {
-      String filename = expr.getFileName();
       int lineno = expr.getLineNumber();
       try {
-        String entry = getLoggingStmt("CALLSITE", filename, expr.getEnclosingClass().getPackageName(), lineno, element);
+        String entry = getLoggingStmt("CALLSITE", relativeSourcePath, expr.getEnclosingClass().getPackageName(), lineno,
+            element);
         String toBeInserted = String.format("{ npex.errortracer.Trace.add(\"%s\"); $_ = $proceed($$);}", entry);
         expr.replace(toBeInserted);
       } catch (CannotCompileException e) {

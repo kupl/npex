@@ -11,6 +11,8 @@ public class Trace {
   }
 
   public static void print() {
-    System.out.println(trace);
+    for (String entry : trace) {
+      System.out.println(entry);
+    }
   }
 }
