@@ -11,7 +11,9 @@ import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtForEach;
 import spoon.reflect.code.CtLoop;
+import spoon.reflect.code.CtRHSReceiver;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.code.CtWhile;
 import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtClass;
@@ -35,7 +37,11 @@ public class Utils {
 
   public static CtExpression getOutermostExpression(CtExpression e) {
     while (e.getParent() instanceof CtExpression && !(e.getParent() instanceof CtBinaryOperator)) {
-      e = e.getParent(CtExpression.class);
+      CtExpression parent = (CtExpression) e.getParent();
+      if (parent instanceof CtVariableWrite || parent instanceof CtRHSReceiver) {
+        break;
+      }
+      e = parent;
     }
     return e;
   }

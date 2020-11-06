@@ -11,7 +11,9 @@ import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtNamedElement;
 import spoon.reflect.factory.Factory;
 
 /* TODO: templates 모듈의 구조가 이상함. PatchTemplateSynth를 추상화하고 If, Ternary 모양으로 분리해야 함.
@@ -22,11 +24,11 @@ public class PatchTemplateTernary implements PatchTemplate {
   CtExpression<?> nullBlockStmt;
   CtExpression<?> skipExpr;
   CtStatement patchedStatement;
-  CtMethod<?> patchedMethod = null;
+  CtNamedElement patchedMethod = null;
 
   final Factory factory;
   final CtClass<?> targetClass;
-  final CtMethod<?> targetMethod;
+  final CtNamedElement targetMethod;
   static Logger logger = Logger.getLogger(PatchTemplateTernary.class);
 
   public PatchTemplateTernary(String ID, CtExpression<?> nullExp, CtExpression<?> nullBlockStmt,
@@ -37,16 +39,18 @@ public class PatchTemplateTernary implements PatchTemplate {
     this.nullBlockStmt = nullBlockStmt;
     this.patchedStatement = skipFrom.getParent(CtStatement.class);
     this.targetClass = nullExp.getParent(CtClass.class).clone();
-    this.targetMethod = nullExp.getParent(CtMethod.class).clone();
+    this.targetMethod = (nullExp.getParent(CtMethod.class) == null ? nullExp.getParent(CtConstructor.class)
+        : nullExp.getParent(CtMethod.class)).clone();
     this.factory = nullExp.getFactory();
     skipExpr = skipFrom;
+
   }
 
   public String getID() {
     return this.ID;
   }
 
-  public CtMethod<?> apply() {
+  public CtNamedElement apply() {
     return patchedMethod != null ? patchedMethod : (patchedMethod = implement());
   }
 
@@ -70,7 +74,7 @@ public class PatchTemplateTernary implements PatchTemplate {
     return conditional;
   }
 
-  public CtMethod<?> implement() {
+  public CtNamedElement implement() {
     CtExpression<?> target = Utils.findMatchedElement(targetMethod, skipExpr);
     if (nullExp.toString().equals("null")) {
       target = Utils.findMatchedElementLookParent(targetMethod, skipExpr);
@@ -79,15 +83,17 @@ public class PatchTemplateTernary implements PatchTemplate {
       target.replace(createTernary(nullBlockStmt, target));
     }
     patchedStatement = target.getParent(CtStatement.class);
-    return target.getParent(CtMethod.class);
+    return target.getParent(CtMethod.class) == null ? nullExp.getParent(CtConstructor.class)
+        : nullExp.getParent(CtMethod.class);
   }
 
   public CtBlock<?> getBlock() {
     return patchedStatement.getParent(CtBlock.class);
   }
 
-  public SourceChange<CtMethod<?>> getSourceChange() {
-    CtMethod<?> originalMethod = nullExp.getParent(CtMethod.class);
+  public SourceChange<CtNamedElement> getSourceChange() {
+    CtNamedElement originalMethod = nullExp.getParent(CtMethod.class) == null ? nullExp.getParent(CtConstructor.class)
+        : nullExp.getParent(CtMethod.class);
     return new SourceChange<>(originalMethod, this.apply(), this.patchedStatement);
   }
 }

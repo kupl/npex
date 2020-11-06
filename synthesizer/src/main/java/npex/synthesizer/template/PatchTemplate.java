@@ -4,14 +4,14 @@ import java.io.File;
 import java.io.IOException;
 
 import spoon.reflect.code.CtBlock;
-import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtNamedElement;
 
 public interface PatchTemplate {
   String getID();
 
   CtBlock<?> getBlock();
 
-  CtMethod<?> apply();
+  CtNamedElement apply();
 
   SourceChange<?> getSourceChange();
 
@@ -19,6 +19,7 @@ public interface PatchTemplate {
     try {
       getSourceChange().store(projectRootPath, outputDir);
     } catch (Exception e) {
+      e.printStackTrace();
       return;
     }
   }
