@@ -14,15 +14,22 @@ mvn install
 ## How to use
 To use NPEX, please type the following command :
 ```
-java -jar "[NPEX_path] -patch [project] [NPE]"
+java -jar "[NPEX_path] -patch [project_dir] [NPE_info]"
 ````
 
+The following options are **mandatory** to enjoy NPEX.  
+* **NPEX_path** : path to NPEX jar file
+* **project_dir** : path to the target project 
+* **NPE_info** : path to the NPE info file
+
+<!---
 The following table describes the **mandatory** arguments for NPEX:  
 Name       | Description
 ---------- | -----------
 NPEX_path  | path to NPEX jar file
 project    | path to the target project
 NPE        | path to the NPE info file
+--->
 
 After running the command above, NPEX generates candidate patches in "patches" directory.
 
