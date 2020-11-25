@@ -58,8 +58,8 @@ All the generated patch candidates are stored in "patches" directory. Users need
 This project is licensed under the MIT license.
 
 ## Issues
-If you find any issues, please refer to the [Issue page](https://github.com/kupl/npex/issues) as the solutions already exists.  
-If you don't get any solutions from the page, please report it as a new issue.  
+If you encounter any issues, please refer to the [Issue page](https://github.com/kupl/npex/issues) as the solutions already exists.  
+If you don't get any solutions from the page, please report it as a new issue for public interest.  
 The email address you can contact is as follows:  
 
 * **Junhee Lee** : junhee_lee@korea.ac.kr
