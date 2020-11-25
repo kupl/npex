@@ -62,7 +62,7 @@ npe_class   | the class name where NPE occurs.<br>For example, if the exact clas
 All the generated patch candidates are stored in "patches" directory. Users need to replace the original NPE-existing file with one of the patch candidates to make their project **NPE-free**.
      
 ## License
-This project is licensed under the MIT license.
+This project is licensed under the terms of MIT license.
 
 ## Issues
 If you encounter any issues, please refer to the [Issue page](https://github.com/kupl/npex/issues) as the solutions already exists.  
