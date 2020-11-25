@@ -23,13 +23,17 @@
  */
 package npex.synthesizer.buggycode;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 import npex.synthesizer.Utils;
 import spoon.javadoc.internal.Pair;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtCFlowBreak;
 import spoon.reflect.code.CtIf;
-import spoon.reflect.code.CtReturn;
+import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtClass;
 
 public class NullHandleIf extends NullHandle {
@@ -49,18 +53,22 @@ public class NullHandleIf extends NullHandle {
     if (blk != null)
       return blk;
 
-    if (this.isNullReturn()) {
+    if (this.isFlowBreak()) {
       int idx = this.parentBlock.getStatements().indexOf(this.handle);
       CtBlock<?> nonNullBlock = this.parentBlock.getFactory().createBlock();
-      this.parentBlock.getStatements().stream().skip(idx + 1).forEach(x -> nonNullBlock.addStatement(x.clone()));
+      this.parentBlock.getStatements().stream().skip(idx + 1).forEach(x -> {
+        nonNullBlock.addStatement(x.clone());
+      });
+
       return nonNullBlock;
     }
-    return blk;
+
+    return null;
   }
 
-  private boolean isNullReturn() {
+  private boolean isFlowBreak() {
     if (this.getNullBlock() != null)
-      return this.getNullBlock().getStatements().stream().anyMatch(x -> x instanceof CtReturn<?>);
+      return this.getNullBlock().getStatements().stream().anyMatch(x -> x instanceof CtCFlowBreak);
     return false;
   }
 
@@ -68,8 +76,16 @@ public class NullHandleIf extends NullHandle {
     boolean isElseBlockEmpty = branches.b != null ? branches.b.getStatements().isEmpty() : true;
     int pos = parentBlock.getStatements().indexOf(handle);
     CtBlock<?> blk = Utils.findMatchedElement(klass, parentBlock);
-    if (isNullReturn() && isElseBlockEmpty) {
-      blk.removeStatement(blk.getStatement(pos));
+    if (isFlowBreak() && isElseBlockEmpty) {
+      // For null-return handles without an else-block, we add explicit block
+      // for the non-null block so that it can be matched properly in the cloned AST.
+      ListIterator<CtStatement> iter = blk.getStatements().listIterator(pos);
+      List<CtStatement> stmtsToRemove = new ArrayList<>();
+      while (iter.hasNext()) {
+        stmtsToRemove.add(iter.next());
+      }
+      stmtsToRemove.forEach(s -> blk.removeStatement(s));
+      blk.addStatement(getNonNullBlock());
     } else {
       blk.getStatement(pos).replace(getNonNullBlock());
     }

@@ -58,9 +58,9 @@ public class PatchSynthesizer extends AbstractDriver {
     ArrayList<NullHandle> handles = new ArrayList<>();
     for (CtElement el : launcher.getFactory().getModel().getElements(new TypeFilter<>(CtCodeElement.class))) {
       try {
-        if (el instanceof CtIf)
+        if (el instanceof CtIf) {
           handles.add(new NullHandleIf((CtIf) el));
-        else if (el instanceof CtConditional)
+        } else if (el instanceof CtConditional)
           handles.add(new NullHandleTernary((CtConditional<?>) el));
       } catch (IllegalArgumentException e) {
         continue;
@@ -72,15 +72,14 @@ public class PatchSynthesizer extends AbstractDriver {
   public List<BuggyCode> extractBuggyCodes() {
     List<BuggyCode> buggyCodes = new ArrayList<>();
     for (NullHandle handle : this.extractNullHandles()) {
+      BuggyCode bug = new BuggyCode(projectRoot.getAbsolutePath(), handle);
       try {
-        BuggyCode bug = new BuggyCode(projectRoot.getAbsolutePath(), handle);
-        if (bug.hasNullPointerIdentifiable() && bug.isAccessPathResolved() && !bug.isBugInConstructor()
-            && bug.stripNullHandle() != null) {
-          buggyCodes.add(bug);
-        }
+        bug.stripNullHandle();
       } catch (Exception e) {
-        continue;
+        e.printStackTrace();
       }
+      if (bug.hasNullPointerIdentifiable() && bug.isAccessPathResolved() && !bug.isBugInConstructor())
+        buggyCodes.add(bug);
     }
     return buggyCodes;
   }

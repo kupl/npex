@@ -24,7 +24,6 @@
 package npex.synthesizer.buggycode;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 
@@ -54,7 +53,7 @@ public class BuggyCode {
   private final String nullExpComment = "NPEX_NULL_EXP";
   static Logger logger = Logger.getLogger(BuggyCode.class);
 
-  public BuggyCode(String projectPath, NullHandle nullHandle) throws IOException {
+  public BuggyCode(String projectPath, NullHandle nullHandle) {
     this.projectDir = new File(projectPath);
     this.nullHandle = nullHandle;
     try {
@@ -82,17 +81,8 @@ public class BuggyCode {
     return this.nullHandle;
   }
 
-  public BuggyCode stripNullHandle() throws ArrayIndexOutOfBoundsException {
-    try {
-      nullHandle.stripNullHandle(klass);
-      return this;
-    } catch (ArrayIndexOutOfBoundsException e) {
-      logger.fatal("Could not strip nullhandle (ArrayIndexOutOfBounds): " + nullHandle.toString());
-      return null;
-    } catch (NoSuchElementException e) {
-      logger.fatal("Could not strip nullhandle (NoSuchElement): " + nullHandle.toString());
-      return null;
-    }
+  public void stripNullHandle() throws ArrayIndexOutOfBoundsException, NoSuchElementException {
+    nullHandle.stripNullHandle(klass);
   }
 
   public String getID() {
@@ -106,8 +96,7 @@ public class BuggyCode {
 
   public boolean hasNullPointerIdentifiable() {
     try {
-      this.getNullPointer();
-      return true;
+      return this.getNullPointer() != null;
     } catch (NoSuchElementException e) {
       return false;
     }
