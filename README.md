@@ -29,8 +29,8 @@ After running the command above, NPEX generates candidate patches in "patches" d
 
 ## Detail
 
-NPEX requires specific npe info file in json format.  
-The following block is the example of npe info file.
+NPEX requires specific NPE info file in json format. This info file describes the NPE error of the target project.
+The following block is the example of NPE info file.
 
 ```
 {
@@ -44,7 +44,7 @@ The following block is the example of npe info file.
 Name        | Description
 ----------- | -----------
 filepath    | the relative path to the file where NPE occurs
-line        | the exact line number wher NPE occurs
+line        | the exact line number where NPE occurs
 last_access | the last access expression of the null pointer. It can be a variable, a name of field, or a name of method.<br> For example, when NPE occurs at x.foo().g, the last_access is foo.
 npe_class   | the class where NPE occurs, discard the package-path.<br>For example, if the exact class org.apache.A, only leaves the name of class, A.
 
