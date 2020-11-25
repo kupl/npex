@@ -20,16 +20,19 @@ java -jar "[NPEX_path] -patch [project] [NPE]"
 The following table describes the **mandatory** arguments for NPEX:  
 Name       | Description
 ---------- | -----------
-NPEX_path  | path to NPEX jar file (executable file)
-project    | path to the project directory
-NPE        | path to the npe info file in json format
+NPEX_path  | path to NPEX jar file
+project    | path to the target project
+NPE        | path to the NPE info file
 
 After running the command above, NPEX generates candidate patches in "patches" directory.
 
 
 ## Detail
 
-NPEX requires specific NPE info file in json format. This info file describes the NPE error of the target project.
+NPEX takes NPE info file as inputs and generates patches 
+
+#### NPE info file
+NPE info file is the specific json file which describes the NPE error of the target project.
 The following block is the example of NPE info file, and the table explains each argument in detail.
 
 ```
@@ -48,6 +51,8 @@ line        | the exact line number where NPE occurs
 last_access | the last access expression of the null pointer. It can be a variable, a name of field, or a name of method.<br> For example, when NPE occurs at "x.foo().g", the last_access is **foo**.
 npe_class   | the class name where NPE occurs.<br>For example, if the exact class is "org.apache.A", npe_class is **A**.
 
+#### Patches
+All the generated patch candidates are stored in "patches" directory. Users need to replace the original NPE-existing file with one of the patch candidates to make their project **NPE-free**.
      
 ## License
 This project is licensed under the MIT license.
