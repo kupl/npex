@@ -29,10 +29,10 @@ After running the command above, NPEX generates candidate patches in "patches" d
 
 ## Detail
 
-NPEX takes NPE info file as inputs and generates patches 
+NPEX takes NPE info file as inputs and stores the generated patch candidates in "patches" directory as outputs.
 
 #### NPE info file
-NPE info file is the specific json file which describes the NPE error of the target project.
+NPE info file is a json file with specific format which describes the NPE error of the target project.
 The following block is the example of NPE info file, and the table explains each argument in detail.
 
 ```
