@@ -30,7 +30,7 @@ After running the command above, NPEX generates candidate patches in "patches" d
 ## Detail
 
 NPEX requires specific NPE info file in json format. This info file describes the NPE error of the target project.
-The following block is the example of NPE info file.
+The following block is the example of NPE info file, and the table explains each argument in detail.
 
 ```
 {
