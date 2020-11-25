@@ -2,7 +2,7 @@
 
 ## Intro
 
-NPEX is an open-source patch recommendation system for Java Null Pointer Exceptions (NPE). NPEX helps developers to maintain their projects NPE-free** by automatically generating **compilable** patches for NPE. Our project is on top of [**Spoon**](https://github.com/INRIA/spoon) framework.
+NPEX is an open-source patch recommendation system for Java Null Pointer Exceptions (NPE). NPEX helps developers to maintain their projects **NPE-free** by automatically generating **compilable** patches for NPE. Our project is on top of [**Spoon**](https://github.com/INRIA/spoon) framework.
 
 ## Build Instruction
 
