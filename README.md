@@ -46,7 +46,7 @@ Name        | Description
 filepath    | the relative path to the file where NPE occurs
 line        | the exact line number where NPE occurs
 last_access | the last access expression of the null pointer. It can be a variable, a name of field, or a name of method.<br> For example, when NPE occurs at "x.foo().g", the last_access is **foo**.
-npe_class   | the class, discarding the package-path, where NPE occurs.<br>For example, if the exact class is "org.apache.A", npe_class is **A**.
+npe_class   | the class name where NPE occurs.<br>For example, if the exact class is "org.apache.A", npe_class is **A**.
 
      
 ## License
