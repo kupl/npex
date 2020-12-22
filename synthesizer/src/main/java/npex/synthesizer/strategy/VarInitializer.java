@@ -49,6 +49,6 @@ public class VarInitializer extends ValueInitializer<CtVariableAccess> {
         .map(f -> f.getDeclaration());
     Stream<CtVariable> allVars = Stream.concat(localVars, classMembers).filter(v -> v != null);
     Factory factory = expr.getFactory();
-    return allVars.map(v -> factory.createVariableRead(v.getReference(), false));
+    return allVars.map(v -> factory.createVariableRead(v.getReference(), v.isStatic()));
   }
 }
