@@ -49,6 +49,10 @@ public final class DefaultValueTable {
     return table.containsKey(typ.getSimpleName());
   }
 
+  static boolean isVoid(CtTypeReference<?> typ) {
+    return typ.getSimpleName().equals("void");
+  }
+
   static <T> List<CtExpression<T>> getDefaultValues(CtTypeReference<T> typ) {
     return table.getOrDefault(typ.getSimpleName(), Collections.singletonList("null")).stream().map(s -> {
       CtCodeSnippetExpression<T> exp = typ.getFactory().createCodeSnippetExpression();
