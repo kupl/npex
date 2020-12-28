@@ -98,13 +98,8 @@ public class PatchTemplateTernary implements PatchTemplate {
   }
 
   public CtNamedElement implement() {
-    CtExpression<?> target = Utils.findMatchedElement(targetMethod, skipExpr);
-    if (nullExp.toString().equals("null")) {
-      target = Utils.findMatchedElementLookParent(targetMethod, skipExpr);
-      target.replace(nullBlockStmt);
-    } else {
-      target.replace(createTernary(nullBlockStmt, target));
-    }
+    CtExpression<?> target = Utils.findMatchedElementLookParent(targetMethod, skipExpr);
+    target.replace(createTernary(nullBlockStmt, target));
     patchedStatement = target.getParent(CtStatement.class);
     return target.getParent(CtMethod.class) == null ? target.getParent(CtConstructor.class)
         : target.getParent(CtMethod.class);
