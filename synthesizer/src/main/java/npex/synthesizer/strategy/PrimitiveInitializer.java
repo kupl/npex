@@ -34,6 +34,10 @@ public class PrimitiveInitializer extends ValueInitializer<CtLiteral> {
     return "Literal";
   }
 
+  protected CtExpression convertToCtExpression(CtLiteral literal) {
+    return literal;
+  }
+
   protected Stream<CtLiteral> enumerate(CtExpression expr) {
     CtTypeReference typ = expr.getType();
     if (!typ.isPrimitive())

@@ -36,6 +36,10 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
     return "Object";
   }
 
+  protected CtExpression convertToCtExpression(CtConstructorCall ctor) {
+    return ctor;
+  }
+
   protected Stream<CtConstructorCall> enumerate(CtExpression expr) {
     CtTypeReference typ = expr.getType();
     if (typ == null || !typ.isClass() || typ.isPrimitive() || typ.isInterface()

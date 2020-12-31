@@ -34,7 +34,9 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtTargetedExpression;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -47,8 +49,11 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
 
   protected abstract Stream<T> enumerate(CtExpression expr);
 
+  protected abstract CtExpression convertToCtExpression(T typedElement);
+
   @SuppressWarnings("unchecked")
   public <S> List<CtExpression<? extends S>> getTypeCompatibleExpressions(CtExpression expr, CtTypeReference<S> typ) {
+
     Predicate<T> filter = ty -> {
       try {
         return ty.getType().isSubtypeOf(typ);
@@ -71,7 +76,7 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
 
   private List<T> enumerate(CtExpression expr, Predicate<T> pred) {
     Stream<T> candidates = this.enumerate(expr).filter(c -> !c.equals(expr));
-    return candidates.filter(pred).collect(Collectors.toList());
+    return candidates.filter(pred).map(c -> convertToCtExpression(c)).collect(Collectors.toList());
   }
 
   private boolean isTargetedExpressionAccessible(T candidate, CtTargetedExpression target) {
@@ -88,6 +93,14 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
 
     if (target instanceof CtInvocation) {
       String signature = ((CtInvocation) target).getExecutable().getSignature();
+      System.out.println("Candidate: " + candidate);
+      System.out.println("Target: " + target);
+      System.out.println("cand type: " + candidate.getType());
+      System.out.println("cand parent: " + candidate.getParent(CtMethod.class));
+      System.out.println("cand parent (Constructor): " + candidate.getParent(CtConstructor.class));
+
+      candidate.getType();
+      candidate.getType().getAllExecutables();
       return candidate.getType().getAllExecutables().stream()
           .anyMatch(e -> e.getSignature().equals(signature) && e.getType().equals(target.getType()));
     }
