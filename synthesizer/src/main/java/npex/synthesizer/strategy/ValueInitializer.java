@@ -34,9 +34,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtTargetedExpression;
-import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtField;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -51,9 +49,7 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
 
   protected abstract CtExpression convertToCtExpression(T typedElement);
 
-  @SuppressWarnings("unchecked")
-  public <S> List<CtExpression<? extends S>> getTypeCompatibleExpressions(CtExpression expr, CtTypeReference<S> typ) {
-
+  public List<CtExpression> getTypeCompatibleExpressions(CtExpression expr, CtTypeReference typ) {
     Predicate<T> filter = ty -> {
       try {
         return ty.getType().isSubtypeOf(typ);
@@ -61,20 +57,20 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
         return false;
       }
     };
-    return (List<CtExpression<? extends S>>) this.enumerate(expr, filter);
+    return this.enumerate(expr, filter);
   }
 
-  public List<T> getReplaceableExpressions(CtExpression expr) throws IllegalArgumentException {
+  public List<CtExpression> getReplaceableExpressions(CtExpression expr) throws IllegalArgumentException {
     if (!(expr.getParent() instanceof CtTargetedExpression)) {
       throw new IllegalArgumentException(String.format("Parent of %s should be a targeted expression", expr));
     }
 
     CtTargetedExpression targetedExpression = expr.getParent(CtTargetedExpression.class);
-    return this.enumerate(expr).filter(c -> isTargetedExpressionAccessible(c, targetedExpression))
-        .collect(Collectors.toList());
+    Predicate<T> filter = ty -> isTargetedExpressionAccessible(ty, targetedExpression);
+    return this.enumerate(expr, filter);
   }
 
-  private List<T> enumerate(CtExpression expr, Predicate<T> pred) {
+  private List<CtExpression> enumerate(CtExpression expr, Predicate<T> pred) {
     Stream<T> candidates = this.enumerate(expr).filter(c -> !c.equals(expr));
     return candidates.filter(pred).map(c -> convertToCtExpression(c)).collect(Collectors.toList());
   }
@@ -93,14 +89,6 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
 
     if (target instanceof CtInvocation) {
       String signature = ((CtInvocation) target).getExecutable().getSignature();
-      System.out.println("Candidate: " + candidate);
-      System.out.println("Target: " + target);
-      System.out.println("cand type: " + candidate.getType());
-      System.out.println("cand parent: " + candidate.getParent(CtMethod.class));
-      System.out.println("cand parent (Constructor): " + candidate.getParent(CtConstructor.class));
-
-      candidate.getType();
-      candidate.getType().getAllExecutables();
       return candidate.getType().getAllExecutables().stream()
           .anyMatch(e -> e.getSignature().equals(signature) && e.getType().equals(target.getType()));
     }
