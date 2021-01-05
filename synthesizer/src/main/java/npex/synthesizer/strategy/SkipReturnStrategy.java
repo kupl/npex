@@ -23,10 +23,12 @@
  */
 package npex.synthesizer.strategy;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
@@ -53,11 +55,19 @@ public class SkipReturnStrategy extends SkipStrategy {
     Factory factory = sinkMethod.getFactory();
     final CtTypeReference<R> retTyp = sinkMethod.getType();
 
-    return DefaultValueTable.getDefaultValues(retTyp).stream().map(e -> {
-      CtReturn<R> retStmt = factory.createReturn();
-      retStmt.setReturnedExpression(e);
-      return retStmt;
-    }).collect(Collectors.toList());
+    // In case of void method, we just insert 'return;'
+    if (retTyp.getSimpleName().equals("void")) {
+      CtReturn<R> retStmt = (CtReturn<R>) factory.createReturn().setReturnedExpression(null);
+      return (Collections.singletonList(retStmt));
+    }
+
+    List<CtReturn<R>> retStmts = new ArrayList<>();
+    for (CtLiteral l : DefaultValueTable.getDefaultValues(retTyp)) {
+      CtReturn<R> retStmt = factory.createReturn().setReturnedExpression(l);
+      retStmts.add(retStmt);
+    }
+
+    return retStmts;
   }
 
   @Override

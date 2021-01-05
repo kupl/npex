@@ -43,8 +43,6 @@ public class PrimitiveInitializer extends ValueInitializer<CtLiteral> {
     if (!typ.isPrimitive())
       return Stream.empty();
 
-    DefaultValueTable.getDefaultValues(typ).forEach(t -> System.out.println(t));
-
     return DefaultValueTable.getDefaultValues(typ).stream();
   }
 }
