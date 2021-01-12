@@ -31,7 +31,6 @@ import org.apache.log4j.Logger;
 
 import npex.synthesizer.NPEInfo;
 import npex.synthesizer.Utils;
-import npex.synthesizer.template.PatchTemplateDeveloper;
 import npex.synthesizer.template.SourceChange;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtComment;
@@ -122,8 +121,9 @@ public class BuggyCode {
         this.nullHandle.getStatement());
   }
 
-  public PatchTemplateDeveloper generateDeveloperPatch() {
-    return new PatchTemplateDeveloper(this.getNullPointer(), this.nullHandle);
+  public SourceChange generateDeveloperPatch() {
+    // return new PatchTemplateDeveloper(this.getNullPointer(), this.nullHandle);
+    return null;
   }
 
   public CtBlock<?> getOriginalBlock() {

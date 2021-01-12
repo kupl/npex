@@ -91,8 +91,8 @@ public class PatchSynthesizer extends AbstractDriver {
   public List<PatchTemplate> generatePatchTemplates(BuggyCode buggy) {
     List<PatchTemplate> templates = new ArrayList<PatchTemplate>();
     CtExpression<?> nullExpr = buggy.getNullPointer();
-    templates.add(buggy.generateDeveloperPatch());
-    strategies.stream().filter(s -> s.isApplicable(nullExpr)).forEach(s -> templates.addAll(s.generate(nullExpr)));
+    // templates.add(buggy.generateDeveloperPatch());
+    strategies.stream().filter(s -> s.isApplicable(nullExpr)).forEach(s -> templates.addAll(s.enumerate(nullExpr)));
     return templates;
   }
 }
