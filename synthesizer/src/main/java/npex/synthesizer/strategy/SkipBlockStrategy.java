@@ -23,6 +23,7 @@
  */
 package npex.synthesizer.strategy;
 
+import java.util.Collections;
 import java.util.List;
 
 import spoon.reflect.code.CtBlock;
@@ -47,6 +48,6 @@ public class SkipBlockStrategy extends AbstractSkipStrategy {
   }
 
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
-    return null;
+    return Collections.singletonList(null);
   }
 }
