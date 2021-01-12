@@ -40,10 +40,9 @@ import spoon.reflect.reference.CtTypeReference;
 public class ReplacePointerStrategy extends AbstractReplaceStrategy {
   public ReplacePointerStrategy(ValueInitializer initializer) {
     super(initializer);
-    this.name = "ReplacePointer" + initializer.getName();
   }
 
-  CtExpression<?> extractExprToReplace(CtExpression<?> nullExp) {
+  protected CtExpression extractExprToReplace(CtExpression nullExp) {
     return nullExp;
   }
 
@@ -65,16 +64,14 @@ public class ReplacePointerStrategy extends AbstractReplaceStrategy {
     }
   }
 
-  @Override
-  List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    CtTypeReference<?> nullExpTyp = !isLiteralNull(nullExp) ? nullExp.getType() : getNullValueType(nullExp);
-
-    List<CtExpression<?>> typeCompatibleExprs = initializer.getTypeCompatibleExpressions(nullExp, nullExpTyp);
+  protected List<CtExpression> enumerateAvailableExpressions(CtExpression nullExp) {
+    CtTypeReference nullExpTyp = !isLiteralNull(nullExp) ? nullExp.getType() : getNullValueType(nullExp);
+    List<CtExpression> typeCompatibleExprs = initializer.getTypeCompatibleExpressions(nullExp, nullExpTyp);
     if (nullExp.getParent() instanceof CtTargetedExpression && !(nullExp.getParent() instanceof CtConstructorCall)) {
       List<CtExpression> replaceableExprs = initializer.getReplaceableExpressions(nullExp);
       return Stream.concat(typeCompatibleExprs.stream(), replaceableExprs.stream()).collect(Collectors.toList());
     }
 
-    return typeCompatibleExprs.stream().collect(Collectors.toList());
+    return typeCompatibleExprs;
   }
 }

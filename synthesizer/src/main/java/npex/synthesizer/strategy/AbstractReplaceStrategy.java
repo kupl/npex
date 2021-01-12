@@ -23,20 +23,28 @@
  */
 package npex.synthesizer.strategy;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import npex.synthesizer.Utils;
-import npex.synthesizer.template.PatchTemplate;
 import npex.synthesizer.template.PatchTemplateTernary;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.declaration.CtElement;
 
-abstract public class AbstractReplaceStrategy extends AbstractStrategy {
+abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemplateTernary> {
+  static Logger logger = LoggerFactory.getLogger(AbstractSkipStrategy.class);
+  static private int idx = 0;
+
   final protected ValueInitializer initializer;
 
   public AbstractReplaceStrategy(ValueInitializer initializer) {
     this.initializer = initializer;
+  }
+
+  public String getName() {
+    return this.getClass().getSimpleName() + initializer.getName();
   }
 
   public boolean isApplicable(CtExpression nullExp) {
@@ -49,26 +57,20 @@ abstract public class AbstractReplaceStrategy extends AbstractStrategy {
     return true;
   }
 
-  @Override
-  protected CtExpression<?> createSkipFrom(CtExpression<?> nullExp) {
-    return extractExprToReplace(nullExp);
+  public List<PatchTemplateTernary> enumerate(CtExpression nullExp) {
+    List<PatchTemplateTernary> templates = new ArrayList<>();
+    CtExpression expFrom = extractExprToReplace(nullExp);
+    for (CtExpression expTo : enumerateAvailableExpressions(expFrom)) {
+      final int line = expTo.getPosition().getLine();
+      String id = String.format("%s_%d_%d", this.getName(), line, idx);
+      templates.add(new PatchTemplateTernary(id, nullExp, expFrom, expTo));
+      idx++;
+    }
+
+    return templates;
   }
 
-  @Override
-  protected CtExpression<?> createSkipTo(CtExpression<?> nullExp) {
-    return extractExprToReplace(nullExp);
-  }
+  protected abstract List<CtExpression> enumerateAvailableExpressions(CtExpression e);
 
-  @Override
-  public List<PatchTemplate> generate(CtExpression<?> nullExp) {
-    final CtExpression<?> skipFrom = (CtExpression<?>) this.createSkipFrom(nullExp);
-    final CtExpression<?> skipTo = (CtExpression<?>) this.createSkipTo(nullExp);
-    final List<CtElement> nullBlockStmt = createNullBlockStmts(nullExp);
-    return nullBlockStmt.stream()
-        .map(
-            s -> new PatchTemplateTernary(getPatchID(skipFrom, skipTo), nullExp, (CtExpression<?>) s, skipFrom, skipTo))
-        .collect(Collectors.toList());
-  }
-
-  abstract CtExpression<?> extractExprToReplace(CtExpression<?> nullExp);
+  protected abstract CtExpression extractExprToReplace(CtExpression nullExp);
 }

@@ -23,26 +23,30 @@
  */
 package npex.synthesizer.strategy;
 
+import java.util.List;
+
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.declaration.CtElement;
+import spoon.reflect.code.CtStatement;
 
-public class SkipBlockStrategy extends SkipStrategy {
-  public SkipBlockStrategy() {
-    this.name = "SkipBlock";
-  }
-
-  public boolean _isApplicable(CtExpression<?> nullExp) {
+/* TODO: This strategy shoud be improved so that it can skip multiple statements from
+  the sink (from) to the last statement of the current block (to). */
+public class SkipBlockStrategy extends AbstractSkipStrategy {
+  public boolean _isApplicable(CtExpression nullExp) {
     return nullExp.getParent(CtBlock.class).getParent(CtBlock.class) != null;
   }
 
   @Override
-  protected CtElement createSkipFrom(CtExpression<?> nullExp) {
+  protected CtStatement createSkipFrom(CtExpression nullExp) {
     return nullExp.getParent(CtBlock.class);
   }
 
   @Override
-  protected CtElement createSkipTo(CtExpression<?> nullExp) {
+  protected CtStatement createSkipTo(CtExpression nullExp) {
     return nullExp.getParent(CtBlock.class);
+  }
+
+  protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
+    return null;
   }
 }

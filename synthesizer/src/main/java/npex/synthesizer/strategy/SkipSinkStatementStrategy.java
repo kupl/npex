@@ -23,11 +23,14 @@
  */
 package npex.synthesizer.strategy;
 
-import spoon.reflect.code.CtExpression;
+import java.util.List;
 
-public class SkipSinkStatementStrategy extends SkipStrategy {
-  public SkipSinkStatementStrategy() {
-    this.name = "SkipSinkStatement";
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtStatement;
+
+public class SkipSinkStatementStrategy extends AbstractSkipStrategy {
+  protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
+    return null;
   }
 
   public boolean _isApplicable(CtExpression<?> nullExp) {
