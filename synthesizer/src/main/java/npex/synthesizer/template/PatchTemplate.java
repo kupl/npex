@@ -45,7 +45,7 @@ public abstract class PatchTemplate {
   }
 
   public CtStatement getPatchedStatement() {
-    return null;
+    return Utils.getEnclosingStatement(nullExp);
   }
 
   /* Apply patch template and generate a fresh AST */

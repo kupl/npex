@@ -104,7 +104,7 @@ public class Main {
         for (PatchStrategy stgy : strategies) {
           if (stgy.isApplicable(nullExp)) {
             System.out.println(String.format("Strategy %s is applicable!", stgy.getName()));
-            List<PatchTemplate> generated = stgy.generate(nullExp);
+            List<PatchTemplate> generated = stgy.enumerate(nullExp);
             System.out.println(String.format("-- %d templates generated.", generated.size()));
             templates.addAll(generated);
           } else
@@ -123,11 +123,11 @@ public class Main {
       templates.forEach(patch -> {
         File patchDir = new File(patchesDir, patch.getID());
         System.out.println("ID: " + patch.getID());
-        System.out.println("Before: " + patch.getBlock());
+        System.out.println("Before: " + patch.getPatchedStatement());
         patch.apply();
-        System.out.println("PatchBlock type: " + patch.getBlock().getClass());
-        System.out.println(patch.getBlock());
-        System.out.println("After: " + patch.getBlock());
+        System.out.println("PatchBlock type: " + patch.getPatchedStatement().getClass());
+        System.out.println(patch.getPatchedStatement());
+        System.out.println("After: " + patch.getPatchedStatement());
         try {
           patch.store(values[0], patchDir);
         } catch (IOException e) {

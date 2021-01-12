@@ -42,18 +42,18 @@ public class SkipReturnStrategy extends AbstractSkipStrategy {
     return nullExp.getParent(CtConstructor.class) == null;
   }
 
-  protected <R> List<CtReturn<R>> createReturnStmts(CtMethod<R> sinkMethod) {
-    final CtTypeReference<R> retTyp = sinkMethod.getType();
+  protected List<CtReturn> createReturnStmts(CtMethod sinkMethod) {
+    final CtTypeReference retTyp = sinkMethod.getType();
 
     // In case of void method, we just insert 'return;'
     if (retTyp.getSimpleName().equals("void")) {
-      CtReturn<R> retStmt = (CtReturn<R>) factory.createReturn().setReturnedExpression(null);
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
       return (Collections.singletonList(retStmt));
     }
 
-    List<CtReturn<R>> retStmts = new ArrayList<>();
-    for (CtLiteral l : DefaultValueTable.getDefaultValues(retTyp)) {
-      CtReturn<R> retStmt = factory.createReturn().setReturnedExpression(l);
+    List<CtReturn> retStmts = new ArrayList<>();
+    for (CtLiteral l : (List<CtLiteral>) DefaultValueTable.getDefaultValues(retTyp)) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(l);
       retStmts.add(retStmt);
     }
 
@@ -62,6 +62,19 @@ public class SkipReturnStrategy extends AbstractSkipStrategy {
 
   @Override
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
-    return createReturnStmts(nullExp.getParent(CtMethod.class));
+    final CtTypeReference retTyp = nullExp.getParent(CtMethod.class).getType();
+
+    // In case of void method, we just insert 'return;'
+    if (retTyp.getSimpleName().equals("void")) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
+      return (Collections.singletonList(retStmt));
+    }
+
+    List<CtStatement> retStmts = new ArrayList<>();
+    for (CtLiteral l : (List<CtLiteral>) DefaultValueTable.getDefaultValues(retTyp)) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(l);
+      retStmts.add(retStmt);
+    }
+    return retStmts;
   }
 }
