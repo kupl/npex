@@ -35,7 +35,7 @@ public class PatchTemplateTernary extends PatchTemplate {
   public PatchTemplateTernary(String id, CtExpression nullExp, CtExpression exprToReplace,
       CtExpression alternativeValue) {
     super(id, nullExp);
-    this.exprToReplace = Utils.findMatchedElementLookParent(exprToReplace, ast);
+    this.exprToReplace = Utils.findMatchedElementLookParent(ast, exprToReplace);
     this.alternativeValue = alternativeValue;
   }
 

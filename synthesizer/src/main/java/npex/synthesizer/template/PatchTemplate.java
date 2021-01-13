@@ -59,7 +59,7 @@ public abstract class PatchTemplate {
       }
     }).clone();
 
-    this.nullExp = Utils.findMatchedElementLookParent(nullExp, ast);
+    this.nullExp = Utils.findMatchedElementLookParent(ast, nullExp);
     this.factory = nullExp.getFactory();
   }
 

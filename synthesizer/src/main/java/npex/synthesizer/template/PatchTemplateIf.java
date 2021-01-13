@@ -45,8 +45,9 @@ public class PatchTemplateIf extends PatchTemplate {
       CtStatement skipTo) {
     super(id, nullExp);
     this.nullExecStmt = nullExecStmt;
-    this.skipFrom = Utils.findMatchedElementLookParent(skipFrom, ast);
-    this.skipTo = Utils.findMatchedElementLookParent(skipTo, ast);
+    this.skipFrom = Utils.findMatchedElementLookParent(ast, skipFrom);
+    this.skipTo = skipTo != null ? Utils.findMatchedElementLookParent(ast, skipTo) : null;
+    
     this.kind = (nullExecStmt == null) ? SkipKind.SKIPONLY : SkipKind.DOSMTH;
   }
 
