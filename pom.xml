@@ -4,11 +4,6 @@
     <artifactId>npex</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <properties>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
     <modules>
         <module>synthesizer</module>
         <module>errortracer</module>
@@ -22,6 +17,16 @@
     </dependencies>
     <build>
         <plugins>
+            <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.8.0</version>
+            <configuration>
+                <release>15</release> <!-- <release>13/14/15</release> -->
+                <compilerArgs>--enable-preview</compilerArgs>
+            </configuration>
+        </plugin>
+
             <plugin>
                 <groupId>com.mycila.maven-license-plugin</groupId>
                 <artifactId>maven-license-plugin</artifactId>
