@@ -59,9 +59,9 @@ abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemp
 
   public List<PatchTemplateTernary> enumerate(CtExpression nullExp) {
     List<PatchTemplateTernary> templates = new ArrayList<>();
+    int line = nullExp.getPosition().getLine();
     CtExpression expFrom = extractExprToReplace(nullExp);
     for (CtExpression expTo : enumerateAvailableExpressions(expFrom)) {
-      final int line = expTo.getPosition().getLine();
       String id = String.format("%s_%d_%d", this.getName(), line, idx);
       templates.add(new PatchTemplateTernary(id, nullExp, expFrom, expTo));
       idx++;
