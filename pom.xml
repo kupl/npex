@@ -6,6 +6,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>synthesizer</module>
+        <module>extractor</module>
         <module>errortracer</module>
     </modules>
     <dependencies>
