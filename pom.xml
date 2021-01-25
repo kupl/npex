@@ -10,6 +10,17 @@
         <module>errortracer</module>
     </modules>
     <dependencies>
+    <dependency>
+      <groupId>org.json</groupId>
+      <artifactId>json</artifactId>
+      <version>20200518</version>
+    </dependency>
+    <dependency>
+      <groupId>org.junit</groupId>
+      <artifactId>junit4-engine</artifactId>
+      <version>5.0.0-ALPHA</version>
+    </dependency>
+
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
