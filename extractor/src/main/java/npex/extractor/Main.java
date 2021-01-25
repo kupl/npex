@@ -21,18 +21,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.extractor.nullhandle;
+package npex.extractor;
 
-import spoon.reflect.code.CtBinaryOperator;
-import spoon.reflect.code.CtConditional;
-import spoon.reflect.code.CtExpression;
+import org.slf4j.LoggerFactory;
 
-public class NullHandleTernary extends AbstractNullHandle<CtConditional> {
-  public NullHandleTernary(CtConditional ternary, CtBinaryOperator nullCond) {
-    super(ternary, nullCond);
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import npex.extractor.processors.NullHandleProcessor;
+import spoon.Launcher;
+import spoon.MavenLauncher;
+import spoon.MavenLauncher.SOURCE_TYPE;
+
+public class Main {
+  static {
+    Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+    root.setLevel(Level.WARN);
   }
 
-  public CtExpression getModelExpr() throws IllegalStateException {
-    return null;
+  public static void main(String[] args) {
+    final String projectRootDir = args[0];
+    Launcher launcher = new MavenLauncher(projectRootDir, SOURCE_TYPE.ALL_SOURCE);
+    launcher.addProcessor(new NullHandleProcessor());
+    launcher.run();
   }
 }

@@ -21,46 +21,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.extractor;
+package npex.extractor.nullhandle;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.ArrayList;
+import java.util.List;
 
-import spoon.reflect.code.CtBinaryOperator;
-import spoon.reflect.code.CtLiteral;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.factory.CoreFactory;
-import spoon.reflect.visitor.Filter;
+import spoon.reflect.visitor.EarlyTerminatingScanner;
 import spoon.support.DefaultCoreFactory;
 
-public class Utils {
-  static Logger logger = LoggerFactory.getLogger(Utils.class);
-  static CoreFactory factory = new DefaultCoreFactory();
+public abstract class AbstractNullModelScanner extends EarlyTerminatingScanner<List<NullModel>> {
+  final protected List<NullModel> models = new ArrayList<NullModel>();
+  final protected CoreFactory factory = new DefaultCoreFactory();
 
-  public static boolean isNullCondition(CtBinaryOperator bo) {
-    return bo.getRightHandOperand() instanceof CtLiteral lit && lit.toString().equals("null");
-  }
-
-  public static boolean isChildOf(CtElement el, CtElement root) {
-    return !root.filterChildren(new EqualsFilter(el)).list().isEmpty();
-  }
-
-  public static CtLiteral createNullLiteral() {
-    return factory.createLiteral().setValue(null);
-
-  }
-
-  static class EqualsFilter implements Filter<CtElement> {
-    CtElement query;
-
-    public EqualsFilter(CtElement query) {
-      this.query = query;
-    }
-
-    @Override
-    public boolean matches(CtElement e) {
-      return e.equals(query);
-    }
-
+  public AbstractNullModelScanner() {
+    setResult(models);
   }
 }

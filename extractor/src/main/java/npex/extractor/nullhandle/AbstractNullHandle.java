@@ -23,31 +23,61 @@
  */
 package npex.extractor.nullhandle;
 
+import java.util.List;
+
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.factory.CoreFactory;
 import spoon.support.DefaultCoreFactory;
 
 public abstract class AbstractNullHandle<T extends CtElement> {
+  static protected Logger logger = LoggerFactory.getLogger(AbstractNullHandle.class);
   final protected T handle;
   final protected CtBinaryOperator nullCond;
-  final protected CtExpression nullExpr;
+  final protected boolean isNullCondKindEQ;
+  final protected CtExpression nullExp;
+
   final protected CoreFactory factory = new DefaultCoreFactory();
+
+  final private CtClass klass;
 
   public AbstractNullHandle(T handle, CtBinaryOperator nullCond) {
     this.handle = handle;
     this.nullCond = nullCond;
-    this.nullExpr = nullCond.getLeftHandOperand();
+    this.isNullCondKindEQ = nullCond.getKind().equals(BinaryOperatorKind.EQ);
+    this.nullExp = nullCond.getLeftHandOperand();
+    this.klass = handle.getParent(CtClass.class);
   }
 
   public T getHandle() {
     return handle;
   }
 
-  public CtExpression getNullExpr() {
-    return nullExpr;
+  public CtExpression getNullExp() {
+    return nullExp;
   }
 
-  public abstract CtExpression getModelExpr();
+  public JSONObject toJson() {
+    var obj = new JSONObject();
+    obj.put("qualified_class_name", klass.getQualifiedName());
+    obj.put("source_location", handle.getPosition().getFile().getAbsolutePath());
+    obj.put("line_no", handle.getPosition().getLine());
+    return obj;
+  }
+
+  public List<NullModel> collectNullModels() {
+    AbstractNullModelScanner scanner = createNullModelScanner();
+    handle.accept(scanner);
+    return scanner.getResult();
+  }
+
+  protected abstract AbstractNullModelScanner createNullModelScanner();
+
 }

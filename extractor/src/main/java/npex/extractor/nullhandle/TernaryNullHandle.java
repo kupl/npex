@@ -23,36 +23,37 @@
  */
 package npex.extractor.nullhandle;
 
+import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
+import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtLiteral;
 
-public class NullHandleBool extends AbstractNullHandle<CtBinaryOperator> {
-  public NullHandleBool(CtBinaryOperator handle, CtBinaryOperator nullCond) {
-    super(handle, nullCond);
+public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
+  final boolean isCondKindEQ;
+
+  public TernaryNullHandle(CtConditional ternary, CtBinaryOperator cond) {
+    super(ternary, cond);
+    this.isCondKindEQ = nullCond.getKind().equals(BinaryOperatorKind.EQ);
   }
-  // public static boolean matches(CtBinaryOperator bo) {
-  // if (bo.getLeftHandOperand() instanceof CtBinaryOperator cond &&
-  // Utils.isNullCondition(cond)) {
-  // return true;
-  // }
 
-  // return false;
-  // }
+  @Override
+  protected AbstractNullModelScanner createNullModelScanner() {
+    return new NullModelScanner();
+  }
 
-  public CtExpression getModelExpr() throws IllegalStateException {
-    CtLiteral modelExpr = factory.createLiteral();
-    switch (handle.getKind()) {
-      case OR:
-        modelExpr.setValue("false");
-        break;
-      case AND:
-        modelExpr.setValue("true");
-        break;
-      default:
-        throw new IllegalStateException();
+  private class NullModelScanner extends AbstractNullModelScanner {
+    final private CtExpression sinkExpr;
+    final private CtExpression nullValue;
+
+    public NullModelScanner() {
+      this.sinkExpr = isCondKindEQ ? handle.getElseExpression() : handle.getThenExpression();
+      this.nullValue = isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression();
+      models.add(new NullModel(nullExp, sinkExpr, nullValue));
     }
 
-    return modelExpr;
+    @Override
+    public void visitCtConditional(CtConditional ternary) {
+      terminate();
+    }
   }
 }
