@@ -29,23 +29,20 @@ import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
 
 public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
-  final boolean isCondKindEQ;
-
   public TernaryNullHandle(CtConditional ternary, CtBinaryOperator cond) {
     super(ternary, cond);
-    this.isCondKindEQ = nullCond.getKind().equals(BinaryOperatorKind.EQ);
   }
 
   @Override
   protected AbstractNullModelScanner createNullModelScanner() {
-    return new NullModelScanner();
+    return new NullModelScanner(nullCond.getKind().equals(BinaryOperatorKind.EQ));
   }
 
   private class NullModelScanner extends AbstractNullModelScanner {
     final private CtExpression sinkExpr;
     final private CtExpression nullValue;
 
-    public NullModelScanner() {
+    public NullModelScanner(boolean isCondKindEQ) {
       this.sinkExpr = isCondKindEQ ? handle.getElseExpression() : handle.getThenExpression();
       this.nullValue = isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression();
       models.add(new NullModel(nullExp, sinkExpr, nullValue));
