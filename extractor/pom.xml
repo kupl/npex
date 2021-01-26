@@ -1,22 +1,16 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>synthesizer</artifactId>
+  <artifactId>extractor</artifactId>
   <parent>
     <groupId>kr.ac.korea.prl</groupId>
     <artifactId>npex</artifactId>
     <version>1.0-SNAPSHOT</version>
   </parent>
-
   <dependencies>
     <dependency>
       <groupId>fr.inria.gforge.spoon</groupId>
       <artifactId>spoon-core</artifactId>
-      <version>8.2.0-beta-11</version>
-    </dependency>
-    <dependency>
-      <groupId>org.unix4j</groupId>
-      <artifactId>unix4j-command</artifactId>
-      <version>0.5</version>
+      <version>8.4.0-beta-11</version>
     </dependency>
     <dependency>
       <groupId>commons-cli</groupId>
@@ -24,14 +18,14 @@
       <version>1.4</version>
     </dependency>
   </dependencies>
-  <build>
+    <build>
     <plugins>
       <plugin>
         <artifactId>maven-jar-plugin</artifactId>
           <configuration>
             <archive>
               <manifest>
-                <mainClass>npex.synthesizer.Main</mainClass>
+                <mainClass>npex.extractor.Main</mainClass>
                 <addClasspath>true</addClasspath>
                 <classpathPrefix>libs/</classpathPrefix>
               </manifest>
@@ -56,15 +50,9 @@
           </execution>
         </executions>
       </plugin>
-    </plugins> 
-  </build>
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <version>${maven-surefire-plugin.version}</version>
-      </plugin>
-    </plugins>
-  </reporting>
+      </plugins>
+
+    </build>
+
+ 
 </project>
