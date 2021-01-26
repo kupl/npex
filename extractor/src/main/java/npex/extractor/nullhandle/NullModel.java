@@ -25,7 +25,9 @@ package npex.extractor.nullhandle;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,7 @@ import npex.extractor.Utils;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class NullModel {
@@ -41,7 +44,7 @@ public class NullModel {
   private final CtExpression nullExp;
   private final CtElement sinkBody;
   private final CtExpression nullValue;
-  private final CtInvocation nullInvo;
+  private final InvocationInfo invoInfo;
 
   public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue) {
     this.nullExp = nullExp;
@@ -50,18 +53,69 @@ public class NullModel {
 
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
-    this.nullInvo = scanner.getResult();
+    this.invoInfo = scanner.getResult();
   }
 
   public JSONObject toJSON() {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_invo", nullInvo == null ? null : nullInvo.toString());
-    obj.put("null_value", nullValue);
+    obj.put("null_value", nullValue.toString());
+    obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
     return obj;
   }
 
-  private class NullInvocationScanner extends EarlyTerminatingScanner<CtInvocation> {
+  private record InvocationInfo(int nullIdx, CtInvocation orgInvo, CtInvocation nullInvo) {
+    static private enum INVO_KIND {
+      CONSTRUCTOR, STATIC, VIRTUAL
+    }
+
+    static InvocationInfo createNullBaseInvocationInfo(CtInvocation orgInvo, CtInvocation nullInvo) {
+      return new InvocationInfo(-1, orgInvo, nullInvo);
+    }
+
+    static InvocationInfo createNullArgumentInvocationInfo(int idx, CtInvocation orgInvo, CtInvocation nullInvo) {
+      return new InvocationInfo(idx, orgInvo, nullInvo);
+    }
+
+    public JSONObject toJSON() {
+      var obj = new JSONObject();
+      CtTypeReference targetType = getTargetType();
+      obj.put("null_invo", nullInvo);
+      obj.put("null_idx", nullIdx);
+      obj.put("method_name", nullInvo.getExecutable().getSimpleName());
+      obj.put("return_type", nullInvo.getType().toString());
+      obj.put("arguments_types",
+          new JSONArray(getActualArgumentsTypes().stream().map(argTyp -> argTyp.toString()).toArray()));
+      obj.put("invo_kind", getInvocationType().toString());
+      obj.put("target_type", targetType != null ? targetType : JSONObject.NULL);
+      return obj;
+    }
+
+    private INVO_KIND getInvocationType() {
+      if (orgInvo.getExecutable().isConstructor())
+        return INVO_KIND.CONSTRUCTOR;
+      else if (nullInvo.getExecutable().isStatic())
+        return INVO_KIND.STATIC;
+      else
+        return INVO_KIND.VIRTUAL;
+    }
+
+    private List<CtTypeReference> getActualArgumentsTypes() {
+      Stream<CtExpression> argsStream = orgInvo.getArguments().stream();
+      List<CtTypeReference> typs = argsStream.map(arg -> arg.getType()).collect(Collectors.toList());
+      return typs;
+    }
+
+    private CtTypeReference getTargetType() {
+      if (getInvocationType().equals(INVO_KIND.VIRTUAL)) {
+        return orgInvo.getTarget().getType();
+      }
+      return null;
+    }
+
+  };
+
+  private class NullInvocationScanner extends EarlyTerminatingScanner<InvocationInfo> {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       super.visitCtInvocation(invo);
@@ -75,16 +129,20 @@ public class NullModel {
     private void whenReceiverIsNull(CtInvocation invo) {
       CtInvocation nullInvo = invo.clone();
       nullInvo.getTarget().replace(Utils.createNullLiteral());
-      setResult(nullInvo);
+      setResult(InvocationInfo.createNullBaseInvocationInfo(invo, nullInvo));
       terminate();
     }
 
     private void whenActualIsNull(CtInvocation invo) {
       CtInvocation nullInvo = invo.clone();
-      var argsStream = invo.getArguments().stream().map(arg -> arg.equals(nullExp) ? Utils.createNullLiteral() : arg);
-      nullInvo.setArguments((List<CtExpression>) argsStream.collect(Collectors.toList()));
-      setResult(nullInvo);
+      Stream<CtExpression> argsStream = invo.getArguments().stream();
+      List<CtExpression> argsList = argsStream.map(arg -> arg.equals(nullExp) ? Utils.createNullLiteral() : arg)
+          .collect(Collectors.toList());
+      nullInvo.setArguments(argsList);
+      int idx = invo.getArguments().indexOf(nullExp);
+      setResult(InvocationInfo.createNullArgumentInvocationInfo(idx, invo, nullInvo));
       terminate();
     }
+
   }
 }
