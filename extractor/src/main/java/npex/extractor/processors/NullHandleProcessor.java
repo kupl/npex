@@ -23,15 +23,19 @@
  */
 package npex.extractor.processors;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.extractor.nullhandle.AbstractNullHandle;
 import npex.extractor.nullhandle.NullHandleFactory;
-import npex.extractor.nullhandle.NullModel;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtCodeElement;
 
@@ -44,21 +48,22 @@ public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
     logger.info("Processing element whose type is {}", element.getClass().getSimpleName());
     AbstractNullHandle handle = NullHandleFactory.createNullHandle(element);
     if (handle != null) {
-      logger.info("-- Extracting succeeds: {}", element);
-      List<NullModel> models = handle.collectNullModels();
-      if (models.isEmpty()) {
-        logger.info("-- No models collected for the handle");
-        return;
-      }
-      for (NullModel model : models) {
-        logger.info("-- Null invocation of model: {}", model.getNullInvocation());
-      }
+      logger.info("-- Extracting handle succeeds: {}", element);
       handles.add(handle);
+      return;
     }
   }
 
   @Override
   public void processingDone() {
+    JSONArray handlesJsonArray = new JSONArray();
+    handles.forEach(h -> handlesJsonArray.put(h.toJSON()));
+    File file = new File("results.json");
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+      handlesJsonArray.write(writer, 0, 4);
+    } catch (IOException e) {
+    }
     return;
   }
+
 }

@@ -23,9 +23,10 @@
  */
 package npex.extractor.nullhandle;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,42 +41,50 @@ public class NullModel {
   private final CtExpression nullExp;
   private final CtElement sinkBody;
   private final CtExpression nullValue;
+  private final CtInvocation nullInvo;
 
   public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue) {
     this.nullExp = nullExp;
     this.sinkBody = sinkBody;
     this.nullValue = nullValue;
-  }
 
-  public CtInvocation getNullInvocation() {
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
-    return scanner.getResult();
+    this.nullInvo = scanner.getResult();
   }
 
-  public CtExpression getNullValue() {
-    return this.nullValue;
+  public JSONObject toJSON() {
+    var obj = new JSONObject();
+    obj.put("sink_body", sinkBody.toString());
+    obj.put("null_invo", nullInvo == null ? null : nullInvo.toString());
+    obj.put("null_value", nullValue);
+    return obj;
   }
 
   private class NullInvocationScanner extends EarlyTerminatingScanner<CtInvocation> {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       super.visitCtInvocation(invo);
-      CtInvocation nullInvo = invo.clone();
       if (invo.getTarget().equals(nullExp)) {
-        nullInvo.getTarget().replace(Utils.createNullLiteral());
-        setResult(nullInvo);
-        terminate();
+        whenReceiverIsNull(invo);
       } else if (invo.getArguments().contains(nullExp)) {
-        List<CtExpression> argsClone = new ArrayList<>();
-        for (var arg : invo.getArguments()) {
-          var argClone = arg.equals(nullExp) ? Utils.createNullLiteral() : arg;
-          argsClone.add((CtExpression) argClone);
-        }
-        nullInvo.setArguments(argsClone);
-        setResult(nullInvo);
-        terminate();
+        whenActualIsNull(invo);
       }
+    }
+
+    private void whenReceiverIsNull(CtInvocation invo) {
+      CtInvocation nullInvo = invo.clone();
+      nullInvo.getTarget().replace(Utils.createNullLiteral());
+      setResult(nullInvo);
+      terminate();
+    }
+
+    private void whenActualIsNull(CtInvocation invo) {
+      CtInvocation nullInvo = invo.clone();
+      var argsStream = invo.getArguments().stream().map(arg -> arg.equals(nullExp) ? Utils.createNullLiteral() : arg);
+      nullInvo.setArguments((List<CtExpression>) argsStream.collect(Collectors.toList()));
+      setResult(nullInvo);
+      terminate();
     }
   }
 }

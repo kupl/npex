@@ -24,12 +24,12 @@
 package npex.extractor.nullhandle;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtClass;
@@ -38,44 +38,37 @@ import spoon.reflect.factory.CoreFactory;
 import spoon.support.DefaultCoreFactory;
 
 public abstract class AbstractNullHandle<T extends CtElement> {
-  static protected Logger logger = LoggerFactory.getLogger(AbstractNullHandle.class);
+  static final protected Logger logger = LoggerFactory.getLogger(AbstractNullHandle.class);
+  static final protected CoreFactory factory = new DefaultCoreFactory();
+
   final protected T handle;
   final protected CtBinaryOperator nullCond;
-  final protected boolean isNullCondKindEQ;
   final protected CtExpression nullExp;
 
-  final protected CoreFactory factory = new DefaultCoreFactory();
-
   final private CtClass klass;
+  final private List<NullModel> models;
 
   public AbstractNullHandle(T handle, CtBinaryOperator nullCond) {
     this.handle = handle;
     this.nullCond = nullCond;
-    this.isNullCondKindEQ = nullCond.getKind().equals(BinaryOperatorKind.EQ);
     this.nullExp = nullCond.getLeftHandOperand();
     this.klass = handle.getParent(CtClass.class);
-  }
 
-  public T getHandle() {
-    return handle;
-  }
-
-  public CtExpression getNullExp() {
-    return nullExp;
-  }
-
-  public JSONObject toJson() {
-    var obj = new JSONObject();
-    obj.put("qualified_class_name", klass.getQualifiedName());
-    obj.put("source_location", handle.getPosition().getFile().getAbsolutePath());
-    obj.put("line_no", handle.getPosition().getLine());
-    return obj;
-  }
-
-  public List<NullModel> collectNullModels() {
     AbstractNullModelScanner scanner = createNullModelScanner();
     handle.accept(scanner);
-    return scanner.getResult();
+    this.models = scanner.getResult();
+  }
+
+  public JSONObject toJSON() {
+    var obj = new JSONObject();
+    obj.put("source_location", handle.getPosition().getFile().getAbsolutePath());
+    obj.put("line_no", handle.getPosition().getLine());
+    obj.put("qualified_class_name", klass.getQualifiedName());
+    obj.put("handle", handle.toString());
+
+    List<JSONObject> modelsJsonList = models.stream().map(m -> m.toJSON()).collect(Collectors.toList());
+    obj.put("models", modelsJsonList);
+    return obj;
   }
 
   protected abstract AbstractNullModelScanner createNullModelScanner();
