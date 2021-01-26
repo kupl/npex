@@ -28,10 +28,13 @@ import java.util.List;
 import npex.synthesizer.template.PatchTemplate;
 import spoon.reflect.code.CtExpression;
 
-public interface PatchStrategy {
-    String getName();
+public interface PatchStrategy<T extends PatchTemplate> {
 
-    boolean isApplicable(CtExpression<?> nullExp);
+  public default String getName() {
+    return this.getClass().getSimpleName();
+  }
 
-    List<PatchTemplate> generate(CtExpression<?> nullExp);
+  boolean isApplicable(CtExpression<?> nullExp);
+
+  List<T> enumerate(CtExpression<?> nullExp);
 }

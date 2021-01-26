@@ -30,40 +30,30 @@ import java.util.List;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtReturn;
+import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtConstructor;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
-public class SkipReturnStrategy extends SkipStrategy {
-  public SkipReturnStrategy() {
-    this.name = "SkipReturn";
-  }
+public class SkipReturnStrategy extends AbstractSkipStrategy {
 
   @Override
-  public boolean _isApplicable(CtExpression<?> nullExp) {
+  public boolean _isApplicable(CtExpression nullExp) {
     return nullExp.getParent(CtConstructor.class) == null;
   }
 
-  @Override
-  protected CtElement createSkipTo(CtExpression<?> nullExp) {
-    return nullExp.getParent(CtMethod.class);
-  }
-
-  protected <R> List<CtReturn<R>> createReturnStmts(CtMethod<R> sinkMethod) {
-    Factory factory = sinkMethod.getFactory();
-    final CtTypeReference<R> retTyp = sinkMethod.getType();
+  protected List<CtReturn> createReturnStmts(CtMethod sinkMethod) {
+    final CtTypeReference retTyp = sinkMethod.getType();
 
     // In case of void method, we just insert 'return;'
     if (retTyp.getSimpleName().equals("void")) {
-      CtReturn<R> retStmt = (CtReturn<R>) factory.createReturn().setReturnedExpression(null);
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
       return (Collections.singletonList(retStmt));
     }
 
-    List<CtReturn<R>> retStmts = new ArrayList<>();
-    for (CtLiteral l : DefaultValueTable.getDefaultValues(retTyp)) {
-      CtReturn<R> retStmt = factory.createReturn().setReturnedExpression(l);
+    List<CtReturn> retStmts = new ArrayList<>();
+    for (CtLiteral l : (List<CtLiteral>) DefaultValueTable.getDefaultValues(retTyp)) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(l);
       retStmts.add(retStmt);
     }
 
@@ -71,7 +61,20 @@ public class SkipReturnStrategy extends SkipStrategy {
   }
 
   @Override
-  protected List<CtElement> createNullBlockStmts(CtExpression<?> nullExp) {
-    return (List<CtElement>) createReturnStmts(nullExp.getParent(CtMethod.class));
+  protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
+    final CtTypeReference retTyp = nullExp.getParent(CtMethod.class).getType();
+
+    // In case of void method, we just insert 'return;'
+    if (retTyp.getSimpleName().equals("void")) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
+      return (Collections.singletonList(retStmt));
+    }
+
+    List<CtStatement> retStmts = new ArrayList<>();
+    for (CtLiteral l : (List<CtLiteral>) DefaultValueTable.getDefaultValues(retTyp)) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(l);
+      retStmts.add(retStmt);
+    }
+    return retStmts;
   }
 }
