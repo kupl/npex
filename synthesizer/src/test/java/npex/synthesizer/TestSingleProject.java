@@ -30,8 +30,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import org.apache.log4j.Logger;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import npex.synthesizer.strategy.InitPointerStrategy;
 import npex.synthesizer.strategy.ObjectInitializer;
@@ -57,7 +58,7 @@ public class TestSingleProject {
       new ReplaceEntireExpressionStrategy(new PrimitiveInitializer()),
       new ReplaceEntireExpressionStrategy(new ObjectInitializer()) });
 
-  protected Logger logger = Logger.getLogger(TestSingleProject.class);
+  final static protected Logger logger = LoggerFactory.getLogger(TestSingleProject.class);
 
   @Test
   public void test() {
@@ -75,7 +76,7 @@ public class TestSingleProject {
       for (PatchStrategy stgy : strategies) {
         if (stgy.isApplicable(nullExp)) {
           System.out.println(String.format("Strategy %s is applicable!", stgy.getName()));
-          List<PatchTemplate> generated = stgy.generate(nullExp);
+          List<PatchTemplate> generated = stgy.enumerate(nullExp);
           System.out.println(String.format("-- %d templates generated.", generated.size()));
           templates.addAll(generated);
         } else
@@ -93,12 +94,10 @@ public class TestSingleProject {
     patchesDir.mkdirs();
     templates.forEach(patch -> {
       File patchDir = new File(patchesDir, patch.getID());
-      System.out.println("ID: " + patch.getID());
-      System.out.println("Before: " + patch.getBlock());
+      logger.info("PatchID: {}", patch.getID());
+      logger.info("Before: {}", patch.getOriginalStatement());
       patch.apply();
-      System.out.println("PatchBlock type: " + patch.getBlock().getClass());
-      System.out.println(patch.getBlock());
-      System.out.println("After: " + patch.getBlock());
+      logger.info("After: {}", patch.getPatchedStatement());
       try {
         patch.store(projectPath, patchDir);
       } catch (IOException e) {

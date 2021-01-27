@@ -38,8 +38,9 @@ import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.factory.Factory;
+import spoon.reflect.factory.CoreFactory;
 import spoon.reflect.visitor.filter.AbstractFilter;
+import spoon.support.DefaultCoreFactory;
 
 public abstract class PatchTemplate {
   static Logger logger = LoggerFactory.getLogger(PatchTemplate.class);
@@ -47,8 +48,11 @@ public abstract class PatchTemplate {
   protected final String id;
   protected final CtExecutable ast;
   protected final CtExpression nullExp;
-  protected final Factory factory;
   private CtExecutable changed = null;
+
+  private final CtExpression nullExpOrg;
+
+  protected final CoreFactory factory = new DefaultCoreFactory();
 
   public PatchTemplate(String id, CtExpression nullExp) {
     this.id = id;
@@ -59,8 +63,8 @@ public abstract class PatchTemplate {
       }
     }).clone();
 
+    this.nullExpOrg = nullExp;
     this.nullExp = Utils.findMatchedElementLookParent(ast, nullExp);
-    this.factory = nullExp.getFactory();
   }
 
   public String getID() {
@@ -69,6 +73,10 @@ public abstract class PatchTemplate {
 
   public CtStatement getPatchedStatement() {
     return Utils.getEnclosingStatement(nullExp);
+  }
+
+  public CtStatement getOriginalStatement() {
+    return Utils.getEnclosingStatement(nullExpOrg);
   }
 
   /* Apply patch template and generate a fresh AST */

@@ -139,14 +139,6 @@ public class Main {
       return;
     }
 
-    if (line.hasOption("extract")) {
-      String[] values = line.getOptionValues("extract");
-      Driver driver = new Driver(values[0], values[1]);
-      driver.run();
-
-      return;
-    }
-
     if (line.hasOption("trace")) {
       String[] values = line.getOptionValues("trace");
     }

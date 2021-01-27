@@ -28,7 +28,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
@@ -41,7 +42,7 @@ import spoon.reflect.reference.CtTypeReference;
 
 @SuppressWarnings("rawtypes")
 public abstract class ValueInitializer<T extends CtTypedElement> {
-  Logger logger = Logger.getLogger(ValueInitializer.class);
+  final static Logger logger = LoggerFactory.getLogger(ValueInitializer.class);
 
   public abstract String getName();
 
