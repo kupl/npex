@@ -26,6 +26,7 @@ package npex.synthesizer.strategy;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;

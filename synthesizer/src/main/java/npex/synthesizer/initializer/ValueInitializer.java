@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer.strategy;
+package npex.synthesizer.initializer;
 
 import java.util.List;
 import java.util.function.Predicate;

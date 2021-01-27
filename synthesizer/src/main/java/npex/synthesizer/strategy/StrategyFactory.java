@@ -18,35 +18,22 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 package npex.synthesizer.strategy;
 
-import java.util.Collections;
-import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.Map;
 
-import spoon.reflect.code.CtConstructorCall;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.reference.CtTypeReference;
-
-@SuppressWarnings("rawtypes")
-public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
-  public String getName() {
-    return "Object";
-  }
-
-  protected CtExpression convertToCtExpression(CtConstructorCall ctor) {
-    return ctor;
-  }
-
-  protected Stream<CtConstructorCall> enumerate(CtExpression expr) {
-    CtTypeReference typ = expr.getType();
-    if (typ == null || !typ.isClass() || typ.isPrimitive() || typ.isInterface()
-        || typ.getDeclaration() != null && typ.getDeclaration().isAbstract()) {
-      return Stream.empty();
-    }
-
-    return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
+public class StrategyFactory {
+  private static Map<String, PatchStrategy> strategies = new HashMap<>();
+  static {
+    strategies.put("InitPointer", new InitPointerStrategy());
+    strategies.put("SkipBlock", new SkipBlockStrategy());
+    strategies.put("SkipBreak", new SkipBreakStrategy());
+    strategies.put("SkipContinue", new SkipContinueStrategy());
+    strategies.put("SkipSinkStatement", new SkipSinkStatementStrategy());
+    strategies.put("SkipReturn", new SkipReturnStrategy());
   }
 }

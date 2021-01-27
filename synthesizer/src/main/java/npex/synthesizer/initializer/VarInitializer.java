@@ -21,28 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer.strategy;
+package npex.synthesizer.initializer;
 
 import java.util.stream.Stream;
 
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtLiteral;
-import spoon.reflect.reference.CtTypeReference;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtConstructor;
+import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtVariable;
+import spoon.reflect.visitor.filter.TypeFilter;
 
-public class PrimitiveInitializer extends ValueInitializer<CtLiteral> {
+@SuppressWarnings("rawtypes")
+public class VarInitializer extends ValueInitializer<CtVariable> {
   public String getName() {
-    return "Literal";
+    return "Var";
   }
 
-  protected CtExpression convertToCtExpression(CtLiteral literal) {
-    return literal;
+  protected Stream<CtVariable> enumerate(CtExpression expr) {
+    CtExecutable executable = expr.getParent(CtMethod.class) != null ? expr.getParent(CtMethod.class)
+        : expr.getParent(CtConstructor.class);
+    Stream<CtVariable> localVars = executable.getElements(new TypeFilter<>(CtVariable.class)).stream();
+    Stream<CtVariable> classMembers = expr.getParent(CtClass.class).getAllFields().stream()
+        .map(f -> f.getDeclaration());
+    return Stream.concat(localVars, classMembers).filter(v -> v != null);
   }
 
-  protected Stream<CtLiteral> enumerate(CtExpression expr) {
-    CtTypeReference typ = expr.getType();
-    if (!typ.isPrimitive())
-      return Stream.empty();
-
-    return DefaultValueTable.getDefaultValues(typ).stream();
+  protected CtExpression convertToCtExpression(CtVariable var) {
+    return var.getFactory().createVariableRead(var.getReference(), var.isStatic());
   }
 }

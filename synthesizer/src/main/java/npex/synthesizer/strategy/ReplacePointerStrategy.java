@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;

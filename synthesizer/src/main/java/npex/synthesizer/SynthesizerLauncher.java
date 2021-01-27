@@ -18,33 +18,18 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-package npex.synthesizer.strategy;
+package npex.synthesizer;
 
-import java.util.List;
+import java.io.File;
 
-import npex.synthesizer.Utils;
-import npex.synthesizer.initializer.ValueInitializer;
-import spoon.reflect.code.CtExpression;
+import npex.common.NPEXLauncher;
 
-public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
-
-  public ReplaceEntireExpressionStrategy(ValueInitializer initializer) {
-    super(initializer);
+public class SynthesizerLauncher extends NPEXLauncher {
+  public SynthesizerLauncher(File projectRoot, File npeReport) {
+    super(projectRoot);
   }
 
-  public boolean isApplicable(CtExpression nullExp) {
-    return !nullExp.toString().equals("null");
-  }
-
-  protected CtExpression extractExprToReplace(CtExpression nullExp) {
-    return Utils.getOutermostExpression(nullExp);
-  }
-
-  protected List<CtExpression> enumerateAvailableExpressions(CtExpression nullExp) {
-    CtExpression exprToRep = extractExprToReplace(nullExp);
-    return initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType());
-  }
 }

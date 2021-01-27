@@ -21,30 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer.strategy;
+package npex.synthesizer.initializer;
 
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
-import npex.synthesizer.Utils;
-import npex.synthesizer.initializer.ValueInitializer;
-import spoon.reflect.code.CtExpression;
-
-public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
-
-  public ReplaceEntireExpressionStrategy(ValueInitializer initializer) {
-    super(initializer);
+public class ValueInitializerFactory {
+  private static Map<String, ValueInitializer> initializers = new HashMap<>();
+  static {
+    initializers.put("ObjectInitializer", new ObjectInitializer());
+    initializers.put("PrimitiveInitializer", new PrimitiveInitializer());
+    initializers.put("VarInitializer", new VarInitializer());
   }
+  
 
-  public boolean isApplicable(CtExpression nullExp) {
-    return !nullExp.toString().equals("null");
-  }
-
-  protected CtExpression extractExprToReplace(CtExpression nullExp) {
-    return Utils.getOutermostExpression(nullExp);
-  }
-
-  protected List<CtExpression> enumerateAvailableExpressions(CtExpression nullExp) {
-    CtExpression exprToRep = extractExprToReplace(nullExp);
-    return initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType());
-  }
 }

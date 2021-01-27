@@ -21,30 +21,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer;
+package npex.synthesizer.initializer;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.stream.Stream;
 
-import npex.synthesizer.strategy.PatchStrategy;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtLiteral;
+import spoon.reflect.reference.CtTypeReference;
 
-public class PatchSynthesizer extends AbstractDriver {
-  private final List<PatchStrategy> strategies;
-
-  public PatchSynthesizer(final String projectRootPath) {
-    this(projectRootPath, new ArrayList<>());
+public class PrimitiveInitializer extends ValueInitializer<CtLiteral> {
+  public String getName() {
+    return "Literal";
   }
 
-  public PatchSynthesizer(final String projectRootPath, List<PatchStrategy> strategies) {
-    super(projectRootPath);
-    this.strategies = strategies;
+  protected CtExpression convertToCtExpression(CtLiteral literal) {
+    return literal;
   }
 
-  protected void setupLauncher() {
-  }
+  protected Stream<CtLiteral> enumerate(CtExpression expr) {
+    CtTypeReference typ = expr.getType();
+    if (!typ.isPrimitive())
+      return Stream.empty();
 
-  public spoon.reflect.factory.Factory getFactory() {
-    return launcher.getFactory();
+    return DefaultValueTable.getDefaultValues(typ).stream();
   }
-
 }

@@ -1,6 +1,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <artifactId>extractor</artifactId>
+  <artifactId>driver</artifactId>
   <parent>
     <groupId>kr.ac.korea.prl</groupId>
     <artifactId>npex</artifactId>
@@ -8,20 +8,20 @@
   </parent>
   <dependencies>
     <dependency>
-			<groupId>kr.ac.korea.prl</groupId>
-			<artifactId>common</artifactId>
-			<version>1.0-SNAPSHOT</version>
-		</dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+      <version>4.6.1</version>
+    </dependency>
     <dependency>
       <groupId>fr.inria.gforge.spoon</groupId>
       <artifactId>spoon-core</artifactId>
       <version>8.4.0-beta-11</version>
     </dependency>
     <dependency>
-      <groupId>commons-cli</groupId>
-      <artifactId>commons-cli</artifactId>
-      <version>1.4</version>
-    </dependency>
+			<groupId>kr.ac.korea.prl</groupId>
+			<artifactId>common</artifactId>
+			<version>1.0-SNAPSHOT</version>
+		</dependency>
   </dependencies>
     <build>
     <plugins>
@@ -30,7 +30,7 @@
           <configuration>
             <archive>
               <manifest>
-                <mainClass>npex.extractor.Main</mainClass>
+                <mainClass>npex.driver.Main</mainClass>
                 <addClasspath>true</addClasspath>
                 <classpathPrefix>libs/</classpathPrefix>
               </manifest>
@@ -58,6 +58,4 @@
       </plugins>
 
     </build>
-
- 
 </project>

@@ -5,9 +5,11 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
+        <module>common</module>
         <module>synthesizer</module>
         <module>extractor</module>
         <module>errortracer</module>
+        <module>driver</module>
     </modules>
     <dependencies>
         <dependency>
@@ -29,17 +31,14 @@
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
             <version>1.7.25</version>
-            </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>2.6</version>
         </dependency>
+
     </dependencies>
     <build>
         <plugins>
             <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
+
             <artifactId>maven-compiler-plugin</artifactId>
             <version>3.8.0</version>
             <configuration>
@@ -47,8 +46,7 @@
                 <compilerArgs>--enable-preview</compilerArgs>
             </configuration>
         </plugin>
-
-            <plugin>
+              <plugin>
                 <groupId>com.mycila.maven-license-plugin</groupId>
                 <artifactId>maven-license-plugin</artifactId>
                 <version>1.9.0</version>
