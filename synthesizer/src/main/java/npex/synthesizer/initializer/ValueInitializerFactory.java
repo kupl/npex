@@ -23,6 +23,7 @@
  */
 package npex.synthesizer.initializer;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +34,8 @@ public class ValueInitializerFactory {
     initializers.put("PrimitiveInitializer", new PrimitiveInitializer());
     initializers.put("VarInitializer", new VarInitializer());
   }
-  
 
+  public static Collection<ValueInitializer> getAllInitializers() {
+    return initializers.values();
+  }
 }

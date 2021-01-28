@@ -38,7 +38,7 @@ import spoon.MavenLauncher;
 import spoon.MavenLauncher.SOURCE_TYPE;
 
 public abstract class NPEXLauncher {
-  final static Logger logger = LoggerFactory.getLogger(NPEXLauncher.class);
+  final protected static Logger logger = LoggerFactory.getLogger(NPEXLauncher.class);
   final protected Launcher spoonLauncher;
   final protected File projectRoot;
   final protected String projectName;
@@ -77,4 +77,6 @@ public abstract class NPEXLauncher {
     sources.forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
     return launcher;
   }
+
+  public abstract void run() throws NPEXException;
 }

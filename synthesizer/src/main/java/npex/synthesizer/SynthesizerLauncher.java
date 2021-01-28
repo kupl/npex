@@ -24,12 +24,63 @@
 package npex.synthesizer;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.NoSuchElementException;
 
+import npex.common.NPEXException;
 import npex.common.NPEXLauncher;
+import npex.synthesizer.strategy.PatchStrategy;
+import npex.synthesizer.strategy.StrategyFactory;
+import npex.synthesizer.template.PatchTemplate;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.factory.Factory;
 
+@SuppressWarnings("rawtypes")
 public class SynthesizerLauncher extends NPEXLauncher {
+  private static Collection<PatchStrategy> strategies = StrategyFactory.getAllStrategies();
+  private Factory factory;
+  private File npeReport;
+
   public SynthesizerLauncher(File projectRoot, File npeReport) {
     super(projectRoot);
+    this.npeReport = npeReport;
+    this.factory = spoonLauncher.getFactory();
+  }
+
+  private List<PatchTemplate> eneumeratePatches(CtExpression nullExp) {
+    List<PatchTemplate> templates = new ArrayList<>();
+    for (PatchStrategy stgy : strategies) {
+      if (stgy.isApplicable(nullExp)) {
+        List<PatchTemplate> generated = stgy.enumerate(nullExp);
+        logger.info("Strategy {} is applicable! (total {} templates are generated): ", stgy.getName(),
+            generated.size());
+        templates.addAll(generated);
+      } else {
+        logger.info("Strategy {} is not applicable", stgy.getName());
+      }
+    }
+    return templates;
+  }
+
+  public void run() throws NPEXException {
+    File patchesDir = new File(projectRoot, "patches");
+    patchesDir.mkdirs();
+    try {
+      NPEInfo npeInfo = NPEInfo.readFromJSON(factory.getModel(), npeReport.getAbsolutePath());
+      CtExpression nullExp = npeInfo.resolve();
+      for (PatchTemplate patch : eneumeratePatches(nullExp)) {
+        logger.info("Patch ID: {}", patch.getID());
+        logger.info("-- Original statement: {}", patch.getOriginalStatement());
+        patch.apply();
+        logger.info("-- Patched statement: {}", patch.getPatchedStatement());
+        patch.store(projectRoot.getAbsolutePath(), patchesDir);
+      }
+    } catch (IOException | NoSuchElementException e) {
+      throw new NPEXException(e.getMessage());
+    }
   }
 
 }

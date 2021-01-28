@@ -23,17 +23,31 @@
  */
 package npex.synthesizer.strategy;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import npex.synthesizer.initializer.ValueInitializer;
+import npex.synthesizer.initializer.ValueInitializerFactory;
+
+@SuppressWarnings("rawtypes")
 public class StrategyFactory {
   private static Map<String, PatchStrategy> strategies = new HashMap<>();
+  private static Collection<ValueInitializer> initializers = ValueInitializerFactory.getAllInitializers();
   static {
-    strategies.put("InitPointer", new InitPointerStrategy());
     strategies.put("SkipBlock", new SkipBlockStrategy());
     strategies.put("SkipBreak", new SkipBreakStrategy());
     strategies.put("SkipContinue", new SkipContinueStrategy());
     strategies.put("SkipSinkStatement", new SkipSinkStatementStrategy());
     strategies.put("SkipReturn", new SkipReturnStrategy());
+    for (ValueInitializer i : initializers) {
+      strategies.put("ReplacePointer" + i.getName().replace("Initializer", ""), new ReplaceEntireExpressionStrategy(i));
+      strategies.put("ReplaceEntireExpression" + i.getName().replace("Initializer", ""),
+          new ReplaceEntireExpressionStrategy(i));
+    }
+  }
+
+  public static Collection<PatchStrategy> getAllStrategies() {
+    return strategies.values();
   }
 }

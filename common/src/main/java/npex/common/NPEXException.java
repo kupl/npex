@@ -18,29 +18,18 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-package npex.synthesizer;
+package npex.common;
 
-import java.io.File;
-
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-public class TestSingleProject {
-  final static protected Logger logger = LoggerFactory.getLogger(TestSingleProject.class);
-
-  @Test
-  public void test() {
-    String projectID = "Lang-33";
-    // String NPEXDataPath = "/media/4tb/npex/NPEX_DATA";
-    String NPEXDataPath = "/media/4tb/npex/originals/benchmarks-commits/benchmarks-defects4j/";
-    String projectPath = String.format("%s/%s-buggy/", NPEXDataPath, projectID);
-    String npePath = String.format("%s/npe.json", projectPath);
-
-    SynthesizerLauncher launcher = new SynthesizerLauncher(new File(projectPath), new File(npePath));
-    launcher.run();
+public class NPEXException extends RuntimeException {
+  public NPEXException() {
+    super();
   }
+
+  public NPEXException(String msg) {
+    super(msg);
+  }
+
 }
