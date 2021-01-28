@@ -34,6 +34,7 @@ import java.util.Set;
 
 import org.json.JSONObject;
 
+import spoon.reflect.CtModel;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtInvocation;
@@ -43,7 +44,6 @@ import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.factory.Factory;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 
@@ -55,14 +55,14 @@ public class NPEInfo {
   CtClass<?> npe_class;
   CtInvocation<?> callee;
 
-  public static NPEInfo readFromJSON(Factory factory, String jsonPath) throws IOException, NoSuchElementException {
+  public static NPEInfo readFromJSON(CtModel model, String jsonPath) throws IOException, NoSuchElementException {
     JSONObject js = new JSONObject(new String(Files.readAllBytes(Paths.get(jsonPath))));
     String filepath = js.getString("filepath");
     int line = js.getInt("line");
     String deref_field = js.getString("deref_field");
     String npe_class_name = js.getString("npe_class");
-    CtClass<?> npe_class = factory.getModel().getElements(new NamedElementFilter<>(CtClass.class, npe_class_name))
-        .stream().filter(c -> c.getPosition().getFile().toString().contains(filepath)).findFirst().get();
+    CtClass<?> npe_class = model.getElements(new NamedElementFilter<>(CtClass.class, npe_class_name)).stream()
+        .filter(c -> c.getPosition().getFile().toString().contains(filepath)).findFirst().get();
 
     CtMethod<?> npe_method = null;
     return new NPEInfo(filepath, line, deref_field, npe_method, npe_class);

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer.strategy;
+package npex.synthesizer.initializer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +49,7 @@ public final class DefaultValueTable {
     return table.containsKey(typ.getSimpleName());
   }
 
-  static <T> List<CtLiteral<T>> getDefaultValues(CtTypeReference<T> typ) throws IllegalArgumentException {
+  public static <T> List<CtLiteral<T>> getDefaultValues(CtTypeReference<T> typ) throws IllegalArgumentException {
     List<CtLiteral<T>> values = new ArrayList<>();
     Factory factory = typ.getFactory();
     if (typ.getSimpleName().equals("void")) {

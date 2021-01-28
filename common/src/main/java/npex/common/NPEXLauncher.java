@@ -18,10 +18,10 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
-package npex.synthesizer;
+package npex.common;
 
 import java.io.File;
 import java.util.Collection;
@@ -37,36 +37,46 @@ import spoon.Launcher;
 import spoon.MavenLauncher;
 import spoon.MavenLauncher.SOURCE_TYPE;
 
-public abstract class AbstractDriver {
-  static final protected Logger logger = LoggerFactory.getLogger(AbstractDriver.class);
+public abstract class NPEXLauncher {
+  final protected static Logger logger = LoggerFactory.getLogger(NPEXLauncher.class);
+  final protected Launcher spoonLauncher;
   final protected File projectRoot;
   final protected String projectName;
-  final protected Launcher launcher;
 
-  public AbstractDriver(final String projectRootPath) {
-    this.projectRoot = new File(projectRootPath);
+  public NPEXLauncher(File projectRoot) {
+    this.projectRoot = projectRoot;
     this.projectName = projectRoot.getName();
-
     if (new File(projectRoot, "pom.xml").exists()) {
-      logger.debug("pom.xml is found: Parsing maven project ...");
-      this.launcher = new MavenLauncher(projectRootPath, SOURCE_TYPE.ALL_SOURCE);
+      this.spoonLauncher = createMavenLauncher(projectRoot);
     } else if (new File(projectRoot, "ant").exists() || (new File(projectRoot, "build.xml").exists())) {
-      logger.debug("build.xml is found: Parsing ant project ...");
-      this.launcher = new Launcher();
-      IOFileFilter dirFilter = FileFilterUtils
-          .notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("target"),
-              FileFilterUtils.nameFileFilter("spooned"), FileFilterUtils.nameFileFilter("patches")));
-      FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), dirFilter)
-          .forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
+      this.spoonLauncher = createAntLauncher(projectRoot);
     } else {
-      this.launcher = new Launcher();
-      Collection<File> sources = FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), null);
-      sources.forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
+      this.spoonLauncher = createJavacLauncher(projectRoot);
     }
-
-    this.setupLauncher();
-    this.launcher.run();
   }
 
-  protected abstract void setupLauncher();
+  static private MavenLauncher createMavenLauncher(File projectRoot) {
+    logger.info("Parsing maven project ...");
+    return new MavenLauncher(projectRoot.getAbsolutePath(), SOURCE_TYPE.ALL_SOURCE);
+  }
+
+  static private Launcher createAntLauncher(File projectRoot) {
+    logger.info("Parsing ant project ...");
+    Launcher launcher = new Launcher();
+    IOFileFilter dirFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("target"),
+        FileFilterUtils.nameFileFilter("spooned"), FileFilterUtils.nameFileFilter("patches")));
+    FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), dirFilter)
+        .forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
+    return launcher;
+  }
+
+  static private Launcher createJavacLauncher(File projectRoot) {
+    logger.info("Parsing project without supported build systems ...");
+    Launcher launcher = new Launcher();
+    Collection<File> sources = FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), null);
+    sources.forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
+    return launcher;
+  }
+
+  public abstract void run() throws NPEXException;
 }

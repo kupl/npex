@@ -26,6 +26,7 @@ package npex.synthesizer.strategy;
 import java.util.List;
 
 import npex.synthesizer.Utils;
+import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {

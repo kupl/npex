@@ -41,7 +41,17 @@ import spoon.reflect.code.CtCodeElement;
 
 public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
   static Logger logger = LoggerFactory.getLogger(NullHandleProcessor.class);
-  public List<AbstractNullHandle> handles = new ArrayList<>();
+  final private List<AbstractNullHandle> handles = new ArrayList<>();
+  final private File resultsOut;
+
+  public NullHandleProcessor(String resultsPath) {
+    super();
+    this.resultsOut = new File(resultsPath);
+  }
+
+  public NullHandleProcessor() {
+    this("/dev/null");
+  }
 
   @Override
   public void process(CtCodeElement element) {
@@ -56,11 +66,9 @@ public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
 
   @Override
   public void processingDone() {
-    JSONArray handlesJsonArray = new JSONArray();
-    handles.forEach(h -> handlesJsonArray.put(h.toJSON()));
-    File file = new File("results.json");
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-      handlesJsonArray.write(writer, 0, 4);
+    JSONArray handlesJsonArray = new JSONArray(handles.stream().map(h -> h.toJSON()).toArray());
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultsOut))) {
+      handlesJsonArray.write(writer, 1, 4);
     } catch (IOException e) {
     }
     return;

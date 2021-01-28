@@ -67,7 +67,7 @@ public class SingleSourceTest {
   @Test
   public void testResolveNPE() {
     try {
-      NPEInfo npeInfo = NPEInfo.readFromJSON(launcher.getFactory(), "./src/test/resources/src/single_source/npe.json");
+      NPEInfo npeInfo = NPEInfo.readFromJSON(launcher.getModel(), "./src/test/resources/src/single_source/npe.json");
       CtExpression npe = npeInfo.resolve();
       System.out.println(npe + ", " + npe.getClass());
     } catch (IOException e) {

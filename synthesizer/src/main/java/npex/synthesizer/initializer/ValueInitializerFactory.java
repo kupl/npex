@@ -21,32 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer.strategy;
+package npex.synthesizer.initializer;
 
-import java.util.Collections;
-import java.util.stream.Stream;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import spoon.reflect.code.CtConstructorCall;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.reference.CtTypeReference;
-
-@SuppressWarnings("rawtypes")
-public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
-  public String getName() {
-    return "Object";
+public class ValueInitializerFactory {
+  private static Map<String, ValueInitializer> initializers = new HashMap<>();
+  static {
+    initializers.put("ObjectInitializer", new ObjectInitializer());
+    initializers.put("PrimitiveInitializer", new PrimitiveInitializer());
+    initializers.put("VarInitializer", new VarInitializer());
   }
 
-  protected CtExpression convertToCtExpression(CtConstructorCall ctor) {
-    return ctor;
-  }
-
-  protected Stream<CtConstructorCall> enumerate(CtExpression expr) {
-    CtTypeReference typ = expr.getType();
-    if (typ == null || !typ.isClass() || typ.isPrimitive() || typ.isInterface()
-        || typ.getDeclaration() != null && typ.getDeclaration().isAbstract()) {
-      return Stream.empty();
-    }
-
-    return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
+  public static Collection<ValueInitializer> getAllInitializers() {
+    return initializers.values();
   }
 }

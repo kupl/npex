@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.synthesizer.Utils;
+import npex.synthesizer.initializer.ValueInitializer;
 import npex.synthesizer.template.PatchTemplateTernary;
 import spoon.reflect.code.CtExpression;
 

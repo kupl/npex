@@ -18,30 +18,28 @@
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
+
 package npex.extractor;
 
-import org.slf4j.LoggerFactory;
+import java.io.File;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
+import npex.common.NPEXException;
+import npex.common.NPEXLauncher;
 import npex.extractor.processors.NullHandleProcessor;
-import spoon.Launcher;
-import spoon.MavenLauncher;
-import spoon.MavenLauncher.SOURCE_TYPE;
 
-public class Main {
-  static {
-    Logger root = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-    root.setLevel(Level.WARN);
+public class ExtractorLauncher extends NPEXLauncher {
+  final NullHandleProcessor nullHandleProcessor;
+
+  public ExtractorLauncher(File projectRoot, String resultsPath) {
+    super(projectRoot);
+    this.nullHandleProcessor = new NullHandleProcessor(resultsPath);
   }
 
-  public static void main(String[] args) {
-    final String projectRootDir = args[0];
-    Launcher launcher = new MavenLauncher(projectRootDir, SOURCE_TYPE.ALL_SOURCE);
-    launcher.addProcessor(new NullHandleProcessor());
-    launcher.run();
+  public void run() throws NPEXException {
+    spoonLauncher.addProcessor(nullHandleProcessor);
+    spoonLauncher.run();
   }
 }
