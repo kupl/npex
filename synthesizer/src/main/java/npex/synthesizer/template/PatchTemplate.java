@@ -47,6 +47,7 @@ public abstract class PatchTemplate {
 
   protected final String id;
   protected final CtExecutable ast;
+  protected final CtExecutable astOrg;
   protected final CtExpression nullExp;
   private CtExecutable changed = null;
 
@@ -54,17 +55,12 @@ public abstract class PatchTemplate {
 
   protected final CoreFactory factory = new DefaultCoreFactory();
 
-  public PatchTemplate(String id, CtExpression nullExp) {
+  public PatchTemplate(String id, CtExpression nullExpOrg) {
     this.id = id;
-    this.ast = nullExp.getParent(new AbstractFilter<CtExecutable>() {
-      @Override
-      public boolean matches(CtExecutable executable) {
-        return executable instanceof CtMethod || executable instanceof CtConstructor;
-      }
-    }).clone();
-
-    this.nullExpOrg = nullExp;
-    this.nullExp = Utils.findMatchedElementLookParent(ast, nullExp);
+    this.astOrg = nullExpOrg.getParent(new MethodORConstructorFilter());
+    this.ast = astOrg.clone();
+    this.nullExpOrg = nullExpOrg;
+    this.nullExp = Utils.findMatchedElementLookParent(ast, nullExpOrg);
   }
 
   public String getID() {
@@ -85,6 +81,9 @@ public abstract class PatchTemplate {
   }
 
   public void store(String projectRootPath, File outputDir) throws IOException {
+    assert (changed != null);
+    SourceChange change = new SourceChange(astOrg, ast, getPatchedStatement());
+    change.store(projectRootPath, outputDir);
   }
 
   protected CtBinaryOperator<Boolean> createNullCond(boolean isEqualToNull) {
@@ -99,4 +98,10 @@ public abstract class PatchTemplate {
 
   protected abstract CtExecutable implement();
 
+  private class MethodORConstructorFilter extends AbstractFilter<CtExecutable> {
+    @Override
+    public boolean matches(CtExecutable executable) {
+      return executable instanceof CtMethod || executable instanceof CtConstructor;
+    }
+  }
 }

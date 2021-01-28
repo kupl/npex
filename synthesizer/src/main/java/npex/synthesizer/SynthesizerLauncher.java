@@ -76,7 +76,8 @@ public class SynthesizerLauncher extends NPEXLauncher {
         logger.info("-- Original statement: {}", patch.getOriginalStatement());
         patch.apply();
         logger.info("-- Patched statement: {}", patch.getPatchedStatement());
-        patch.store(projectRoot.getAbsolutePath(), patchesDir);
+        File patchDir = new File(patchesDir, patch.getID());
+        patch.store(projectRoot.getAbsolutePath(), patchDir);
       }
     } catch (IOException | NoSuchElementException e) {
       throw new NPEXException(e.getMessage());
