@@ -24,15 +24,14 @@
 package npex.extractor.nullhandle;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.factory.CoreFactory;
 import spoon.support.DefaultCoreFactory;
@@ -45,15 +44,12 @@ public abstract class AbstractNullHandle<T extends CtElement> {
   final protected CtBinaryOperator nullCond;
   final protected CtExpression nullExp;
 
-  final private CtClass klass;
   final private List<NullModel> models;
 
   public AbstractNullHandle(T handle, CtBinaryOperator nullCond) {
     this.handle = handle;
     this.nullCond = nullCond;
     this.nullExp = nullCond.getLeftHandOperand();
-    this.klass = handle.getParent(CtClass.class);
-
     AbstractNullModelScanner scanner = createNullModelScanner();
     handle.accept(scanner);
     this.models = scanner.getResult();
@@ -63,11 +59,8 @@ public abstract class AbstractNullHandle<T extends CtElement> {
     var obj = new JSONObject();
     obj.put("source_location", handle.getPosition().getFile().getAbsolutePath());
     obj.put("line_no", handle.getPosition().getLine());
-    obj.put("qualified_class_name", klass.getQualifiedName());
     obj.put("handle", handle.toString());
-
-    List<JSONObject> modelsJsonList = models.stream().map(m -> m.toJSON()).collect(Collectors.toList());
-    obj.put("models", modelsJsonList);
+    obj.put("models", new JSONArray(models.stream().map(m -> m.toJSON()).toArray()));
     return obj;
   }
 

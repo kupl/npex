@@ -48,6 +48,7 @@ public class SynthesizerLauncher extends NPEXLauncher {
     super(projectRoot);
     this.npeReport = npeReport;
     this.factory = spoonLauncher.getFactory();
+    spoonLauncher.buildModel();
   }
 
   private List<PatchTemplate> eneumeratePatches(CtExpression nullExp) {
