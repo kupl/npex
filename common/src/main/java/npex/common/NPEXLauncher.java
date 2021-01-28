@@ -53,6 +53,7 @@ public abstract class NPEXLauncher {
     } else {
       this.spoonLauncher = createJavacLauncher(projectRoot);
     }
+    spoonLauncher.buildModel();
   }
 
   static private MavenLauncher createMavenLauncher(File projectRoot) {
