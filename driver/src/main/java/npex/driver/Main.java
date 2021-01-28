@@ -31,6 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import npex.common.NPEXLauncher;
+import npex.extractor.ExtractorLauncher;
+import npex.synthesizer.SynthesizerLauncher;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.ArgSpec;
@@ -104,7 +107,8 @@ class PatchCommand extends SpoonCommand {
     if (!pr.hasMatchedOption("report")) {
       spec.findOption("--report").setValue(new File(projectRoot, defaultNPEReportName));
     }
-    // NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, npeReport);
+    NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, npeReport);
+    launcher.run();
   }
 }
 
@@ -120,6 +124,7 @@ class HandleExtractorCommand extends SpoonCommand {
     if (!pr.hasMatchedOption("--results")) {
       spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
     }
-    // NPEXLauncher launcher = new ExtractorLauncher(projectRoot, resultsPath);
+    NPEXLauncher launcher = new ExtractorLauncher(projectRoot, resultsPath);
+    launcher.run();
   }
 }
