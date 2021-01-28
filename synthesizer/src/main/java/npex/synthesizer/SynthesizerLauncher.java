@@ -33,14 +33,14 @@ import java.util.NoSuchElementException;
 import npex.common.NPEXException;
 import npex.common.NPEXLauncher;
 import npex.synthesizer.strategy.PatchStrategy;
-import npex.synthesizer.strategy.StrategyFactory;
+import npex.synthesizer.strategy.PatchStrategyFactory;
 import npex.synthesizer.template.PatchTemplate;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.factory.Factory;
 
 @SuppressWarnings("rawtypes")
 public class SynthesizerLauncher extends NPEXLauncher {
-  private static Collection<PatchStrategy> strategies = StrategyFactory.getAllStrategies();
+  private static Collection<PatchStrategy> strategies = PatchStrategyFactory.getAllStrategies();
   private Factory factory;
   private File npeReport;
 
@@ -80,6 +80,7 @@ public class SynthesizerLauncher extends NPEXLauncher {
         patch.store(projectRoot.getAbsolutePath(), patchDir);
       }
     } catch (IOException | NoSuchElementException e) {
+      e.printStackTrace();
       throw new NPEXException(e.getMessage());
     }
   }
