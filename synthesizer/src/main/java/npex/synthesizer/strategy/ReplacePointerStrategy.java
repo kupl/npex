@@ -53,13 +53,14 @@ public class ReplacePointerStrategy extends AbstractReplaceStrategy {
 
   private CtTypeReference getNullValueType(CtExpression nullExp) {
     CtElement parent = nullExp.getParent();
-    if (parent instanceof CtAssignment) {
-      return ((CtAssignment) parent).getAssigned().getType();
-    } else if (parent instanceof CtLocalVariable) {
-      return ((CtLocalVariable) parent).getReference().getType();
+    if (parent instanceof CtAssignment assign) {
+      return assign.getAssigned().getType();
+    } else if (parent instanceof CtLocalVariable var) {
+      return var.getReference().getType();
     } else if (nullExp.getRoleInParent().equals(CtRole.ARGUMENT)) {
       CtInvocation invo = nullExp.getParent(CtInvocation.class);
-      return (CtTypeReference<?>) invo.getActualTypeArguments().get(invo.getArguments().indexOf(nullExp));
+      Stream<CtExpression<?>> args = invo.getArguments().stream();
+      return (CtTypeReference) args.map(arg -> arg.getType()).toArray()[invo.getArguments().indexOf(nullExp)];
     } else {
       throw new IllegalArgumentException("Not supported null assignment form");
     }
