@@ -59,7 +59,7 @@ public class NullModel {
   public JSONObject toJSON() {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_value", nullValue.toString());
+    obj.put("null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
     return obj;
   }
@@ -79,7 +79,7 @@ public class NullModel {
 
     public JSONObject toJSON() {
       var obj = new JSONObject();
-      CtTypeReference targetType = getTargetType();
+      CtTypeReference targetType = getInvocationType().equals(INVO_KIND.VIRTUAL) ? orgInvo.getTarget().getType() : null;
       obj.put("null_invo", nullInvo);
       obj.put("null_idx", nullIdx);
       obj.put("method_name", nullInvo.getExecutable().getSimpleName());
@@ -105,14 +105,6 @@ public class NullModel {
       List<CtTypeReference> typs = argsStream.map(arg -> arg.getType()).collect(Collectors.toList());
       return typs;
     }
-
-    private CtTypeReference getTargetType() {
-      if (getInvocationType().equals(INVO_KIND.VIRTUAL)) {
-        return orgInvo.getTarget().getType();
-      }
-      return null;
-    }
-
   };
 
   private class NullInvocationScanner extends EarlyTerminatingScanner<InvocationInfo> {

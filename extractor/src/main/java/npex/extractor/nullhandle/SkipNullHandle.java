@@ -50,16 +50,16 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
 
     @Override
     public void visitCtBlock(CtBlock blk) {
-      if (!handle.getThenStatement().equals(blk)) {
+      List<CtStatement> stmts = blk.getStatements();
+      if (!handle.getThenStatement().equals(blk) || stmts.size() != 1) {
         return;
       }
-      List<CtStatement> stmts = blk.getStatements();
-      if (stmts.size() == 1) {
-        firstStmt = stmts.get(0);
-        if (firstStmt instanceof CtInvocation || firstStmt instanceof CtAssignment)
-          return;
+      firstStmt = stmts.get(0);
+      if ((firstStmt instanceof CtInvocation || firstStmt instanceof CtAssignment)) {
+        super.visitCtBlock(blk);
+      } else {
+        terminate();
       }
-      terminate();
     }
 
     @Override
