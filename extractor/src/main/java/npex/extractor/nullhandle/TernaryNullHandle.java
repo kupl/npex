@@ -27,6 +27,7 @@ import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
 
 public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
   public TernaryNullHandle(CtConditional ternary, CtBinaryOperator cond) {
@@ -34,15 +35,16 @@ public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
   }
 
   @Override
-  protected AbstractNullModelScanner createNullModelScanner() {
-    return new NullModelScanner(nullCond.getKind().equals(BinaryOperatorKind.EQ));
+  protected AbstractNullModelScanner createNullModelScanner(CtExpression nullExp) {
+    return new NullModelScanner(nullExp, nullCond.getKind().equals(BinaryOperatorKind.EQ));
   }
 
   private class NullModelScanner extends AbstractNullModelScanner {
     final private CtExpression sinkExpr;
     final private CtExpression nullValue;
 
-    public NullModelScanner(boolean isCondKindEQ) {
+    public NullModelScanner(CtExpression nullExp, boolean isCondKindEQ) {
+      super(nullExp);
       this.sinkExpr = isCondKindEQ ? handle.getElseExpression() : handle.getThenExpression();
       this.nullValue = isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression();
       models.add(new NullModel(nullExp, sinkExpr, nullValue));
@@ -51,6 +53,12 @@ public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
     @Override
     public void visitCtConditional(CtConditional ternary) {
       terminate();
+    }
+
+    @Override
+    protected NullModel createModel(CtInvocation invo) {
+      /* NO-OP */
+      return null;
     }
   }
 }

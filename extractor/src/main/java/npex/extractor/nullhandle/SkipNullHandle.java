@@ -28,6 +28,7 @@ import java.util.List;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtStatement;
@@ -38,14 +39,15 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
   }
 
   @Override
-  protected AbstractNullModelScanner createNullModelScanner() {
-    return new NullModelScanner();
+  protected AbstractNullModelScanner createNullModelScanner(CtExpression nullExp) {
+    return new NullModelScanner(nullExp);
   }
 
   private class NullModelScanner extends AbstractNullModelScanner {
     private CtStatement firstStmt;
 
-    public NullModelScanner() {
+    public NullModelScanner(CtExpression nullExp) {
+      super(nullExp);
     }
 
     @Override
@@ -63,12 +65,8 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     }
 
     @Override
-    public void visitCtInvocation(CtInvocation invo) {
-      super.visitCtInvocation(invo);
-      if (firstStmt != null && invo.getTarget().equals(nullExp)) {
-        models.add(new NullModel(nullExp, firstStmt, null));
-        terminate();
-      }
+    protected NullModel createModel(CtInvocation invo) {
+      return new NullModel(nullExp, firstStmt, null);
     }
   }
 }

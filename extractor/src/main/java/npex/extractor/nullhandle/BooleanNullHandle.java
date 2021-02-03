@@ -36,12 +36,16 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
   }
 
   @Override
-  protected AbstractNullModelScanner createNullModelScanner() {
-    return new NullModelScanner();
+  protected AbstractNullModelScanner createNullModelScanner(CtExpression nullExp) {
+    return new NullModelScanner(nullExp);
   }
 
   private class NullModelScanner extends AbstractNullModelScanner {
     private CtExpression root;
+
+    public NullModelScanner(CtExpression nullExp) {
+      super(nullExp);
+    }
 
     @Override
     public void visitCtBinaryOperator(CtBinaryOperator bo) {
@@ -58,12 +62,10 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
     }
 
     @Override
-    public void visitCtInvocation(CtInvocation invo) {
-      if (invo.getTarget().equals(nullExp)) {
-        /* TODO: resolve compound cases e.g.m !(e), e == false ... */
-        CtExpression nullValue = factory.createLiteral().setValue(handleBoKind.equals(BinaryOperatorKind.OR));
-        models.add(new NullModel(nullExp, root, nullValue));
-      }
+    protected NullModel createModel(CtInvocation invo) {
+      /* TODO: resolve compound cases e.g.m !(e), e == false ... */
+      CtExpression nullValue = factory.createLiteral().setValue(handleBoKind.equals(BinaryOperatorKind.OR));
+      return new NullModel(nullExp, root, nullValue);
     }
 
   }

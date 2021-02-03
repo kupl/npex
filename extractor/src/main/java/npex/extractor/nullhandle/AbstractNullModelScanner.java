@@ -26,6 +26,8 @@ package npex.extractor.nullhandle;
 import java.util.ArrayList;
 import java.util.List;
 
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.factory.CoreFactory;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 import spoon.support.DefaultCoreFactory;
@@ -33,8 +35,22 @@ import spoon.support.DefaultCoreFactory;
 public abstract class AbstractNullModelScanner extends EarlyTerminatingScanner<List<NullModel>> {
   final protected List<NullModel> models = new ArrayList<NullModel>();
   final protected CoreFactory factory = new DefaultCoreFactory();
+  final protected CtExpression nullExp;
 
-  public AbstractNullModelScanner() {
+  public AbstractNullModelScanner(CtExpression nullExp) {
+    this.nullExp = nullExp;
     setResult(models);
   }
+
+  @Override
+  public void visitCtInvocation(CtInvocation invo) {
+    super.visitCtInvocation(invo);
+    if (invo.getTarget().equals(nullExp) || invo.getArguments().contains(nullExp)) {
+      models.add(createModel(invo));
+      terminate();
+    }
+  }
+
+  protected abstract NullModel createModel(CtInvocation invo);
+
 }

@@ -50,7 +50,7 @@ public abstract class AbstractNullHandle<T extends CtElement> {
     this.handle = handle;
     this.nullCond = nullCond;
     this.nullExp = nullCond.getLeftHandOperand();
-    AbstractNullModelScanner scanner = createNullModelScanner();
+    AbstractNullModelScanner scanner = createNullModelScanner(nullExp);
     handle.accept(scanner);
     this.models = scanner.getResult();
   }
@@ -64,6 +64,6 @@ public abstract class AbstractNullHandle<T extends CtElement> {
     return obj;
   }
 
-  protected abstract AbstractNullModelScanner createNullModelScanner();
+  protected abstract AbstractNullModelScanner createNullModelScanner(CtExpression nullExp);
 
 }
