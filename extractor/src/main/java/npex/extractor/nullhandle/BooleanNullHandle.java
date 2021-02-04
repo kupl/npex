@@ -29,7 +29,6 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 
 public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boolean>> {
-  final BinaryOperatorKind handleBoKind = handle.getKind();
 
   public BooleanNullHandle(CtBinaryOperator<Boolean> handle, CtBinaryOperator<Boolean> nullCond) {
     super(handle, nullCond);
@@ -42,13 +41,16 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
 
   private class NullModelScanner extends AbstractNullModelScanner {
     private CtExpression root;
+    private final BinaryOperatorKind handleBoKind;
 
     public NullModelScanner(CtExpression nullExp) {
       super(nullExp);
+      this.handleBoKind = handle.getKind();
     }
 
     @Override
     public void visitCtBinaryOperator(CtBinaryOperator bo) {
+      super.visitCtBinaryOperator(bo);
       root = bo;
       BinaryOperatorKind kind = bo.getKind();
       switch (kind) {
@@ -64,7 +66,7 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
     @Override
     protected NullModel createModel(CtInvocation invo) {
       /* TODO: resolve compound cases e.g.m !(e), e == false ... */
-      CtExpression nullValue = factory.createLiteral().setValue(handleBoKind.equals(BinaryOperatorKind.OR));
+      CtExpression nullValue = factory.createLiteral().setValue(this.handleBoKind.equals(BinaryOperatorKind.OR));
       return new NullModel(nullExp, root, nullValue);
     }
 
