@@ -25,6 +25,7 @@ package npex.extractor.nullhandle;
 
 import java.util.List;
 
+import npex.extractor.Utils;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
@@ -32,6 +33,11 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtStatement;
+import spoon.reflect.code.CtVariableWrite;
+import spoon.reflect.reference.CtLocalVariableReference;
+import spoon.reflect.reference.CtTypeReference;
+import spoon.reflect.reference.CtVariableReference;
+import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class SkipNullHandle extends AbstractNullHandle<CtIf> {
   public SkipNullHandle(CtIf handle, CtBinaryOperator nullCond) {
@@ -66,7 +72,67 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
 
     @Override
     protected NullModel createModel(CtInvocation invo) {
+      if (firstStmt instanceof CtAssignment a) {
+        if (a.getAssigned() instanceof CtVariableWrite w && w.getVariable() instanceof CtLocalVariableReference) {
+          var scanner = new NullValueScanner(a);
+          invo.getParent(new Utils.MethodOrConstructorFilter()).accept(scanner);
+          return new NullModel(nullExp, firstStmt, scanner.getResult());
+        }
+      }
+
       return new NullModel(nullExp, firstStmt, null);
+    }
+
+    private class NullValueScanner extends EarlyTerminatingScanner<CtExpression> {
+      private final CtAssignment me;
+      private final CtVariableReference varRef;
+
+      private CtAssignment lastAssignment;
+
+      public NullValueScanner(CtAssignment me) {
+        this.me = me;
+        this.varRef = ((CtVariableWrite) me.getAssigned()).getVariable();
+      }
+
+      @Override
+      public void visitCtAssignment(CtAssignment assignment) {
+        super.visitCtAssignment(assignment);
+        // If the given assignment is the first one, null-value is a default value.
+        if (assignment == me && lastAssignment == null) {
+          setResult(getDefaultValue(varRef.getType()));
+          terminate();
+          return;
+        }
+
+        if (assignment.getAssigned() instanceof CtVariableWrite write && write.getVariable().equals(varRef)) {
+          if (assignment == me) {
+            CtBlock lastAssignmentBlock = lastAssignment.getParent(CtBlock.class);
+            CtBlock myBlock = me.getParent(CtBlock.class);
+
+            if (Utils.isChildOf(myBlock, lastAssignmentBlock)) {
+              setResult(lastAssignment.getAssignment());
+            }
+            terminate();
+          } else {
+            lastAssignment = assignment;
+          }
+        }
+      }
+
+      private CtExpression getDefaultValue(CtTypeReference type) {
+        String value;
+        switch (type.getSimpleName()) {
+          case "short", "int", "long":
+            value = "0";
+            break;
+          case "boolean":
+            value = "false";
+            break;
+          default:
+            value = null;
+        }
+        return factory.createCodeSnippetExpression().setValue(value);
+      }
     }
   }
 }

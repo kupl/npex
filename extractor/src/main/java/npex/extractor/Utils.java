@@ -28,9 +28,13 @@ import org.slf4j.LoggerFactory;
 
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtLiteral;
+import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtExecutable;
+import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.CoreFactory;
 import spoon.reflect.visitor.Filter;
+import spoon.reflect.visitor.filter.AbstractFilter;
 import spoon.support.DefaultCoreFactory;
 
 public class Utils {
@@ -60,6 +64,13 @@ public class Utils {
     @Override
     public boolean matches(CtElement e) {
       return e.equals(query);
+    }
+
+  }
+
+  public static class MethodOrConstructorFilter extends AbstractFilter<CtExecutable> {
+    public boolean matches(CtExecutable e) {
+      return e instanceof CtMethod || e instanceof CtConstructor;
     }
 
   }
