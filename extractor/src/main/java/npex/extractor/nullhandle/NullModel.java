@@ -83,7 +83,7 @@ public class NullModel {
       obj.put("null_invo", nullInvo);
       obj.put("null_idx", nullIdx);
       obj.put("method_name", nullInvo.getExecutable().getSimpleName());
-      obj.put("return_type", nullInvo.getType().toString());
+      obj.put("return_type", nullInvo.getType() != null ? nullInvo.getType().toString() : JSONObject.NULL);
       obj.put("arguments_types",
           new JSONArray(getActualArgumentsTypes().stream().map(argTyp -> argTyp.toString()).toArray()));
       obj.put("invo_kind", getInvocationType().toString());
