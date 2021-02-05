@@ -21,15 +21,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.common;
+package npex.common.utils;
 
-public class NPEXException extends RuntimeException {
-  public NPEXException() {
-    super();
-  }
+import spoon.reflect.code.CtLiteral;
+import spoon.reflect.factory.CoreFactory;
+import spoon.support.DefaultCoreFactory;
 
-  public NPEXException(String msg) {
-    super(msg);
+public class FactoryUtils {
+  static CoreFactory factory = new DefaultCoreFactory();
+
+  public static CtLiteral createNullLiteral() {
+    return factory.createLiteral().setValue(null);
   }
 
 }

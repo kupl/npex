@@ -26,7 +26,7 @@ package npex.extractor.nullhandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import npex.extractor.Utils;
+import npex.common.utils.ASTUtils;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtCodeElement;
@@ -56,21 +56,21 @@ public class NullHandleFactory {
   }
 
   private static BooleanNullHandle createBooleanNullHandle(CtBinaryOperator bo) {
-    if (bo.getLeftHandOperand() instanceof CtBinaryOperator cond && Utils.isNullCondition(cond)) {
+    if (bo.getLeftHandOperand() instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
       return new BooleanNullHandle(bo, cond);
     }
     return null;
   }
 
   private static TernaryNullHandle createTernaryNullHandle(CtConditional ternary) {
-    if (ternary.getCondition() instanceof CtBinaryOperator cond && Utils.isNullCondition(cond)) {
+    if (ternary.getCondition() instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
       return new TernaryNullHandle(ternary, cond);
     }
     return null;
   }
 
   private static SkipNullHandle createSkipNullHandle(CtIf ifStmt) {
-    if (ifStmt.getCondition() instanceof CtBinaryOperator cond && Utils.isNullCondition(cond)) {
+    if (ifStmt.getCondition() instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
       if (cond.getKind().equals(BinaryOperatorKind.NE))
         return new SkipNullHandle(ifStmt, cond);
     }

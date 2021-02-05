@@ -23,7 +23,7 @@
  */
 package npex.synthesizer.template;
 
-import npex.synthesizer.Utils;
+import npex.common.utils.ASTUtils;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtExecutable;
@@ -35,7 +35,7 @@ public class PatchTemplateTernary extends PatchTemplate {
   public PatchTemplateTernary(String id, CtExpression nullExp, CtExpression exprToReplace,
       CtExpression alternativeValue) {
     super(id, nullExp);
-    this.exprToReplace = Utils.findMatchedElementLookParent(ast, exprToReplace);
+    this.exprToReplace = ASTUtils.findMatchedElementLookParent(ast, exprToReplace);
     this.alternativeValue = alternativeValue;
   }
 

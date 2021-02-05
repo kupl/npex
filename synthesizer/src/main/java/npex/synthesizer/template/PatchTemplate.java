@@ -29,7 +29,7 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import npex.synthesizer.Utils;
+import npex.common.utils.ASTUtils;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtCodeSnippetExpression;
@@ -60,7 +60,7 @@ public abstract class PatchTemplate {
     this.astOrg = nullExpOrg.getParent(new MethodORConstructorFilter());
     this.ast = astOrg.clone();
     this.nullExpOrg = nullExpOrg;
-    this.nullExp = Utils.findMatchedElementLookParent(ast, nullExpOrg);
+    this.nullExp = ASTUtils.findMatchedElementLookParent(ast, nullExpOrg);
   }
 
   public String getID() {
@@ -68,11 +68,11 @@ public abstract class PatchTemplate {
   }
 
   public CtStatement getPatchedStatement() {
-    return Utils.getEnclosingStatement(nullExp);
+    return ASTUtils.getEnclosingStatement(nullExp);
   }
 
   public CtStatement getOriginalStatement() {
-    return Utils.getEnclosingStatement(nullExpOrg);
+    return ASTUtils.getEnclosingStatement(nullExpOrg);
   }
 
   /* Apply patch template and generate a fresh AST */

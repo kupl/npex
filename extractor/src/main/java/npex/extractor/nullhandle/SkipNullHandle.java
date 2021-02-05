@@ -25,7 +25,8 @@ package npex.extractor.nullhandle;
 
 import java.util.List;
 
-import npex.extractor.Utils;
+import npex.common.filters.MethodOrConstructorFilter;
+import npex.common.utils.ASTUtils;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
@@ -75,7 +76,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
       if (firstStmt instanceof CtAssignment a) {
         if (a.getAssigned() instanceof CtVariableWrite w && w.getVariable() instanceof CtLocalVariableReference) {
           var scanner = new NullValueScanner(a);
-          invo.getParent(new Utils.MethodOrConstructorFilter()).accept(scanner);
+          invo.getParent(new MethodOrConstructorFilter()).accept(scanner);
           return new NullModel(nullExp, firstStmt, scanner.getResult());
         }
       }
@@ -109,7 +110,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
             CtBlock lastAssignmentBlock = lastAssignment.getParent(CtBlock.class);
             CtBlock myBlock = me.getParent(CtBlock.class);
 
-            if (Utils.isChildOf(myBlock, lastAssignmentBlock)) {
+            if (ASTUtils.isChildOf(myBlock, lastAssignmentBlock)) {
               setResult(lastAssignment.getAssignment());
             }
             terminate();

@@ -25,7 +25,7 @@ package npex.synthesizer.strategy;
 
 import java.util.List;
 
-import npex.synthesizer.Utils;
+import npex.common.utils.ASTUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
 
@@ -40,7 +40,7 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   }
 
   protected CtExpression extractExprToReplace(CtExpression nullExp) {
-    return Utils.getOutermostExpression(nullExp);
+    return ASTUtils.getOutermostExpression(nullExp);
   }
 
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression nullExp) {

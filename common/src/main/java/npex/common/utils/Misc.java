@@ -21,15 +21,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.common;
+package npex.common.utils;
 
-public class NPEXException extends RuntimeException {
-  public NPEXException() {
-    super();
+import java.io.File;
+
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtElement;
+
+public class Misc {
+  public static File getSourceFile(CtElement element) {
+    return element.getFactory().CompilationUnit().getOrCreate(element.getParent(CtClass.class)).getFile();
   }
-
-  public NPEXException(String msg) {
-    super(msg);
-  }
-
 }

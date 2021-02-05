@@ -32,7 +32,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import npex.extractor.Utils;
+import npex.common.utils.FactoryUtils;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtElement;
@@ -120,7 +120,7 @@ public class NullModel {
 
     private void whenReceiverIsNull(CtInvocation invo) {
       CtInvocation nullInvo = invo.clone();
-      nullInvo.getTarget().replace(Utils.createNullLiteral());
+      nullInvo.getTarget().replace(FactoryUtils.createNullLiteral());
       setResult(InvocationInfo.createNullBaseInvocationInfo(invo, nullInvo));
       terminate();
     }
@@ -128,7 +128,7 @@ public class NullModel {
     private void whenActualIsNull(CtInvocation invo) {
       CtInvocation nullInvo = invo.clone();
       Stream<CtExpression> argsStream = invo.getArguments().stream();
-      List<CtExpression> argsList = argsStream.map(arg -> arg.equals(nullExp) ? Utils.createNullLiteral() : arg)
+      List<CtExpression> argsList = argsStream.map(arg -> arg.equals(nullExp) ? FactoryUtils.createNullLiteral() : arg)
           .collect(Collectors.toList());
       nullInvo.setArguments(argsList);
       int idx = invo.getArguments().indexOf(nullExp);

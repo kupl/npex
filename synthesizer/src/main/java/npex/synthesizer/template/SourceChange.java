@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
 
 import org.json.JSONObject;
 
-import npex.synthesizer.Utils;
+import npex.common.utils.Misc;
 import spoon.reflect.code.CtComment;
 import spoon.reflect.code.CtComment.CommentType;
 import spoon.reflect.cu.SourcePosition;
@@ -55,14 +55,14 @@ public class SourceChange<T extends CtElement> {
     this.after = after;
     this.after.setAnnotations(new ArrayList<>());
     this.orgElementPosition = before.getPosition();
-    this.sourceFile = Utils.getSourceFile(this.before);
+    this.sourceFile = Misc.getSourceFile(this.before);
 
     /* Insert a comment to identify the begin of patch */
     CtComment comment = additiveBegin.getFactory().createComment(patchComment, CommentType.BLOCK);
     ArrayList<CtComment> comments = new ArrayList<>();
     comments.add(comment);
     additiveBegin.setComments(comments);
-    assert (this.sourceFile.equals(Utils.getSourceFile(this.after)));
+    assert (this.sourceFile.equals(Misc.getSourceFile(this.after)));
   }
 
   private ArrayList<String> getElementAfterSource() {

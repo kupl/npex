@@ -25,7 +25,7 @@ package npex.synthesizer.template;
 
 import java.util.List;
 
-import npex.synthesizer.Utils;
+import npex.common.utils.ASTUtils;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
@@ -45,9 +45,9 @@ public class PatchTemplateIf extends PatchTemplate {
       CtStatement skipTo) {
     super(id, nullExp);
     this.nullExecStmt = nullExecStmt;
-    this.skipFrom = Utils.findMatchedElementLookParent(ast, skipFrom);
-    this.skipTo = skipTo != null ? Utils.findMatchedElementLookParent(ast, skipTo) : null;
-    
+    this.skipFrom = ASTUtils.findMatchedElementLookParent(ast, skipFrom);
+    this.skipTo = skipTo != null ? ASTUtils.findMatchedElementLookParent(ast, skipTo) : null;
+
     this.kind = (nullExecStmt == null) ? SkipKind.SKIPONLY : SkipKind.DOSMTH;
   }
 

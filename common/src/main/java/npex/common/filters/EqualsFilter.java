@@ -21,15 +21,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.common;
+package npex.common.filters;
 
-public class NPEXException extends RuntimeException {
-  public NPEXException() {
-    super();
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.visitor.filter.AbstractFilter;
+
+public class EqualsFilter extends AbstractFilter<CtElement> {
+  CtElement query;
+
+  public EqualsFilter(CtElement query) {
+    this.query = query;
   }
 
-  public NPEXException(String msg) {
-    super(msg);
+  @Override
+  public boolean matches(CtElement e) {
+    return e.equals(query);
   }
 
 }

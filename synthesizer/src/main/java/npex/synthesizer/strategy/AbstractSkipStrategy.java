@@ -29,7 +29,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import npex.synthesizer.Utils;
+import npex.common.utils.ASTUtils;
 import npex.synthesizer.template.PatchTemplateIf;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLambda;
@@ -46,11 +46,11 @@ public abstract class AbstractSkipStrategy implements PatchStrategy<PatchTemplat
   static CoreFactory factory = new DefaultCoreFactory();
 
   protected CtStatement createSkipFrom(CtExpression nullExp) {
-    return Utils.getNearestSkippableStatement(nullExp);
+    return ASTUtils.getNearestSkippableStatement(nullExp);
   }
 
   protected CtStatement createSkipTo(CtExpression nullExp) {
-    return Utils.getNearestSkippableStatement(nullExp);
+    return ASTUtils.getNearestSkippableStatement(nullExp);
   }
 
   public boolean isApplicable(CtExpression<?> nullExp) {
@@ -67,7 +67,7 @@ public abstract class AbstractSkipStrategy implements PatchStrategy<PatchTemplat
     /* Do not skip if null expr is a loop-head element */
     CtLoop loop = nullExp.getParent(CtLoop.class);
     if (loop != null) {
-      CtElement loopHead = Utils.getLoopHeadElement(loop);
+      CtElement loopHead = ASTUtils.getLoopHeadElement(loop);
       if (loopHead != null && !loopHead.getElements(new SameFilter(nullExp)).isEmpty())
         return false;
     }

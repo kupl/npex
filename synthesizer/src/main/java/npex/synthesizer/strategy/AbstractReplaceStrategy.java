@@ -29,7 +29,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import npex.synthesizer.Utils;
+import npex.common.utils.ASTUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import npex.synthesizer.template.PatchTemplateTernary;
 import spoon.reflect.code.CtExpression;
@@ -52,7 +52,7 @@ abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemp
     if (extractExprToReplace(nullExp).getType().toString().equals("void"))
       return false;
 
-    if (extractExprToReplace(nullExp).equals(Utils.getNearestSkippableStatement(nullExp))) {
+    if (extractExprToReplace(nullExp).equals(ASTUtils.getNearestSkippableStatement(nullExp))) {
       return false;
     }
     return true;

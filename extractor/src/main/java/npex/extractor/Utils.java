@@ -26,52 +26,14 @@ package npex.extractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import spoon.reflect.code.CtBinaryOperator;
-import spoon.reflect.code.CtLiteral;
-import spoon.reflect.declaration.CtConstructor;
-import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.CoreFactory;
-import spoon.reflect.visitor.Filter;
-import spoon.reflect.visitor.filter.AbstractFilter;
 import spoon.support.DefaultCoreFactory;
 
 public class Utils {
   static Logger logger = LoggerFactory.getLogger(Utils.class);
   static CoreFactory factory = new DefaultCoreFactory();
 
-  public static boolean isNullCondition(CtBinaryOperator bo) {
-    return bo.getRightHandOperand() instanceof CtLiteral lit && lit.toString().equals("null");
-  }
+ 
+  
 
-  public static boolean isChildOf(CtElement el, CtElement root) {
-    return !root.filterChildren(new EqualsFilter(el)).list().isEmpty();
-  }
-
-  public static CtLiteral createNullLiteral() {
-    return factory.createLiteral().setValue(null);
-
-  }
-
-  static class EqualsFilter implements Filter<CtElement> {
-    CtElement query;
-
-    public EqualsFilter(CtElement query) {
-      this.query = query;
-    }
-
-    @Override
-    public boolean matches(CtElement e) {
-      return e.equals(query);
-    }
-
-  }
-
-  public static class MethodOrConstructorFilter extends AbstractFilter<CtExecutable> {
-    public boolean matches(CtExecutable e) {
-      return e instanceof CtMethod || e instanceof CtConstructor;
-    }
-
-  }
 }
