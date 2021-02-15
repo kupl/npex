@@ -58,7 +58,7 @@ public class NullModel {
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
     this.invoInfo = scanner.getResult();
-    this.contexts = ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx);
+    this.contexts = invoInfo != null ? ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx) : null;
   }
 
   public JSONObject toJSON() {
