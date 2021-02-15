@@ -25,19 +25,12 @@ package npex.extractor.context;
 
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
-import spoon.reflect.declaration.ParentNotInitializedException;
 import spoon.reflect.path.CtRole;
 import spoon.reflect.visitor.filter.AbstractFilter;
 
 public class UsedAsArgument implements Context {
   public Boolean extract(CtInvocation invo, int nullPos) {
-    try {
-      invo.getParent(new ArgumentFilter());
-      return true;
-    } catch (ParentNotInitializedException e) {
-      return false;
-    }
-
+    return invo.getParent(new ArgumentFilter()) == null;
   }
 
   private class ArgumentFilter extends AbstractFilter<CtExpression> {
@@ -45,4 +38,5 @@ public class UsedAsArgument implements Context {
       return e.getRoleInParent().equals(CtRole.ARGUMENT);
     }
   }
+
 }
