@@ -24,6 +24,7 @@
 package npex.extractor.nullhandle;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.utils.FactoryUtils;
+import npex.extractor.context.ContextExtractor;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtElement;
@@ -46,6 +48,8 @@ public class NullModel {
   private final CtExpression nullValue;
   private final InvocationInfo invoInfo;
 
+  final private Map<String, Boolean> contexts;
+
   public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue) {
     this.nullExp = nullExp;
     this.sinkBody = sinkBody;
@@ -54,6 +58,7 @@ public class NullModel {
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
     this.invoInfo = scanner.getResult();
+    this.contexts = ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx);
   }
 
   public JSONObject toJSON() {
@@ -61,6 +66,7 @@ public class NullModel {
     obj.put("sink_body", sinkBody.toString());
     obj.put("null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
+    obj.put("contexts", contexts != null ? new JSONObject(contexts) : JSONObject.NULL);
     return obj;
   }
 
