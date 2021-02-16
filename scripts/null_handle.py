@@ -2,7 +2,7 @@ import json
 import os
 import typing
 from dataclasses import dataclass
-from typing import List, Any, Optional
+from typing import Dict, List, Any, Optional
 from dacite import from_dict as _from_dict
 
 def from_dict(klass, d):
@@ -15,6 +15,8 @@ def read_json_from_file(json_filename: str):
   with open(json_filename, "r") as f:
     return json.load(f)
 
+def get_primitive_fields(cls):
+  return [k for (k, v) in cls.__annotations__.items() if v in [str, int, bool, List[str], Optional[str], Optional[int]]]
 
 
 @dataclass
@@ -49,10 +51,27 @@ class InvoInfo:
   null_invo: str
   null_idx: int
   method_name: str
-  return_type: str
+  return_type: Optional[str]
   arguments_types : List[str]
   invo_kind : str 
   target_type : Optional[str]
+
+  @classmethod
+  def get_columns(cls):
+    return get_primitive_fields(cls)
+
+  def flatten(self):
+    return self.__dict__
+
+@dataclass
+class Contexts:
+  UsedAsReturnExpression : bool
+  UsedAsArgument : bool
+  NullCheckingExists : bool
+
+  @classmethod
+  def get_columns(cls):
+    return get_primitive_fields(cls)
 
   def flatten(self):
     return self.__dict__
@@ -62,18 +81,20 @@ class NullModel:
   sink_body : str
   null_value : Optional[str]
   invocation_info : Optional[InvoInfo]
+  contexts : Optional[Contexts]
 
   @classmethod
-  def __get_primitive_fields(cls):
-    return [k for (k, v) in cls.__annotations__.items() if v == str or v == int]
+  def get_columns(cls):
+    return get_primitive_fields(cls) + InvoInfo.get_columns() + Contexts.get_columns()
 
   def flatten(self):
-    row = dict()
-    for f in (NullModel.__get_primitive_fields()):
+    row = dict() 
+    for f in get_primitive_fields(self.__class__):
       row[f] = vars(self)[f]
     
     if self.invocation_info != None:
       row.update(self.invocation_info.flatten())
+      row.update(self.contexts.flatten())
 
     return row
 
@@ -93,16 +114,15 @@ class NullHandle:
         h2 = from_dict(cls, {'project': os.path.basename(jsonfile).split('.')[0], **h})
         ret.append(h2)
     return ret
-      # return [from_dict(cls, {'project': os.path.basename(jsonfile).split('.')[0], **h}) for h in handles]
-  
+
 
   @classmethod
-  def __get_primitive_fields(cls):
-    return [k for (k, v) in cls.__annotations__.items() if v == str or v == int]
+  def get_columns(cls):
+    return get_primitive_fields(cls) + NullModel.get_columns()
 
   def flatten(self):
     row = dict()
-    for f in (NullHandle.__get_primitive_fields()):
+    for f in (get_primitive_fields(self.__class__)):
       row[f] = vars(self)[f]
 
     results = []
@@ -112,7 +132,3 @@ class NullHandle:
       results.append(d)
 
     return results
-
-
-
-
