@@ -68,6 +68,9 @@ class Contexts:
   UsedAsReturnExpression : bool
   UsedAsArgument : bool
   NullCheckingExists : bool
+  IsField : bool
+  IsParameter : bool
+  IsVariable : bool
 
   @classmethod
   def get_columns(cls):

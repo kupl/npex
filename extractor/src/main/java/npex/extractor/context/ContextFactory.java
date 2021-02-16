@@ -32,6 +32,9 @@ public class ContextFactory {
     contexts.add(new NullCheckingExists());
     contexts.add(new UsedAsArgument());
     contexts.add(new UsedAsReturnExpression());
+    contexts.add(new IsParameter());
+    contexts.add(new IsVariable());
+    contexts.add(new IsField());
   }
 
   public static List<Context> getAllContexts() {
