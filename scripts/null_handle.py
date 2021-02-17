@@ -71,6 +71,10 @@ class Contexts:
   IsField : bool
   IsParameter : bool
   IsVariable : bool
+  SinkExprIsAssigned : bool
+  SinkMethodIsConstructor : bool
+  SinkMethodIsPrivate : bool
+  SinkMethodIsStatic : bool
 
   @classmethod
   def get_columns(cls):
