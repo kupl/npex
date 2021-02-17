@@ -24,6 +24,7 @@
 package npex.extractor;
 
 import java.io.File;
+import java.io.IOException;
 
 import npex.common.NPEXException;
 import npex.common.NPEXLauncher;
@@ -31,8 +32,8 @@ import npex.extractor.processors.NullHandleProcessor;
 
 public class ExtractorLauncher extends NPEXLauncher {
 
-  public ExtractorLauncher(File projectRoot, String resultsPath) {
-    super(projectRoot);
+  public ExtractorLauncher(File projectRoot, boolean loadFromCache, String resultsPath) throws IOException {
+    super(projectRoot, loadFromCache);
     spoonLauncher.addProcessor(new NullHandleProcessor(resultsPath));
   }
 

@@ -24,6 +24,11 @@
 package npex.common;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
@@ -36,25 +41,48 @@ import org.slf4j.LoggerFactory;
 import spoon.Launcher;
 import spoon.MavenLauncher;
 import spoon.MavenLauncher.SOURCE_TYPE;
+import spoon.reflect.factory.Factory;
+import spoon.support.SerializationModelStreamer;
 
 public abstract class NPEXLauncher {
+  final private static String SPOON_MODEL_CACHE_NAME = ".spoon-model.cache";
   final protected static Logger logger = LoggerFactory.getLogger(NPEXLauncher.class);
-  final protected Launcher spoonLauncher;
+
   final protected File projectRoot;
   final protected String projectName;
+  final private File spoonModelCacheFile;
 
-  public NPEXLauncher(File projectRoot) {
+  final protected Factory factory;
+  final protected Launcher spoonLauncher;
+
+  private Launcher buildSpoonLauncher(File projectRoot, boolean loadFromCache) throws IOException {
+    if (loadFromCache) {
+      Factory factory = new SerializationModelStreamer().load(new FileInputStream(spoonModelCacheFile));
+      logger.info("Cached spoon model has been found! (created on {})",
+          Files.readAttributes(spoonModelCacheFile.toPath(), BasicFileAttributes.class).creationTime());
+      return new Launcher(factory);
+    } else {
+      Launcher launcher;
+      if (new File(projectRoot, "pom.xml").exists()) {
+        launcher = createMavenLauncher(projectRoot);
+      } else if (new File(projectRoot, "ant").exists() || (new File(projectRoot, "build.xml").exists())) {
+        launcher = createAntLauncher(projectRoot);
+      } else {
+        launcher = createJavacLauncher(projectRoot);
+      }
+      launcher.getEnvironment().setNoClasspath(true);
+      launcher.buildModel();
+      new SerializationModelStreamer().save(launcher.getFactory(), new FileOutputStream(spoonModelCacheFile));
+      return launcher;
+    }
+  }
+
+  public NPEXLauncher(File projectRoot, boolean loadFromCache) throws IOException {
     this.projectRoot = projectRoot;
     this.projectName = projectRoot.getName();
-    if (new File(projectRoot, "pom.xml").exists()) {
-      this.spoonLauncher = createMavenLauncher(projectRoot);
-    } else if (new File(projectRoot, "ant").exists() || (new File(projectRoot, "build.xml").exists())) {
-      this.spoonLauncher = createAntLauncher(projectRoot);
-    } else {
-      this.spoonLauncher = createJavacLauncher(projectRoot);
-    }
-    spoonLauncher.getEnvironment().setNoClasspath(true);
-    spoonLauncher.buildModel();
+    this.spoonModelCacheFile = new File(projectRoot, SPOON_MODEL_CACHE_NAME);
+    this.spoonLauncher = buildSpoonLauncher(projectRoot, loadFromCache);
+    this.factory = spoonLauncher.getFactory();
   }
 
   static private MavenLauncher createMavenLauncher(File projectRoot) {
