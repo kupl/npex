@@ -54,7 +54,6 @@ def statistics(results, cached=False):
       writer.writerow(row)
 
 
-
 def __initialize_logger(logpath):
   logger.setLevel(logging.NOTSET)
 
@@ -84,6 +83,11 @@ if __name__ == "__main__":
 
   learn = subparsers.add_parser('learn', help='learn model classifier')
   learn.add_argument('data', help='csvfile for collected null-handles')
+  learn.add_argument('-cls', help='path to store learned classifier (default: %(default)s)', default=classifier.CLASSIFIER_PATH)
+
+  predict = subparsers.add_parser('predict', help='predict label with learned classifier')
+  predict.add_argument('data', help='csvfile for collected null-handles')
+  predict.add_argument('-cls', help='path to store learned classifier (default: %(default)s)', default=classifier.CLASSIFIER_PATH)
 
   args = parser.parse_args()
   logpath = f'{datetime.today().strftime("%m%d%_H%M%_S")}.log' if args.log == None else args.log
@@ -99,6 +103,8 @@ if __name__ == "__main__":
     statistics(results)
 
   elif args.subcommand == 'learn':
-    score, out_file = classifier.train(args.data)
-    pdf = os.path.basename(out_file).split('.')[0] + '.pdf'
-    os.system(f"dot -Tpdf {out_file} > {pdf}")
+    classifier.train(args.data, args.cls)
+
+  elif args.subcommand == 'predict':
+    classifier.see_conflict(args.data, args.cls) 
+
