@@ -77,6 +77,10 @@ class Contexts:
   SinkMethodIsStatic : bool
 
   @classmethod
+  def get_feature_names(cls):
+    return get_primitive_fields(cls)
+
+  @classmethod
   def get_columns(cls):
     return get_primitive_fields(cls)
 

@@ -7,17 +7,18 @@ import os
 import glob
 import json
 import argparse
+from slacker import Slacker
 from datetime import datetime
 from  multiprocessing import Pool
 from functools import partial
 
 from null_handle import NullHandle
+import classifier
 
 ROOT_DIR=os.path.dirname(os.path.realpath(__file__))
 
 JDK_15_PATH = '/usr/lib/jvm/jdk-15.0.1'
 NPEX_DRIVER_JAR_PATH = '/home/june/project/npex/driver/target/driver-1.0-SNAPSHOT.jar'
-
 
 logger = logging.getLogger()
 
@@ -52,6 +53,7 @@ def statistics(results, cached=False):
     for row in rows:
       writer.writerow(row)
 
+
 def __initialize_logger(logpath):
   logger.setLevel(logging.NOTSET)
 
@@ -79,6 +81,14 @@ if __name__ == "__main__":
   stat = subparsers.add_parser('stat', help='print statistics on collected null-handles')
   stat.add_argument('results_dir', help='a directory where collected null-handles')
 
+  learn = subparsers.add_parser('learn', help='learn model classifier')
+  learn.add_argument('data', help='csvfile for collected null-handles')
+  learn.add_argument('-cls', help='path to store learned classifier (default: %(default)s)', default=classifier.CLASSIFIER_PATH)
+
+  predict = subparsers.add_parser('predict', help='predict label with learned classifier')
+  predict.add_argument('data', help='csvfile for collected null-handles')
+  predict.add_argument('-cls', help='path to store learned classifier (default: %(default)s)', default=classifier.CLASSIFIER_PATH)
+
   args = parser.parse_args()
   logpath = f'{datetime.today().strftime("%m%d%_H%M%_S")}.log' if args.log == None else args.log
   __initialize_logger(logpath)
@@ -91,3 +101,10 @@ if __name__ == "__main__":
   elif args.subcommand == 'stat':
     results = [r for r in glob.glob(f'{args.results_dir}/*') if r.endswith('.json')]
     statistics(results)
+
+  elif args.subcommand == 'learn':
+    classifier.train(args.data, args.cls)
+
+  elif args.subcommand == 'predict':
+    classifier.see_conflict(args.data, args.cls) 
+
