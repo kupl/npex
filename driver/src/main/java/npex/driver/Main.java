@@ -24,6 +24,7 @@
 package npex.driver;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -68,7 +69,10 @@ abstract class SpoonCommand implements Runnable {
   protected CommandSpec spec;
 
   @Parameters(paramLabel = "<PROJECT_ROOT>", description = "path for project root directory")
-  File projectRoot;
+  protected File projectRoot;
+
+  @Option(names = { "-c", "--cached" }, paramLabel = "<LOAD_CACHED_MODEL>", description = "load cached spoon model")
+  protected boolean loadSpoonModelFromCache;
 
   private void checkFileParametersValidity() {
     List<ArgSpec> argSpecs = new ArrayList<>();
@@ -89,10 +93,13 @@ abstract class SpoonCommand implements Runnable {
 
   public void run() {
     checkFileParametersValidity();
-    launch(spec.commandLine().getParseResult());
+    try {
+      launch(spec.commandLine().getParseResult());
+    } catch (IOException e) {
+    }
   }
 
-  protected abstract void launch(ParseResult pr);
+  protected abstract void launch(ParseResult pr) throws IOException;
 }
 
 @Command(name = "patch")
@@ -103,11 +110,11 @@ class PatchCommand extends SpoonCommand {
       "--report" }, paramLabel = "<NPE_REPORT>", defaultValue = defaultNPEReportName, description = "path for JSON-formatted NPE report (default: <PROJECT_ROOT>/${DEFAULT-VALUE})")
   File npeReport;
 
-  public void launch(ParseResult pr) {
+  public void launch(ParseResult pr) throws IOException {
     if (!pr.hasMatchedOption("report")) {
       spec.findOption("--report").setValue(new File(projectRoot, defaultNPEReportName));
     }
-    NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, npeReport);
+    NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, loadSpoonModelFromCache, npeReport);
     launcher.run();
   }
 }
@@ -120,11 +127,11 @@ class HandleExtractorCommand extends SpoonCommand {
       "--results" }, paramLabel = "<RESULTS_JSON>", defaultValue = defaultResultsName, description = "path for results JSON file where collected handles information to be stored (default:<PROJECT_ROOT>/${DEFAULT-VALUE})")
   String resultsPath;
 
-  public void launch(ParseResult pr) {
+  public void launch(ParseResult pr) throws IOException {
     if (!pr.hasMatchedOption("--results")) {
       spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
     }
-    NPEXLauncher launcher = new ExtractorLauncher(projectRoot, resultsPath);
+    NPEXLauncher launcher = new ExtractorLauncher(projectRoot, loadSpoonModelFromCache, resultsPath);
     launcher.run();
   }
 }

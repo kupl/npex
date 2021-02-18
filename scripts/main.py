@@ -26,7 +26,7 @@ def run_npex_extractor(project_root_dir, results_dir):
     logger.info(f'Running NPEX-extractor on {project_root_dir}')
     project_name = os.path.basename(project_root_dir)
     cmd = f'{JDK_15_PATH}/bin/java --enable-preview -cp {NPEX_DRIVER_JAR_PATH} npex.driver.Main'
-    cmd = f'{cmd} -g handle-extractor {project_root_dir} --results=./{results_dir}/{project_name}.results.json'
+    cmd = f'{cmd} handle-extractor {project_root_dir} --results=./{results_dir}/{project_name}.results.json -c'
     ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     if ret.returncode != 0:
       logger.error(f'Fails to extract null handles for project {project_name}')

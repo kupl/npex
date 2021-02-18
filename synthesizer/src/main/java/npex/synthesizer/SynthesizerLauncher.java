@@ -36,19 +36,15 @@ import npex.synthesizer.strategy.PatchStrategy;
 import npex.synthesizer.strategy.PatchStrategyFactory;
 import npex.synthesizer.template.PatchTemplate;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.factory.Factory;
 
 @SuppressWarnings("rawtypes")
 public class SynthesizerLauncher extends NPEXLauncher {
   private static Collection<PatchStrategy> strategies = PatchStrategyFactory.getAllStrategies();
-  private Factory factory;
   private File npeReport;
 
-  public SynthesizerLauncher(File projectRoot, File npeReport) {
-    super(projectRoot);
+  public SynthesizerLauncher(File projectRoot, boolean loadFromCache, File npeReport) throws IOException {
+    super(projectRoot, loadFromCache);
     this.npeReport = npeReport;
-    this.factory = spoonLauncher.getFactory();
-    spoonLauncher.buildModel();
   }
 
   private List<PatchTemplate> eneumeratePatches(CtExpression nullExp) {

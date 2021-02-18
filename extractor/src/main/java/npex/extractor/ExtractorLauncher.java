@@ -24,21 +24,20 @@
 package npex.extractor;
 
 import java.io.File;
+import java.io.IOException;
 
 import npex.common.NPEXException;
 import npex.common.NPEXLauncher;
 import npex.extractor.processors.NullHandleProcessor;
 
 public class ExtractorLauncher extends NPEXLauncher {
-  final NullHandleProcessor nullHandleProcessor;
 
-  public ExtractorLauncher(File projectRoot, String resultsPath) {
-    super(projectRoot);
-    this.nullHandleProcessor = new NullHandleProcessor(resultsPath);
+  public ExtractorLauncher(File projectRoot, boolean loadFromCache, String resultsPath) throws IOException {
+    super(projectRoot, loadFromCache);
+    spoonLauncher.addProcessor(new NullHandleProcessor(resultsPath));
   }
 
   public void run() throws NPEXException {
-    spoonLauncher.addProcessor(nullHandleProcessor);
-    spoonLauncher.run();
+    spoonLauncher.process();
   }
 }
