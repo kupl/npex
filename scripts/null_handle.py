@@ -74,6 +74,7 @@ class Contexts:
   SinkExprIsAssigned : bool
   SinkMethodIsConstructor : bool
   SinkMethodIsPrivate : bool
+  SinkMethodIsPublic : bool
   SinkMethodIsStatic : bool
 
   @classmethod

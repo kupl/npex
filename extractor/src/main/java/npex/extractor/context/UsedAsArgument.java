@@ -30,7 +30,7 @@ import spoon.reflect.visitor.filter.AbstractFilter;
 
 public class UsedAsArgument implements Context {
   public Boolean extract(CtInvocation invo, int nullPos) {
-    return invo.getParent(new ArgumentFilter()) == null;
+    return invo.getParent(new ArgumentFilter()) != null;
   }
 
   private class ArgumentFilter extends AbstractFilter<CtExpression> {

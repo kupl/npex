@@ -38,6 +38,7 @@ public class ContextFactory {
     contexts.add(new SinkExprIsAssigned());
     contexts.add(new SinkMethodIsConstructor());
     contexts.add(new SinkMethodIsPrivate());
+    contexts.add(new SinkMethodIsPublic());
     contexts.add(new SinkMethodIsStatic());
   }
 
