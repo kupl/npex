@@ -31,15 +31,22 @@ public class ContextFactory {
   static {
     contexts.add(new NullCheckingExists());
     contexts.add(new UsedAsArgument());
+    contexts.add(new UsedAsOperand());
     contexts.add(new UsedAsReturnExpression());
     contexts.add(new IsParameter());
     contexts.add(new IsVariable());
+    contexts.add(new LHSIsField());
+    contexts.add(new LHSIsPrivate());
+    contexts.add(new LHSIsPublic());
     contexts.add(new IsField());
     contexts.add(new SinkExprIsAssigned());
+    contexts.add(new SinkExprIsExceptionArgument());
     contexts.add(new SinkMethodIsConstructor());
     contexts.add(new SinkMethodIsPrivate());
     contexts.add(new SinkMethodIsPublic());
     contexts.add(new SinkMethodIsStatic());
+    contexts.add(new VariableIsObjectType());
+    contexts.add(new VariableIsFinal());
   }
 
   public static List<Context> getAllContexts() {

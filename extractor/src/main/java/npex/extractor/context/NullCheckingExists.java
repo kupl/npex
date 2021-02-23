@@ -34,6 +34,9 @@ import spoon.reflect.visitor.EarlyTerminatingScanner;
 public class NullCheckingExists implements Context {
   public Boolean extract(CtInvocation invo, int nullPos) {
     CtExecutable exec = invo.getParent(new MethodOrConstructorFilter());
+    if (exec == null) {
+      return false;
+    }
     CtExpression nullExp = nullPos == -1 ? invo.getTarget() : (CtExpression) invo.getArguments().get(nullPos);
     ContextScanner scanner = new ContextScanner(invo, nullExp);
     exec.accept(scanner);

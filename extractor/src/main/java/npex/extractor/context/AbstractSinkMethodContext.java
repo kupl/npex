@@ -12,7 +12,7 @@ public abstract class AbstractSinkMethodContext implements Context {
 
   public Boolean extract(CtInvocation invo, int nullPos) {
     CtExecutable exec = invo.getParent(new MethodOrConstructorFilter());
-    return predicateOnMethod(exec);
+    return exec != null && predicateOnMethod(exec);
   }
 
   protected abstract boolean predicateOnMethod(CtExecutable exec);

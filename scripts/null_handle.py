@@ -4,6 +4,7 @@ import typing
 from dataclasses import dataclass
 from typing import Dict, List, Any, Optional
 from dacite import from_dict as _from_dict
+from dacite.core import T
 
 def from_dict(klass, d):
   if d == None or d== []:
@@ -13,7 +14,11 @@ def from_dict(klass, d):
 
 def read_json_from_file(json_filename: str):
   with open(json_filename, "r") as f:
-    return json.load(f)
+    try:
+      return json.load(f)
+    except json.decoder.JSONDecodeError as e:
+      print(f'Could not convert {json_filename}')
+      raise e
 
 def get_primitive_fields(cls):
   return [k for (k, v) in cls.__annotations__.items() if v in [str, int, bool, List[str], Optional[str], Optional[int]]]
@@ -67,15 +72,22 @@ class InvoInfo:
 class Contexts:
   UsedAsReturnExpression : bool
   UsedAsArgument : bool
+  UsedAsOperand : bool
   NullCheckingExists : bool
   IsField : bool
   IsParameter : bool
   IsVariable : bool
+  LHSIsField : bool
+  LHSIsPrivate : bool
+  LHSIsPublic : bool
   SinkExprIsAssigned : bool
+  SinkExprIsExceptionArgument : bool
   SinkMethodIsConstructor : bool
   SinkMethodIsPrivate : bool
   SinkMethodIsPublic : bool
   SinkMethodIsStatic : bool
+  VariableIsObjectType : bool
+  VariableIsFinal : bool
 
   @classmethod
   def get_feature_names(cls):
