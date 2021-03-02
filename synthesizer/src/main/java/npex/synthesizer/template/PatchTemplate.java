@@ -96,7 +96,7 @@ public abstract class PatchTemplate {
     return nullCond;
   }
 
-  protected abstract CtExecutable implement();
+  protected abstract CtExecutable implement() throws ImplementationFailure;
 
   private class MethodORConstructorFilter extends AbstractFilter<CtExecutable> {
     @Override

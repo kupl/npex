@@ -23,34 +23,16 @@
  */
 package npex.synthesizer.template;
 
-import npex.common.utils.ASTUtils;
-import spoon.reflect.code.CtConditional;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.declaration.CtExecutable;
-
-public class PatchTemplateTernary extends PatchTemplate {
-  private final CtExpression exprToReplace;
-  private final CtExpression alternativeValue;
-
-  public PatchTemplateTernary(String id, CtExpression nullExp, CtExpression exprToReplace,
-      CtExpression alternativeValue) {
-    super(id, nullExp);
-    this.exprToReplace = ASTUtils.findMatchedElementLookParent(ast, exprToReplace);
-    this.alternativeValue = alternativeValue;
+public class ImplementationFailure extends RuntimeException {
+  public ImplementationFailure(String msg) {
+    super(msg);
   }
 
-  protected CtExecutable implement() throws ImplementationFailure {
-    CtConditional ternary = factory.createConditional();
-    try {
-      ternary.setCondition(createNullCond(false));
-      ternary.setThenExpression(exprToReplace.clone());
-      ternary.setElseExpression(alternativeValue);
+  public ImplementationFailure(Throwable e) {
+    super(e);
+  }
 
-      exprToReplace.replace(ternary);
-      return ast;
-
-    } catch (NullPointerException e) {
-      throw new ImplementationFailure(this, e);
-    }
+  public ImplementationFailure(PatchTemplate template, Throwable e) {
+    super(String.format("Faild to implment on template: %s, ", template.getID()), e);
   }
 }

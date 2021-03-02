@@ -51,30 +51,34 @@ public class PatchTemplateIf extends PatchTemplate {
     this.kind = (nullExecStmt == null) ? SkipKind.SKIPONLY : SkipKind.DOSMTH;
   }
 
-  protected CtExecutable implement() {
+  protected CtExecutable implement() throws ImplementationFailure {
     CtIf ifStmt = factory.createIf();
     CtBlock<?> thenBlock = factory.createBlock();
 
     CtBlock<?> skipBlock = skipFrom.getParent(CtBlock.class);
-    List<CtStatement> stmts = skipBlock.getStatements();
-    switch (kind) {
-      case SKIPONLY:
-        ifStmt.setCondition(createNullCond(false));
-        int idxFrom = stmts.indexOf(skipFrom);
-        int idxTo = stmts.indexOf(skipTo);
-        for (CtStatement s : stmts.subList(idxFrom, idxTo + 1)) {
-          skipBlock.removeStatement(s);
-          thenBlock.addStatement(s);
-        }
-        skipBlock.addStatement(idxFrom, ifStmt);
-        break;
-      case DOSMTH:
-        ifStmt.setCondition(createNullCond(true));
-        thenBlock.addStatement(nullExecStmt);
-        break;
-    }
+    try {
+      List<CtStatement> stmts = skipBlock.getStatements();
+      switch (kind) {
+        case SKIPONLY:
+          ifStmt.setCondition(createNullCond(false));
+          int idxFrom = stmts.indexOf(skipFrom);
+          int idxTo = stmts.indexOf(skipTo);
+          for (CtStatement s : stmts.subList(idxFrom, idxTo + 1)) {
+            skipBlock.removeStatement(s);
+            thenBlock.addStatement(s);
+          }
+          skipBlock.addStatement(idxFrom, ifStmt);
+          break;
+        case DOSMTH:
+          ifStmt.setCondition(createNullCond(true));
+          thenBlock.addStatement(nullExecStmt);
+          break;
+      }
 
-    ifStmt.setThenStatement(thenBlock);
-    return ast;
+      ifStmt.setThenStatement(thenBlock);
+      return ast;
+    } catch (NullPointerException | IndexOutOfBoundsException e) {
+      throw new ImplementationFailure(this, e);
+    }
   }
 }
