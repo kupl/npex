@@ -43,6 +43,8 @@ public class PatchTemplateIf extends PatchTemplate {
   private final CtStatement skipFrom, skipTo;
   private final SkipKind kind;
 
+  private CtStatement patchedStatement;
+
   public PatchTemplateIf(String id, CtExpression nullExp, CtStatement nullExecStmt, CtStatement skipFrom,
       CtStatement skipTo) {
     super(id, nullExp);
@@ -53,10 +55,15 @@ public class PatchTemplateIf extends PatchTemplate {
     this.kind = (nullExecStmt == null) ? SkipKind.SKIPONLY : SkipKind.DOSMTH;
   }
 
+  public CtStatement getPatchedStatement() {
+    return patchedStatement;
+  }
+
   protected CtExecutable implement() throws ImplementationFailure {
     CtIf ifStmt = factory.createIf();
     CtBlock<?> thenBlock = factory.createBlock();
     ifStmt.setThenStatement(thenBlock);
+    this.patchedStatement = ifStmt;
     try {
       CtBlock<?> modBlock = skipFrom.getParent(CtBlock.class);
       List<CtStatement> stmts = new ArrayList<>(modBlock.getStatements());

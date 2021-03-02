@@ -29,17 +29,15 @@ import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.filters.MethodOrConstructorFilter;
 import npex.common.utils.ASTUtils;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.factory.CoreFactory;
-import spoon.reflect.visitor.filter.AbstractFilter;
 import spoon.support.DefaultCoreFactory;
 
 public abstract class PatchTemplate {
@@ -57,7 +55,7 @@ public abstract class PatchTemplate {
 
   public PatchTemplate(String id, CtExpression nullExpOrg) {
     this.id = id;
-    this.astOrg = nullExpOrg.getParent(new MethodORConstructorFilter());
+    this.astOrg = nullExpOrg.getParent(new MethodOrConstructorFilter());
     this.ast = astOrg.clone();
     this.nullExpOrg = nullExpOrg;
     this.nullExp = ASTUtils.findMatchedElementLookParent(ast, nullExpOrg);
@@ -65,10 +63,6 @@ public abstract class PatchTemplate {
 
   public String getID() {
     return id;
-  }
-
-  public CtStatement getPatchedStatement() {
-    return ASTUtils.getEnclosingStatement(nullExp);
   }
 
   public CtStatement getOriginalStatement() {
@@ -96,12 +90,8 @@ public abstract class PatchTemplate {
     return nullCond;
   }
 
+  public abstract CtStatement getPatchedStatement();
+
   protected abstract CtExecutable implement() throws ImplementationFailure;
 
-  private class MethodORConstructorFilter extends AbstractFilter<CtExecutable> {
-    @Override
-    public boolean matches(CtExecutable executable) {
-      return executable instanceof CtMethod || executable instanceof CtConstructor;
-    }
-  }
 }

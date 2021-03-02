@@ -26,17 +26,23 @@ package npex.synthesizer.template;
 import npex.common.utils.ASTUtils;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtExecutable;
 
 public class PatchTemplateTernary extends PatchTemplate {
   private final CtExpression exprToReplace;
   private final CtExpression alternativeValue;
+  private CtStatement patchedStatement;
 
   public PatchTemplateTernary(String id, CtExpression nullExp, CtExpression exprToReplace,
       CtExpression alternativeValue) {
     super(id, nullExp);
     this.exprToReplace = ASTUtils.findMatchedElementLookParent(ast, exprToReplace);
     this.alternativeValue = alternativeValue;
+  }
+
+  public CtStatement getPatchedStatement() {
+    return patchedStatement;
   }
 
   protected CtExecutable implement() throws ImplementationFailure {
@@ -47,8 +53,8 @@ public class PatchTemplateTernary extends PatchTemplate {
       ternary.setElseExpression(alternativeValue);
 
       exprToReplace.replace(ternary);
+      this.patchedStatement = ternary.getParent(CtStatement.class);
       return ast;
-
     } catch (NullPointerException e) {
       throw new ImplementationFailure(this, e);
     }
