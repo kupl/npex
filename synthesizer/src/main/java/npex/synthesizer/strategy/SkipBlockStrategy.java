@@ -39,12 +39,12 @@ public class SkipBlockStrategy extends AbstractSkipStrategy {
 
   @Override
   protected CtStatement createSkipFrom(CtExpression nullExp) {
-    return nullExp.getParent(CtBlock.class);
+    return nullExp.getParent(CtBlock.class).getStatements().get(0);
   }
 
   @Override
   protected CtStatement createSkipTo(CtExpression nullExp) {
-    return nullExp.getParent(CtBlock.class);
+    return nullExp.getParent(CtBlock.class).getLastStatement();
   }
 
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {

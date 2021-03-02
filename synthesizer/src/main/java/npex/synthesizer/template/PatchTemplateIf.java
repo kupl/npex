@@ -23,6 +23,8 @@
  */
 package npex.synthesizer.template;
 
+import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 import npex.common.utils.ASTUtils;
@@ -54,30 +56,30 @@ public class PatchTemplateIf extends PatchTemplate {
   protected CtExecutable implement() throws ImplementationFailure {
     CtIf ifStmt = factory.createIf();
     CtBlock<?> thenBlock = factory.createBlock();
-
-    CtBlock<?> skipBlock = skipFrom.getParent(CtBlock.class);
+    ifStmt.setThenStatement(thenBlock);
     try {
-      List<CtStatement> stmts = skipBlock.getStatements();
+      CtBlock<?> modBlock = skipFrom.getParent(CtBlock.class);
+      List<CtStatement> stmts = new ArrayList<>(modBlock.getStatements());
+      int idxFrom = stmts.indexOf(skipFrom);
+      int idxTo = stmts.indexOf(skipTo);
       switch (kind) {
         case SKIPONLY:
           ifStmt.setCondition(createNullCond(false));
-          int idxFrom = stmts.indexOf(skipFrom);
-          int idxTo = stmts.indexOf(skipTo);
           for (CtStatement s : stmts.subList(idxFrom, idxTo + 1)) {
-            skipBlock.removeStatement(s);
+            modBlock.removeStatement(s);
             thenBlock.addStatement(s);
           }
-          skipBlock.addStatement(idxFrom, ifStmt);
+          modBlock.addStatement(idxFrom, ifStmt);
           break;
         case DOSMTH:
           ifStmt.setCondition(createNullCond(true));
           thenBlock.addStatement(nullExecStmt);
+          modBlock.addStatement(idxFrom, ifStmt);
           break;
       }
 
-      ifStmt.setThenStatement(thenBlock);
       return ast;
-    } catch (NullPointerException | IndexOutOfBoundsException e) {
+    } catch (NullPointerException | IndexOutOfBoundsException | ConcurrentModificationException e) {
       throw new ImplementationFailure(this, e);
     }
   }
