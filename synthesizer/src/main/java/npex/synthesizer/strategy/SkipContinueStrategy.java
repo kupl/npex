@@ -31,7 +31,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtStatement;
 
-public class SkipContinueStrategy extends SkipLoopStrategy {
+public class SkipContinueStrategy extends SkipLoopBodyStrategy {
 
   @Override
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {

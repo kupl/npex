@@ -25,9 +25,11 @@ package npex.synthesizer.strategy;
 
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLoop;
+import spoon.reflect.visitor.filter.SameFilter;
 
-public abstract class SkipLoopStrategy extends AbstractSkipStrategy {
+public abstract class SkipLoopBodyStrategy extends AbstractSkipStrategy {
   public boolean _isApplicable(CtExpression<?> nullExp) {
-    return nullExp.getParent(CtLoop.class) != null;
+    CtLoop loop = nullExp.getParent(CtLoop.class);
+    return loop != null && nullExp.getParent(new SameFilter(loop.getBody())) != null;
   }
 }
