@@ -26,11 +26,13 @@ package npex.synthesizer.template;
 import npex.common.utils.ASTUtils;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtExecutable;
 
 public class PatchTemplateTernary extends PatchTemplate {
   private final CtExpression exprToReplace;
   private final CtExpression alternativeValue;
+  private CtStatement patchedStatement;
 
   public PatchTemplateTernary(String id, CtExpression nullExp, CtExpression exprToReplace,
       CtExpression alternativeValue) {
@@ -39,13 +41,22 @@ public class PatchTemplateTernary extends PatchTemplate {
     this.alternativeValue = alternativeValue;
   }
 
-  protected CtExecutable implement() {
-    CtConditional ternary = factory.createConditional();
-    ternary.setCondition(createNullCond(false));
-    ternary.setThenExpression(exprToReplace.clone());
-    ternary.setElseExpression(alternativeValue);
+  public CtStatement getPatchedStatement() {
+    return patchedStatement;
+  }
 
-    exprToReplace.replace(ternary);
-    return ast;
+  protected CtExecutable implement() throws ImplementationFailure {
+    CtConditional ternary = factory.createConditional();
+    try {
+      ternary.setCondition(createNullCond(false));
+      ternary.setThenExpression(exprToReplace.clone());
+      ternary.setElseExpression(alternativeValue);
+
+      exprToReplace.replace(ternary);
+      this.patchedStatement = ternary.getParent(CtStatement.class);
+      return ast;
+    } catch (NullPointerException e) {
+      throw new ImplementationFailure(this, e);
+    }
   }
 }

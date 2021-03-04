@@ -21,13 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer.strategy;
+package npex.synthesizer.template;
 
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtLoop;
+public class ImplementationFailure extends RuntimeException {
+  public ImplementationFailure(String msg) {
+    super(msg);
+  }
 
-public abstract class SkipLoopStrategy extends AbstractSkipStrategy {
-  public boolean _isApplicable(CtExpression<?> nullExp) {
-    return nullExp.getParent(CtLoop.class) != null;
+  public ImplementationFailure(Throwable e) {
+    super(e);
+  }
+
+  public ImplementationFailure(PatchTemplate template, Throwable e) {
+    super(String.format("Faild to implment on template: %s, ", template.getID()), e);
   }
 }

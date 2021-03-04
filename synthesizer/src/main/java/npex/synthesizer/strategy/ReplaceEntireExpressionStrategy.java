@@ -26,6 +26,7 @@ package npex.synthesizer.strategy;
 import java.util.List;
 
 import npex.common.utils.ASTUtils;
+import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
 
@@ -45,6 +46,10 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
 
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression nullExp) {
     CtExpression exprToRep = extractExprToReplace(nullExp);
-    return initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType());
+    List<CtExpression> exprs = initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType());
+    if (!exprToRep.getType().isPrimitive()) {
+      exprs.add(FactoryUtils.createNullLiteral());
+    }
+    return exprs;
   }
 }
