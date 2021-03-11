@@ -30,12 +30,22 @@ public record InvocationInfo(int nullIdx, CtInvocation orgInvo, CtInvocation nul
     obj.put("null_invo", nullInvo);
     obj.put("null_idx", nullIdx);
     obj.put("method_name", nullInvo.getExecutable().getSimpleName());
-    obj.put("return_type", nullInvo.getType() != null ? nullInvo.getType().toString() : JSONObject.NULL);
+    obj.put("return_type", nullInvo.getType() != null ? abstractReturnType(nullInvo.getType()) : JSONObject.NULL);
+    obj.put("actual_return_type", nullInvo.getType() != null ? nullInvo.getType().toString() : JSONObject.NULL);
     obj.put("arguments_types",
         new JSONArray(getActualArgumentsTypes().stream().map(argTyp -> argTyp.toString()).toArray()));
     obj.put("invo_kind", getInvocationType().toString());
     obj.put("target_type", targetType != null ? targetType : JSONObject.NULL);
     return obj;
+  }
+
+  private String abstractReturnType(CtTypeReference type) {
+    if (type.isPrimitive() || type.toString().equals("void"))
+      return type.toString();
+    else if (type.toString().equals("java.lang.String"))
+      return "java.lang.String";
+    else
+      return "object";
   }
 
   private INVO_KIND getInvocationType() {

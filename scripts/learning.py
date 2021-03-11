@@ -73,9 +73,12 @@ class InvoSignature(JSONData):
     method_name: str
     null_idx: int
     return_type: Optional[str]
+    actual_return_type: Optional[str]
     arguments_types: List[str]
     invo_kind: str
-    target_type: Optional[str]
+
+    def askey(self):
+        return (self.method_name, self.null_idx, self.return_type, len(self.arguments_types), self.invo_kind)
 
 
 @dataclass
