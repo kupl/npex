@@ -2,12 +2,21 @@ import dataclasses
 import glob
 import csv
 import os
+import pickle
 import json
 import typing
 from dacite import from_dict as _from_dict
 from dataclasses import dataclass
-from typing import List, Optional, get_type_hints
+from typing import List, Optional, Set, get_type_hints
+from collections import defaultdict
+import pprint
 
+from sklearn import preprocessing, tree
+from sklearn import datasets
+from sklearn.tree import export_graphviz
+import joblib
+
+from slacker import Slacker
 import typing_extensions
 
 
@@ -67,6 +76,9 @@ class Contexts(JSONData):
     VariableIsObjectType: bool
     VariableIsFinal: bool
 
+    def astuple(self):
+        return tuple(self.__dict__.values())
+
 
 @dataclass
 class InvoSignature(JSONData):
@@ -124,20 +136,31 @@ class Row(JSONData):
         return cls._flatten_attributes()
 
 
-class DB:
+class RawDB:
     handles: List[NullHandle]
     rows: List[Row]
 
     @classmethod
     def from_result_json(cls, handle_json_file):
-        return DB(handles=NullHandle.from_results_json(handle_json_file))
+        return RawDB(handles=NullHandle.from_results_json(handle_json_file))
 
     def __init__(self, handles=[], rows=[]):
         self.handles = handles
         self.rows = rows if rows != [] else sum([Row.from_null_handle(h) for h in handles], [])
 
     def __add__(self, db2):
-        return DB(self.handles + db2.handles, self.rows + db2.rows)
+        return RawDB(self.handles + db2.handles, self.rows + db2.rows)
+
+    def split_db_by_invo_signature(self):
+        d = defaultdict(list)
+
+        row_with_invocation_info = [r for r in self.rows if r.model and r.model.invocation_info]
+        for r in row_with_invocation_info:
+            d[r.model.invocation_info.askey()].append(r.model)
+
+        dbs = [LearningDB(invocation_info, rows) for (invocation_info, rows) in d.items()]
+        dbs = [d for d in dbs if d.num_of_labels > 1]
+        return dbs
 
     def print_statistics(self):
         print(f"# total handles: {len(self.handles)}")
@@ -150,3 +173,52 @@ class DB:
             writer.writeheader()
             for row in self.rows:
                 writer.writerow(row.flatten())
+
+    def serialize(self, path):
+        with open(path, 'wb') as file:
+            pickle.dump(self, file)
+
+    @classmethod
+    def deserialize(cls, path):
+        with open(path, 'rb') as f:
+            return pickle.load(f)
+
+
+class LearningDB:
+    def __init__(self, key, rows):
+        self.key = key
+        self.datasize = len(rows)
+        self.d = defaultdict(list)
+        for r in rows:
+            assert (r.invocation_info.askey() == key)
+            self.d[r.null_value].append(r.contexts)
+        self.num_of_labels = len(self.d.keys())
+
+        self.labeldict = dict()
+        for (idx, label) in enumerate(self.d.keys()):
+            self.labeldict[label] = idx
+
+    def stat(self):
+        print(f'Key: {self.key}')
+        print(f'# of data: {self.datasize}')
+        print(f'# of labels (null-values): {self.num_of_labels}')
+
+    def train(self, model_dir, model_name):
+        X, Y = [], []
+
+        for (null_value, contexts) in self.d.items():
+            for ctx in contexts:
+                feature_vector = [1 if b else 0 for b in ctx.astuple()]
+                X.append(feature_vector)
+                Y.append(self.labeldict[null_value])
+
+        clf = tree.DecisionTreeClassifier()
+        clf.fit(X, Y)
+
+        model_dot = f'{model_dir}/{model_name}.dot'
+        model_classifier = f'{model_dir}/{model_name}.classifier'
+        export_graphviz(clf, out_file=model_dot, feature_names=list(Contexts.__annotations__.keys()), impurity=False)
+        joblib.dump(clf, model_classifier)
+
+        model_pdf = f"{model_dir}/{model_name}.pdf"
+        os.system(f"dot -Tpdf {model_dot} > {model_pdf}")
