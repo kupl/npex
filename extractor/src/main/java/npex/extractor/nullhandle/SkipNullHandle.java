@@ -33,6 +33,8 @@ import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtRHSReceiver;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.reference.CtLocalVariableReference;
@@ -88,11 +90,18 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
       private final CtAssignment me;
       private final CtVariableReference varRef;
 
-      private CtAssignment lastAssignment;
+      private CtRHSReceiver lastAssignment;
 
       public NullValueScanner(CtAssignment me) {
         this.me = me;
         this.varRef = ((CtVariableWrite) me.getAssigned()).getVariable();
+      }
+
+      @Override
+      public void visitCtLocalVariable(CtLocalVariable localVar) {
+        if (localVar.getReference().equals(varRef)) {
+          lastAssignment = localVar;
+        }
       }
 
       @Override
@@ -107,9 +116,8 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
 
         if (assignment.getAssigned() instanceof CtVariableWrite write && write.getVariable().equals(varRef)) {
           if (assignment == me) {
-            CtBlock lastAssignmentBlock = lastAssignment.getParent(CtBlock.class);
+            CtBlock lastAssignmentBlock = ((CtStatement) lastAssignment).getParent(CtBlock.class);
             CtBlock myBlock = me.getParent(CtBlock.class);
-
             if (ASTUtils.isChildOf(myBlock, lastAssignmentBlock)) {
               setResult(lastAssignment.getAssignment());
             }
