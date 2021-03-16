@@ -75,6 +75,10 @@ abstract class SpoonCommand implements Runnable {
   @Option(names = { "-c", "--cached" }, paramLabel = "<LOAD_CACHED_MODEL>", description = "load cached spoon model")
   protected boolean loadSpoonModelFromCache;
 
+  @Option(names = { "-cp",
+      "--classpath" }, defaultValue = ".", split = ":", paramLabel = "<CLASSPATH>", description = "set source class path")
+  protected String[] classpath;
+
   private void checkFileParametersValidity() {
     List<ArgSpec> argSpecs = new ArrayList<>();
     argSpecs.addAll(spec.options());
@@ -115,7 +119,7 @@ class PatchCommand extends SpoonCommand {
     if (!pr.hasMatchedOption("report")) {
       spec.findOption("--report").setValue(new File(projectRoot, defaultNPEReportName));
     }
-    NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, loadSpoonModelFromCache, npeReport);
+    NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, loadSpoonModelFromCache, classpath, npeReport);
     launcher.run();
   }
 }
@@ -132,7 +136,8 @@ class HandleExtractorCommand extends SpoonCommand {
     if (!pr.hasMatchedOption("--results")) {
       spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
     }
-    NPEXLauncher launcher = new NullHandleExtractorLauncher(projectRoot, loadSpoonModelFromCache, resultsPath);
+    NPEXLauncher launcher = new NullHandleExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
+        resultsPath);
     launcher.run();
   }
 }
@@ -149,7 +154,8 @@ class InvocationExtractor extends SpoonCommand {
     if (!pr.hasMatchedOption("--results")) {
       spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
     }
-    NPEXLauncher launcher = new InvoContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, resultsPath);
+    NPEXLauncher launcher = new InvoContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
+        resultsPath);
     launcher.run();
   }
 

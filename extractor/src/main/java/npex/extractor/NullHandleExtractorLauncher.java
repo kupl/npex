@@ -31,8 +31,9 @@ import npex.common.NPEXLauncher;
 import npex.extractor.processors.NullHandleProcessor;
 
 public class NullHandleExtractorLauncher extends NPEXLauncher {
-  public NullHandleExtractorLauncher(File projectRoot, boolean loadFromCache, String resultsPath) throws IOException {
-    super(projectRoot, loadFromCache);
+  public NullHandleExtractorLauncher(File projectRoot, boolean loadFromCache, String[] classpath, String resultsPath)
+      throws IOException {
+    super(projectRoot, loadFromCache, classpath);
     spoonLauncher.addProcessor(new NullHandleProcessor(resultsPath));
   }
 
