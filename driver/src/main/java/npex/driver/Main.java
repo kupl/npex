@@ -76,7 +76,7 @@ abstract class SpoonCommand implements Runnable {
   protected boolean loadSpoonModelFromCache;
 
   @Option(names = { "-cp",
-      "--classpath" }, defaultValue = ".", split = ":", paramLabel = "<CLASSPATH>", description = "set source class path")
+      "--classpath" }, split = ":", paramLabel = "<CLASSPATH>", description = "set source class path")
   protected String[] classpath;
 
   private void checkFileParametersValidity() {
