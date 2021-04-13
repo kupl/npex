@@ -36,7 +36,10 @@ import npex.common.utils.FactoryUtils;
 import npex.extractor.context.ContextExtractor;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class NullModel {
@@ -62,10 +65,19 @@ public class NullModel {
   public JSONObject toJSON() {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
+    obj.put("null_value", nullValue != null ? abstractNullValue(nullValue) : JSONObject.NULL);
+    obj.put("actual_null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
     obj.put("contexts", contexts != null ? new JSONObject(contexts) : JSONObject.NULL);
     return obj;
+  }
+
+  private String abstractNullValue(CtExpression nullValue) {
+    if (nullValue instanceof CtLiteral) {
+      return nullValue.toString();
+    } else {
+      return "NPEXNonLiteral";
+    }
   }
 
   private class NullInvocationScanner extends EarlyTerminatingScanner<InvocationInfo> {
@@ -87,6 +99,11 @@ public class NullModel {
     }
 
     private void whenActualIsNull(CtInvocation invo) {
+      if (invo.getExecutable() instanceof CtExecutableReference exec && exec.getActualMethod() instanceof CtMethod mthd
+          && mthd.getReturnType())
+        ;
+
+
       CtInvocation nullInvo = invo.clone();
       Stream<CtExpression> argsStream = invo.getArguments().stream();
       List<CtExpression> argsList = argsStream.map(arg -> arg.equals(nullExp) ? FactoryUtils.createNullLiteral() : arg)
