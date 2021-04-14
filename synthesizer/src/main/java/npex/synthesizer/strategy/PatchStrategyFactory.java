@@ -40,6 +40,7 @@ public class PatchStrategyFactory {
     strategies.put("SkipContinue", new SkipContinueStrategy());
     strategies.put("SkipSinkStatement", new SkipSinkStatementStrategy());
     strategies.put("SkipReturn", new SkipReturnStrategy());
+    strategies.put("SkipThrow", new SkipThrowStrategy());
     for (ValueInitializer i : initializers) {
       strategies.put("InitPointer" + i.getName().replace("Initializer", ""), new InitPointerStrategy(i));
       strategies.put("ReplacePointer" + i.getName().replace("Initializer", ""), new ReplacePointerStrategy(i));
