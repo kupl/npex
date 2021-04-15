@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer;
+package npex.common;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -53,7 +53,7 @@ public class NPEInfo {
   String deref_field;
   CtMethod<?> npe_method;
   CtClass<?> npe_class;
-  CtInvocation<?> callee;
+  CtMethod<?> callee;
 
   public static NPEInfo readFromJSON(CtModel model, String jsonPath) throws IOException, NoSuchElementException {
     JSONObject js = new JSONObject(new String(Files.readAllBytes(Paths.get(jsonPath))));
@@ -103,8 +103,8 @@ public class NPEInfo {
         return expr.getParent(CtTargetedExpression.class).getTarget();
       }
 
-      if (expr instanceof CtInvocation) {
-        if (((CtInvocation<?>) expr).getExecutable().getSignature().contains(deref_field))
+      if (expr instanceof CtInvocation invo) {
+        if (invo.getExecutable().getSignature().contains(deref_field))
           return expr;
         continue;
       }
