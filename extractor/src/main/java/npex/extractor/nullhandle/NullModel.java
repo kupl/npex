@@ -33,13 +33,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.utils.FactoryUtils;
+import npex.extractor.InvocationKey;
 import npex.extractor.context.ContextExtractor;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtMethod;
-import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class NullModel {
@@ -48,6 +47,7 @@ public class NullModel {
   private final CtElement sinkBody;
   private final CtExpression nullValue;
   private final InvocationInfo invoInfo;
+  private final InvocationKey invoKey;
 
   final private Map<String, Boolean> contexts;
 
@@ -59,6 +59,7 @@ public class NullModel {
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
     this.invoInfo = scanner.getResult();
+    this.invoKey = invoInfo != null ? new InvocationKey(invoInfo.orgInvo(), invoInfo.nullIdx()) : null;
     this.contexts = invoInfo != null ? ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx()) : null;
   }
 
@@ -68,6 +69,7 @@ public class NullModel {
     obj.put("null_value", nullValue != null ? abstractNullValue(nullValue) : JSONObject.NULL);
     obj.put("actual_null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
+    obj.put("invocation_key", invoKey != null ? invoKey.toJSON() : JSONObject.NULL);
     obj.put("contexts", contexts != null ? new JSONObject(contexts) : JSONObject.NULL);
     return obj;
   }
@@ -84,10 +86,14 @@ public class NullModel {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       super.visitCtInvocation(invo);
-      if (invo.getTarget().equals(nullExp)) {
-        whenReceiverIsNull(invo);
-      } else if (invo.getArguments().contains(nullExp)) {
-        whenActualIsNull(invo);
+      try {
+        if (invo.getTarget().equals(nullExp)) {
+          whenReceiverIsNull(invo);
+        } else if (invo.getArguments().contains(nullExp)) {
+          whenActualIsNull(invo);
+        }
+      } catch (NullPointerException e) {
+        logger.error("Target of {} is null", invo);
       }
     }
 
@@ -99,11 +105,6 @@ public class NullModel {
     }
 
     private void whenActualIsNull(CtInvocation invo) {
-      if (invo.getExecutable() instanceof CtExecutableReference exec && exec.getActualMethod() instanceof CtMethod mthd
-          && mthd.getReturnType())
-        ;
-
-
       CtInvocation nullInvo = invo.clone();
       Stream<CtExpression> argsStream = invo.getArguments().stream();
       List<CtExpression> argsList = argsStream.map(arg -> arg.equals(nullExp) ? FactoryUtils.createNullLiteral() : arg)

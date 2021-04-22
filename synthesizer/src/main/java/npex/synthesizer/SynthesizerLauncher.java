@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import npex.common.NPEInfo;
 import npex.common.NPEXException;
 import npex.common.NPEXLauncher;
 import npex.synthesizer.strategy.PatchStrategy;
