@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.extractor;
+package npex.extractor.nullhandle;
 
 import java.io.File;
 import java.io.IOException;

@@ -33,8 +33,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.utils.FactoryUtils;
-import npex.extractor.InvocationKey;
 import npex.extractor.context.ContextExtractor;
+import npex.extractor.invocation.InvocationKey;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;

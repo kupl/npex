@@ -1,4 +1,4 @@
-package npex.extractor;
+package npex.extractor.invocation;
 
 import org.json.JSONObject;
 
@@ -6,16 +6,16 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.reference.CtTypeReference;
 
 public class InvocationKey {
-  public final String methodName;
-  public final int nullPos;
-  public final int actualsLen;
-  public final String return_type;
+  final String methodName;
+  final int nullPos;
+  final int actualsLength;
+  final String returnType;
 
   public InvocationKey(CtInvocation invo, int nullPos) {
     this.methodName = invo.getExecutable().getSimpleName();
     this.nullPos = nullPos;
-    this.actualsLen = invo.getArguments().size();
-    this.return_type = abstractReturnType(invo.getType());
+    this.actualsLength = invo.getArguments().size();
+    this.returnType = abstractReturnType(invo.getType());
 
   }
 
@@ -33,9 +33,9 @@ public class InvocationKey {
   public JSONObject toJSON() {
     var obj = new JSONObject();
     obj.put("method_name", methodName);
-    obj.put("nullPos", nullPos);
-    obj.put("actuals_length", actualsLen);
-    obj.put("return_type", return_type);
+    obj.put("null_pos", nullPos);
+    obj.put("actuals_length", actualsLength);
+    obj.put("return_type", returnType);
     return obj;
   }
 }

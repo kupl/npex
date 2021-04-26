@@ -33,8 +33,8 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import npex.common.NPEXLauncher;
-import npex.extractor.InvoContextExtractorLauncher;
-import npex.extractor.NullHandleExtractorLauncher;
+import npex.extractor.invocation.InvocationContextExtractorLauncher;
+import npex.extractor.nullhandle.NullHandleExtractorLauncher;
 import npex.synthesizer.SynthesizerLauncher;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -47,7 +47,7 @@ import picocli.CommandLine.ParseResult;
 import picocli.CommandLine.Spec;
 
 @Command(name = "npex", subcommands = { PatchCommand.class, HandleExtractorCommand.class, InvocationExtractor.class,
-    NullInvocationExtractor.class, CommandLine.HelpCommand.class }, mixinStandardHelpOptions = true)
+    CommandLine.HelpCommand.class }, mixinStandardHelpOptions = true)
 
 public class Main {
   final static Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -155,37 +155,9 @@ class InvocationExtractor extends SpoonCommand {
     if (!pr.hasMatchedOption("--results")) {
       spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
     }
-    NPEXLauncher launcher = new InvoContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
+    NPEXLauncher launcher = new InvocationContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
         resultsPath);
     launcher.run();
   }
 
-}
-
-@Command(name = "extract-null-invo")
-class NullInvocationExtractor extends SpoonCommand {
-  static final String defaultResultsName = "nullinvo.npex.json";
-  static final String defaultNPEReportName = "npe.json";
-
-  @Option(names = { "-rs",
-      "--results" }, paramLabel = "<RESULTS_JSON>", defaultValue = defaultResultsName, description = "path for results JSON file where collected handles information to be stored (default:<PROJECT_ROOT>/${DEFAULT-VALUE})")
-  String resultsPath;
-
-  @Option(names = { "-rep",
-      "--report" }, paramLabel = "<NPE_REPORT>", defaultValue = defaultNPEReportName, description = "path for JSON-formatted NPE report (default: <PROJECT_ROOT>/${DEFAULT-VALUE})")
-  File npeReport;
-
-  public void launch(ParseResult pr) throws IOException {
-    if (!pr.hasMatchedOption("--results")) {
-      spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
-    }
-
-    if (!pr.hasMatchedOption("report")) {
-      spec.findOption("--report").setValue(new File(projectRoot, defaultNPEReportName));
-    }
-
-    NPEXLauncher launcher = new InvoContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
-        resultsPath);
-    launcher.run();
-  }
 }
