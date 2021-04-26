@@ -23,24 +23,13 @@
  */
 package npex.synthesizer.strategy;
 
-import java.util.Collections;
-import java.util.List;
-
-import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLoop;
-import spoon.reflect.code.CtStatement;
+import spoon.reflect.visitor.filter.SameFilter;
 
-public class SkipContinueStrategy extends SkipLoopBodyStrategy {
-
-  @Override
-  protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
-    return Collections.singletonList(factory.createContinue());
-  }
-
-  @Override
-  protected CtStatement createSkipTo(CtExpression nullExp) {
-    CtBlock loopBody = (CtBlock) nullExp.getParent(CtLoop.class).getBody();
-    return loopBody.getLastStatement();
+public abstract class SkipLoopBodyStrategy extends AbstractSkipStrategy {
+  public boolean _isApplicable(CtExpression<?> nullExp) {
+    CtLoop loop = nullExp.getParent(CtLoop.class);
+    return loop != null && nullExp.getParent(new SameFilter(loop.getBody())) != null;
   }
 }

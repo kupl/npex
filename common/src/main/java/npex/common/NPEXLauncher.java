@@ -29,7 +29,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -109,13 +108,10 @@ public abstract class NPEXLauncher {
   static private Launcher createJavacLauncher(File projectRoot) {
     logger.info("Parsing project without supported build systems ...");
     Launcher launcher = new Launcher();
-    Collection<File> sources = FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), null);
-    sources.forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
     IOFileFilter dirFilter = FileFilterUtils.notFileFilter(FileFilterUtils.or(FileFilterUtils.nameFileFilter("target"),
         FileFilterUtils.nameFileFilter("spooned"), FileFilterUtils.nameFileFilter("patches")));
-    FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), dirFilter).forEach(src -> {
-      launcher.addInputResource(src.getAbsolutePath());
-    });
+    FileUtils.listFiles(projectRoot, new SuffixFileFilter(".java"), dirFilter)
+        .forEach(src -> launcher.addInputResource(src.getAbsolutePath()));
     return launcher;
   }
 

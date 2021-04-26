@@ -33,6 +33,7 @@ import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtForEach;
+import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtRHSReceiver;
@@ -61,7 +62,7 @@ public class ASTUtils {
   public static CtExpression getOutermostExpression(CtExpression e) {
     while (e.getParent() instanceof CtExpression && !(e.getParent() instanceof CtBinaryOperator)) {
       CtExpression parent = (CtExpression) e.getParent();
-      if (parent instanceof CtVariableWrite || parent instanceof CtRHSReceiver) {
+      if (parent instanceof CtVariableWrite || parent instanceof CtRHSReceiver || parent instanceof CtLambda) {
         break;
       }
       e = parent;

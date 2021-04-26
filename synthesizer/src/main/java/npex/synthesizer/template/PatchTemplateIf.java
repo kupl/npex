@@ -23,6 +23,8 @@
  */
 package npex.synthesizer.template;
 
+import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 import npex.common.utils.ASTUtils;
@@ -41,6 +43,8 @@ public class PatchTemplateIf extends PatchTemplate {
   private final CtStatement skipFrom, skipTo;
   private final SkipKind kind;
 
+  private CtStatement patchedStatement;
+
   public PatchTemplateIf(String id, CtExpression nullExp, CtStatement nullExecStmt, CtStatement skipFrom,
       CtStatement skipTo) {
     super(id, nullExp);
@@ -51,30 +55,39 @@ public class PatchTemplateIf extends PatchTemplate {
     this.kind = (nullExecStmt == null) ? SkipKind.SKIPONLY : SkipKind.DOSMTH;
   }
 
-  protected CtExecutable implement() {
+  public CtStatement getPatchedStatement() {
+    return patchedStatement;
+  }
+
+  protected CtExecutable implement() throws ImplementationFailure {
     CtIf ifStmt = factory.createIf();
     CtBlock<?> thenBlock = factory.createBlock();
-
-    CtBlock<?> skipBlock = skipFrom.getParent(CtBlock.class);
-    List<CtStatement> stmts = skipBlock.getStatements();
-    switch (kind) {
-      case SKIPONLY:
-        ifStmt.setCondition(createNullCond(false));
-        int idxFrom = stmts.indexOf(skipFrom);
-        int idxTo = stmts.indexOf(skipTo);
-        for (CtStatement s : stmts.subList(idxFrom, idxTo + 1)) {
-          skipBlock.removeStatement(s);
-          thenBlock.addStatement(s);
-        }
-        skipBlock.addStatement(idxFrom, ifStmt);
-        break;
-      case DOSMTH:
-        ifStmt.setCondition(createNullCond(true));
-        thenBlock.addStatement(nullExecStmt);
-        break;
-    }
-
     ifStmt.setThenStatement(thenBlock);
-    return ast;
+    this.patchedStatement = ifStmt;
+    try {
+      CtBlock<?> modBlock = skipFrom.getParent(CtBlock.class);
+      List<CtStatement> stmts = new ArrayList<>(modBlock.getStatements());
+      int idxFrom = stmts.indexOf(skipFrom);
+      int idxTo = stmts.indexOf(skipTo);
+      switch (kind) {
+        case SKIPONLY:
+          ifStmt.setCondition(createNullCond(false));
+          for (CtStatement s : stmts.subList(idxFrom, idxTo + 1)) {
+            modBlock.removeStatement(s);
+            thenBlock.addStatement(s);
+          }
+          modBlock.addStatement(idxFrom, ifStmt);
+          break;
+        case DOSMTH:
+          ifStmt.setCondition(createNullCond(true));
+          thenBlock.addStatement(nullExecStmt);
+          modBlock.addStatement(idxFrom, ifStmt);
+          break;
+      }
+
+      return ast;
+    } catch (NullPointerException | IndexOutOfBoundsException | ConcurrentModificationException e) {
+      throw new ImplementationFailure(this, e);
+    }
   }
 }

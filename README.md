@@ -70,6 +70,6 @@ If you don't get any solutions from the page, please report it as a new issue fo
 The email address you can contact is as follows:  
 
 * **Junhee Lee** : junhee_lee@korea.ac.kr
-* **Seongjoon Hong** : seongjoon_hong@korea.ac.kr
+* **Seongjoon Hong** : seongjoon@korea.ac.kr
 
 We are welcome to any questions or comments for our lovely project! 

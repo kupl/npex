@@ -30,7 +30,6 @@ import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.code.CtThisAccess;
 import spoon.reflect.code.CtVariableAccess;
 
 @SuppressWarnings("rawtypes")
@@ -51,7 +50,7 @@ public class InitPointerStrategy extends AbstractSkipStrategy {
     return values.stream().map(v -> {
       CtAssignment assignment = nullExp.getFactory().createAssignment();
       assignment.setAssigned(nullExp.clone());
-      assignment.setAssigned(v);
+      assignment.setAssignment(v);
       return assignment;
     }).collect(Collectors.toList());
   }
@@ -62,6 +61,6 @@ public class InitPointerStrategy extends AbstractSkipStrategy {
   }
 
   protected boolean _isApplicable(CtExpression nullExp) {
-    return nullExp instanceof CtVariableAccess || nullExp instanceof CtThisAccess;
+    return nullExp instanceof CtVariableAccess va && !va.getVariable().getDeclaration().isFinal();
   }
 }

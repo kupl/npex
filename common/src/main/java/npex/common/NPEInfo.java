@@ -98,9 +98,8 @@ public class NPEInfo {
           && deref_field.equals(((CtVariableRead<?>) expr).getVariable().getSimpleName()))
         return expr;
 
-      if (expr instanceof CtFieldAccess
-          && deref_field.equals(((CtFieldAccess<?>) expr).getVariable().getSimpleName())) {
-        return expr.getParent(CtTargetedExpression.class).getTarget();
+      if (expr instanceof CtFieldAccess fa && deref_field.equals(fa.getVariable().getSimpleName())) {
+        return fa;
       }
 
       if (expr instanceof CtInvocation invo) {

@@ -33,11 +33,8 @@ import npex.common.utils.ASTUtils;
 import npex.synthesizer.template.PatchTemplateIf;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLambda;
-import spoon.reflect.code.CtLoop;
 import spoon.reflect.code.CtStatement;
-import spoon.reflect.declaration.CtElement;
 import spoon.reflect.factory.CoreFactory;
-import spoon.reflect.visitor.filter.SameFilter;
 import spoon.support.DefaultCoreFactory;
 
 public abstract class AbstractSkipStrategy implements PatchStrategy<PatchTemplateIf> {
@@ -64,13 +61,6 @@ public abstract class AbstractSkipStrategy implements PatchStrategy<PatchTemplat
       return false;
     }
 
-    /* Do not skip if null expr is a loop-head element */
-    CtLoop loop = nullExp.getParent(CtLoop.class);
-    if (loop != null) {
-      CtElement loopHead = ASTUtils.getLoopHeadElement(loop);
-      if (loopHead != null && !loopHead.getElements(new SameFilter(nullExp)).isEmpty())
-        return false;
-    }
     return _isApplicable(nullExp);
   }
 
