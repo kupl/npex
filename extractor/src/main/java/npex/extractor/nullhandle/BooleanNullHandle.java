@@ -50,16 +50,21 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
 
     @Override
     public void visitCtBinaryOperator(CtBinaryOperator bo) {
-      super.visitCtBinaryOperator(bo);
       root = bo;
       BinaryOperatorKind kind = bo.getKind();
-      switch (kind) {
-        case OR, AND:
-          if (!kind.equals(handleBoKind))
-            terminate();
-          root = bo.getLeftHandOperand();
-        default:
-          ;
+      if (kind.equals(BinaryOperatorKind.OR) || kind.equals(BinaryOperatorKind.AND)) {
+        // Exclude boolean handles with inconsistent bops, e.g., p != null && e1 || e2
+        if (!kind.equals(handleBoKind)) {
+          terminate();
+        }
+      }
+      root = bo.getRightHandOperand();
+      if (root instanceof CtBinaryOperator boRHS) {
+        visitCtBinaryOperator(boRHS);
+      } else if (root instanceof CtInvocation invo) {
+        super.visitCtInvocation(invo);
+      } else {
+        terminate();
       }
     }
 

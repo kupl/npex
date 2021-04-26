@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.extractor;
+package npex.extractor.nullhandle;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,10 +30,10 @@ import npex.common.NPEXException;
 import npex.common.NPEXLauncher;
 import npex.extractor.processors.NullHandleProcessor;
 
-public class ExtractorLauncher extends NPEXLauncher {
-
-  public ExtractorLauncher(File projectRoot, boolean loadFromCache, String resultsPath) throws IOException {
-    super(projectRoot, loadFromCache);
+public class NullHandleExtractorLauncher extends NPEXLauncher {
+  public NullHandleExtractorLauncher(File projectRoot, boolean loadFromCache, String[] classpath, String resultsPath)
+      throws IOException {
+    super(projectRoot, loadFromCache, classpath);
     spoonLauncher.addProcessor(new NullHandleProcessor(resultsPath));
   }
 

@@ -33,7 +33,8 @@ import org.slf4j.LoggerFactory;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import npex.common.NPEXLauncher;
-import npex.extractor.ExtractorLauncher;
+import npex.extractor.invocation.InvocationContextExtractorLauncher;
+import npex.extractor.nullhandle.NullHandleExtractorLauncher;
 import npex.synthesizer.SynthesizerLauncher;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
@@ -45,8 +46,9 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParseResult;
 import picocli.CommandLine.Spec;
 
-@Command(name = "npex", subcommands = { PatchCommand.class, HandleExtractorCommand.class,
+@Command(name = "npex", subcommands = { PatchCommand.class, HandleExtractorCommand.class, InvocationExtractor.class,
     CommandLine.HelpCommand.class }, mixinStandardHelpOptions = true)
+
 public class Main {
   final static Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
   static {
@@ -73,6 +75,10 @@ abstract class SpoonCommand implements Runnable {
 
   @Option(names = { "-c", "--cached" }, paramLabel = "<LOAD_CACHED_MODEL>", description = "load cached spoon model")
   protected boolean loadSpoonModelFromCache;
+
+  @Option(names = { "-cp",
+      "--classpath" }, split = ":", paramLabel = "<CLASSPATH>", description = "set source class path")
+  protected String[] classpath;
 
   private void checkFileParametersValidity() {
     List<ArgSpec> argSpecs = new ArrayList<>();
@@ -114,7 +120,7 @@ class PatchCommand extends SpoonCommand {
     if (!pr.hasMatchedOption("report")) {
       spec.findOption("--report").setValue(new File(projectRoot, defaultNPEReportName));
     }
-    NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, loadSpoonModelFromCache, npeReport);
+    NPEXLauncher launcher = new SynthesizerLauncher(projectRoot, loadSpoonModelFromCache, classpath, npeReport);
     launcher.run();
   }
 }
@@ -131,7 +137,27 @@ class HandleExtractorCommand extends SpoonCommand {
     if (!pr.hasMatchedOption("--results")) {
       spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
     }
-    NPEXLauncher launcher = new ExtractorLauncher(projectRoot, loadSpoonModelFromCache, resultsPath);
+    NPEXLauncher launcher = new NullHandleExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
+        resultsPath);
     launcher.run();
   }
+}
+
+@Command(name = "extract-invo-context")
+class InvocationExtractor extends SpoonCommand {
+  static final String defaultResultsName = "invo-ctx.npex.json";
+
+  @Option(names = { "-r",
+      "--results" }, paramLabel = "<RESULTS_JSON>", defaultValue = defaultResultsName, description = "path for results JSON file where collected handles information to be stored (default:<PROJECT_ROOT>/${DEFAULT-VALUE})")
+  String resultsPath;
+
+  public void launch(ParseResult pr) throws IOException {
+    if (!pr.hasMatchedOption("--results")) {
+      spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
+    }
+    NPEXLauncher launcher = new InvocationContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
+        resultsPath);
+    launcher.run();
+  }
+
 }

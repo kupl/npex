@@ -28,17 +28,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.utils.FactoryUtils;
 import npex.extractor.context.ContextExtractor;
+import npex.extractor.invocation.InvocationKey;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtElement;
-import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class NullModel {
@@ -47,6 +47,7 @@ public class NullModel {
   private final CtElement sinkBody;
   private final CtExpression nullValue;
   private final InvocationInfo invoInfo;
+  private final InvocationKey invoKey;
 
   final private Map<String, Boolean> contexts;
 
@@ -58,69 +59,41 @@ public class NullModel {
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
     this.invoInfo = scanner.getResult();
-    this.contexts = invoInfo != null ? ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx) : null;
+    this.invoKey = invoInfo != null ? new InvocationKey(invoInfo.orgInvo(), invoInfo.nullIdx()) : null;
+    this.contexts = invoInfo != null ? ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx()) : null;
   }
 
   public JSONObject toJSON() {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
+    obj.put("null_value", nullValue != null ? abstractNullValue(nullValue) : JSONObject.NULL);
+    obj.put("actual_null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
+    obj.put("invocation_key", invoKey != null ? invoKey.toJSON() : JSONObject.NULL);
     obj.put("contexts", contexts != null ? new JSONObject(contexts) : JSONObject.NULL);
     return obj;
   }
 
-  private record InvocationInfo(int nullIdx, CtInvocation orgInvo, CtInvocation nullInvo) {
-    static private enum INVO_KIND {
-      CONSTRUCTOR, STATIC, VIRTUAL
+  private String abstractNullValue(CtExpression nullValue) {
+    if (nullValue instanceof CtLiteral) {
+      return nullValue.toString();
+    } else {
+      return "NPEXNonLiteral";
     }
-
-    static InvocationInfo createNullBaseInvocationInfo(CtInvocation orgInvo, CtInvocation nullInvo) {
-      return new InvocationInfo(-1, orgInvo, nullInvo);
-    }
-
-    static InvocationInfo createNullArgumentInvocationInfo(int idx, CtInvocation orgInvo, CtInvocation nullInvo) {
-      return new InvocationInfo(idx, orgInvo, nullInvo);
-    }
-
-    public JSONObject toJSON() {
-      var obj = new JSONObject();
-      CtTypeReference targetType = getInvocationType().equals(INVO_KIND.VIRTUAL) ? orgInvo.getTarget().getType() : null;
-      obj.put("null_invo", nullInvo);
-      obj.put("null_idx", nullIdx);
-      obj.put("method_name", nullInvo.getExecutable().getSimpleName());
-      obj.put("return_type", nullInvo.getType() != null ? nullInvo.getType().toString() : JSONObject.NULL);
-      obj.put("arguments_types",
-          new JSONArray(getActualArgumentsTypes().stream().map(argTyp -> argTyp.toString()).toArray()));
-      obj.put("invo_kind", getInvocationType().toString());
-      obj.put("target_type", targetType != null ? targetType : JSONObject.NULL);
-      return obj;
-    }
-
-    private INVO_KIND getInvocationType() {
-      if (orgInvo.getExecutable().isConstructor())
-        return INVO_KIND.CONSTRUCTOR;
-      else if (nullInvo.getExecutable().isStatic())
-        return INVO_KIND.STATIC;
-      else
-        return INVO_KIND.VIRTUAL;
-    }
-
-    private List<CtTypeReference> getActualArgumentsTypes() {
-      Stream<CtExpression> argsStream = orgInvo.getArguments().stream();
-      List<CtTypeReference> typs = argsStream.map(arg -> arg.getType()).collect(Collectors.toList());
-      return typs;
-    }
-  };
+  }
 
   private class NullInvocationScanner extends EarlyTerminatingScanner<InvocationInfo> {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       super.visitCtInvocation(invo);
-      if (invo.getTarget().equals(nullExp)) {
-        whenReceiverIsNull(invo);
-      } else if (invo.getArguments().contains(nullExp)) {
-        whenActualIsNull(invo);
+      try {
+        if (invo.getTarget().equals(nullExp)) {
+          whenReceiverIsNull(invo);
+        } else if (invo.getArguments().contains(nullExp)) {
+          whenActualIsNull(invo);
+        }
+      } catch (NullPointerException e) {
+        logger.error("Target of {} is null", invo);
       }
     }
 

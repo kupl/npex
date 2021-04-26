@@ -12,7 +12,7 @@ public abstract class AbstractVariableContext implements Context {
 
   public Boolean extract(CtInvocation invo, int nullPos) {
     CtExpression nullExp = nullPos == -1 ? invo.getTarget() : (CtExpression) invo.getArguments().get(nullPos);
-    return nullExp instanceof CtVariableAccess va && extract(va);
+    return nullExp instanceof CtVariableAccess va && va.getVariable().getDeclaration() != null && extract(va);
   }
 
   protected abstract Boolean extract(CtVariableAccess va);
