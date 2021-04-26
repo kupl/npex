@@ -64,7 +64,9 @@ public abstract class NPEXLauncher {
     } else {
       launcher = createJavacLauncher(projectRoot);
     }
-    launcher.getEnvironment().setSourceClasspath(classpath);
+    if (classpath != null)
+      launcher.getEnvironment().setSourceClasspath(classpath);
+    launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
     launcher.buildModel();
     new SerializationModelStreamer().save(launcher.getFactory(), new FileOutputStream(spoonModelCacheFile));
     return launcher;
