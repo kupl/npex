@@ -1,113 +1,68 @@
 #!/usr/bin/python3.8
-
-import csv
-from learning import DB
-import logging
 import subprocess
-import os
-import glob
-import json
-import argparse
-from datetime import datetime
 from multiprocessing import Pool
 from functools import partial
-
-from null_handle import NullHandle
-import classifier
-
-ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+from datetime import datetime
+import os
+import json
+import logging
+import argparse
+import learn
+import pprint
+from data import DB
 
 JDK_15_PATH = '/usr/lib/jvm/jdk-15.0.1'
 NPEX_DRIVER_JAR_PATH = '/home/june/project/npex/driver/target/driver-1.0-SNAPSHOT.jar'
+logger = open('log.log', 'w')
 
-logger = logging.getLogger()
+def run_npex(project_dir, mode, args=''):
+  print(f'Running NPEX-extractor on {project_dir}')
+  project_name = os.path.basename(project_dir)
+  cmd = f'{JDK_15_PATH}/bin/java --enable-preview -cp {NPEX_DRIVER_JAR_PATH} npex.driver.Main'
+  cmd = f'{cmd} {mode} {project_dir} {args}'
+  ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-
-def run_npex_extractor(project_root_dir, results_dir):
-    logger.info(f'Running NPEX-extractor on {project_root_dir}')
-    project_name = os.path.basename(project_root_dir)
-    results_json_path = os.path.abspath(f'./{results_dir}/{project_name}.results.json')
-    cmd = f'{JDK_15_PATH}/bin/java --enable-preview -cp {NPEX_DRIVER_JAR_PATH} npex.driver.Main'
-    cmd = f'{cmd} handle-extractor --cached {project_root_dir} --results={results_json_path}'
-    ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    if ret.returncode != 0:
-        logger.error(f'Fails to extract null handles for project {project_name}')
-        with open(f'logs/{project_name}.err.log', 'w') as f:
-            f.write(ret.stdout.decode('utf-8'))
-        return None
-
-    if os.path.exists(results_json_path):
-        return DB.from_result_json(results_json_path)
-    else:
-        logger.error(f'{project_name}: Something goes wrong. results json did not created?')
-        return None
-
-
-def collect(benchmarks, results_dir, results_csv, jobs):
-    with Pool(processes=jobs) as pool:
-        dbs = pool.map(partial(run_npex_extractor, results_dir=results_dir), benchmarks)
-        pool.close()
-        pool.join()
-
-    db = sum([d for d in dbs if not d is None], DB())
-    db.writeToCSV(results_csv)
-
-
-def __initialize_logger(logpath):
-    logger.setLevel(logging.NOTSET)
-
-    consoleHandler = logging.StreamHandler()
-    consoleHandler.setLevel(logging.INFO)
-    consoleHandler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s"))
-    logger.addHandler(consoleHandler)
-
-    fileHandler = logging.FileHandler(logpath, 'w', encoding=None, delay=True)
-    fileHandler.setLevel(logging.DEBUG)
-    fileHandler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s"))
-    logger.addHandler(fileHandler)
+  if ret.returncode != 0:
+    logger.write(f'{project_name}: Fails to extract null handles\n')
+  else:
+    logger.write(f'{project_name}: Succeed to extract null handles\n')
+  logger.flush()
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-log', help="a log file (default: stored by datetime at the 'logs' in the running directory")
-    subparsers = parser.add_subparsers(dest='subcommand')
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-log', help="a log file (default: stored by datetime at the 'logs' in the running directory")
+  subparsers = parser.add_subparsers(dest='subcommand')
 
-    collector = subparsers.add_parser('collect', help='collect null-handles')
-    collector.add_argument('benchmarks', nargs='+', help='benchmarks directories to collect null-handles')
-    collector.add_argument('results_dir',
-                           help='a directory to store collected null-handles in JSON format (default: %(default)s)',
-                           default=f'{os.getcwd()}/results')
-    collector.add_argument('results_csv', help='csv file to store collected null handles')
-    collector.add_argument('-j',
-                           type=int,
-                           dest='jobs',
-                           help='the number of jobs to run in parallel (default: %(default)s)',
-                           default=4)
+  collect = subparsers.add_parser('collect', help='collect null-handles')
+  collect.add_argument('benchmarks', nargs='+', help='benchmarks directories to collect null-handles')
+  collect.add_argument('dbname', help='name of db to collect')
+  collect.add_argument('-j',
+                          type=int,
+                          dest='jobs',
+                          help='the number of jobs to run in parallel (default: %(default)s)',
+                          default=4)
 
-    learn = subparsers.add_parser('learn', help='learn model classifier')
-    learn.add_argument('data', help='csvfile for collected null-handles')
-    learn.add_argument('-cls',
-                       help='path to store learned classifier (default: %(default)s)',
-                       default=classifier.CLASSIFIER_PATH)
+  db = subparsers.add_parser('db', help='construct learning DB from collected null handles')
+  db.add_argument('benchmarks', nargs='+', help='target projects')
+  db.add_argument('db_output', help='output path for constructed DB')
 
-    predict = subparsers.add_parser('predict', help='predict label with learned classifier')
-    predict.add_argument('data', help='csvfile for collected null-handles')
-    predict.add_argument('-cls',
-                         help='path to store learned classifier (default: %(default)s)',
-                         default=classifier.CLASSIFIER_PATH)
+  train = subparsers.add_parser('train', help='train models for each invocation key')
+  train.add_argument('db', help='pickled learning DB file')
+  train.add_argument('models_dir', help='directory where to store learned classifiers')
 
-    args = parser.parse_args()
-    logpath = f'{datetime.today().strftime("%m%d%_H%M%_S")}.log' if args.log == None else args.log
-    __initialize_logger(logpath)
+  args = parser.parse_args()
+  if args.subcommand == 'collect':
+    with Pool(processes=args.jobs) as pool:
+      dbs = pool.map(partial(run_npex, mode='handle-extractor', args='--cached'), args.benchmarks)
+    
+  elif args.subcommand == 'db':
+    handle_json_files = [js for dir in args.benchmarks if os.path.exists(js := f'{dir}/handles.npex.json')]
+    db = sum([DB.create_from_handles(js) for js in handle_json_files], DB(handles=[]))
+    db.serialize(args.db_output)
+    with open('collected.db', 'w') as f:
+      f.write(db.to_json())
 
-    if args.subcommand == 'collect':
-        os.makedirs(args.results_dir, exist_ok=False)
-        os.makedirs("logs", exist_ok=True)
-        collect(args.benchmarks, args.results_dir, args.results_csv, jobs=args.jobs)
-
-    elif args.subcommand == 'learn':
-        classifier.train2(args.data, args.cls, -1)
-        classifier.train2(args.data, args.cls, 0)
-
-    elif args.subcommand == 'predict':
-        classifier.see_conflict(args.data, args.cls)
+  elif args.subcommand == 'train':
+    db = DB.deserialize(args.db)
+    td = learn.train_classifiers(db, args.models_dir)
