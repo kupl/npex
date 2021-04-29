@@ -25,7 +25,7 @@ class JSONData:
         fields.add(k)
     return fields
 
-@dataclass
+@dataclass(frozen=True)
 class InvocationSite(JSONData):
   lineno: int
   source_path : str
