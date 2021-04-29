@@ -57,8 +57,8 @@ public abstract class AbstractNullHandle<T extends CtElement> {
 
   public JSONObject toJSON() {
     var obj = new JSONObject();
-    obj.put("source_location", handle.getPosition().getFile().getAbsolutePath());
-    obj.put("line_no", handle.getPosition().getLine());
+    obj.put("source_path", handle.getPosition().getFile().getAbsolutePath());
+    obj.put("lineno", handle.getPosition().getLine());
     obj.put("handle", handle.toString());
     obj.put("models", new JSONArray(models.stream().map(m -> m.toJSON()).toArray()));
     return obj;
