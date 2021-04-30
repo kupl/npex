@@ -19,6 +19,13 @@ class Model:
     self.classifiers = dict()
     self.labels = dict()
 
+  def serialize(self, path):
+    joblib.dump(self, path)
+
+  @classmethod
+  def deserialize(cls, path):
+    return joblib.load(path)
+
 def construct_training_data(db):
   data = dict()
   for h in db.handles:
@@ -29,7 +36,7 @@ def construct_training_data(db):
   return data
 
 
-def train_classifiers(db, model_output_dir) -> Dict[InvocationKey, DecisionTreeClassifier]:
+def train_classifiers(db, model_output_dir, classifier_out_path) -> Dict[InvocationKey, DecisionTreeClassifier]:
   model = Model()
   for key, d in construct_training_data(db).items():
     X, Y = [], []
@@ -40,7 +47,7 @@ def train_classifiers(db, model_output_dir) -> Dict[InvocationKey, DecisionTreeC
 
     model.classifiers[key], model.labels[key] = train_classifier(key, X, Y, model_output_dir)
 
-  joblib.dump(model, f'{model_output_dir}/classifiers')
+  model.serialize(classifer_out_path)
 
 
 def train_classifier(key, X, Y, model_output_dir, visualize=False) -> Tuple[DecisionTreeClassifier, Dict[str, int]]:
@@ -64,8 +71,8 @@ def train_classifier(key, X, Y, model_output_dir, visualize=False) -> Tuple[Deci
   return (clf, list(labeldict.keys()))
 
 
-def generate_answer_sheet(project_dir, model) -> Dict[Tuple[InvocationSite, int], Dict[str, float]] :
-  model = joblib.load(model)
+def generate_answer_sheet(project_dir, model_path, outpath) -> Dict[Tuple[InvocationSite, int], Dict[str, float]] :
+  model = Model.deserialize(model_path)
   invo_contexts = data.JSONData.read_json_from_file(f'{project_dir}/invo-ctx.npex.json')
   answers = []
 
@@ -81,9 +88,6 @@ def generate_answer_sheet(project_dir, model) -> Dict[Tuple[InvocationSite, int]
         d['proba'] = {model.labels[key][idx]: prob for (idx, prob) in enumerate(proba[0])}
       answers.append(d)
 
-  with open('sheet', 'w') as f:
-    pprint.PrettyPrinter(indent=4, stream=f).pprint(answers)
-
-  with open('sheet.json', 'w') as f:
+  with open(outpath, 'w') as f:
     f.write(json.dumps(answers, indent=4))
     

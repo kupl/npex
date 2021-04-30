@@ -86,7 +86,7 @@ class DB:
     for h in JSONData.read_json_from_file(handles_json):
       for m in h['models']:
          model = NullModel.from_dict(m)
-         handle = NullHandle(h['source_location'], h['line_no'], h['handle'], model) 
+         handle = NullHandle(h['source_path'], h['lineno'], h['handle'], model) 
          handles.append(handle)
 
     return DB(handles)
