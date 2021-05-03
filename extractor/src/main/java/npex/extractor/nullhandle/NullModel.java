@@ -66,7 +66,7 @@ public class NullModel {
   public JSONObject toJSON() {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_value", nullValue != null ? abstractNullValue(nullValue) : JSONObject.NULL);
+    obj.put("null_value", abstractNullValue(nullValue));
     obj.put("actual_null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
     obj.put("invocation_key", invoKey != null ? invoKey.toJSON() : JSONObject.NULL);
