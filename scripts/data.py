@@ -5,6 +5,14 @@ from dacite import from_dict as _from_dict
 import pprint
 import pickle
 import json
+from re import finditer
+
+
+def camel_case_split(identifier):
+    matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)',
+                       identifier)
+    return [m.group(0) for m in matches]
+
 
 @dataclass
 class JSONData:
@@ -33,10 +41,24 @@ class InvocationSite(JSONData):
 
 @dataclass(frozen=True)
 class InvocationKey(JSONData):
-  method_name: str
-  null_pos : int
-  actuals_length : int
-  return_type : str
+    method_name: str
+    null_pos: int
+    actuals_length: int
+    return_type: str
+
+    def matches_up_to_sub_camel_case(self, key):
+        if self.null_pos != key.null_pos or self.actuals_length != key.actuals_length or self.return_type != key.return_type:
+            return False
+
+        lhs_camels = camel_case_split(self.method_name)
+        rhs_camels = camel_case_split(key.method_name)
+
+        for i in range(0, min(len(lhs_camels), len(rhs_camels))):
+            if lhs_camels[i] == rhs_camels[i]:
+                return True
+
+        return False
+
 
 @dataclass
 class Contexts(JSONData):

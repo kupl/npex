@@ -74,11 +74,38 @@ def train_classifier(key, X, Y, model_output_dir, visualize=False):
     return (clf, list(labeldict.keys()))
 
 
+def find_alternative_models(model, key, contexts):
+    probas = []
+    for model_key, classifier in model.classifiers.items():
+        if key.matches_up_to_sub_camel_case(model_key):
+            _proba = classifier.predict_proba([contexts.to_boolean_vector()])
+            proba = {model.labels[model_key][idx]: prob for (
+                idx, prob) in enumerate(_proba[0])}
+            probas.append(proba)
+
+    num_of_matched = len(probas)
+
+    labels = set()
+    for proba in probas:
+        labels |= set(proba.keys())
+
+    ret = {}
+    for label in labels:
+        _sum = 0.0
+        for proba in probas:
+            _sum += proba[label] if label in proba else 0.0
+        ret[label] = _sum / num_of_matched
+
+    return ret
+
+
 def generate_answer_sheet(project_dir, model_path, outpath):
+    print(f"Deserializing {model_path}...")
     model = Model.deserialize(model_path)
     invo_contexts = data.JSONData.read_json_from_file(
         f'{project_dir}/invo-ctx.npex.json')
     answers = []
+    print(f"Done ...!")
 
     for entry in invo_contexts:
         for key_contexts in entry['keycons']:
@@ -94,12 +121,18 @@ def generate_answer_sheet(project_dir, model_path, outpath):
             d = {'site': d_site, 'null_pos': key.null_pos,
                  'key': key_contexts['key']}
             if key not in model.classifiers:
-                d['proba'] = {}
+                d['proba'] = find_alternative_models(model, key, contexts)
             else:
                 proba = model.classifiers[key].predict_proba(
                     [contexts.to_boolean_vector()])
                 d['proba'] = {model.labels[key][idx]: prob for (
                     idx, prob) in enumerate(proba[0])}
+
+            keys = list(d['proba'].keys())
+            for key in keys:
+                if d['proba'][key] == 0.0:
+                    del d['proba'][key]
+
             answers.append(d)
 
     with open(outpath, 'w') as f:
