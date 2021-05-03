@@ -16,28 +16,31 @@ def camel_case_split(identifier):
 
 @dataclass
 class JSONData:
-  @classmethod
-  def from_dict(klass, d):
-      return d if (d == None or d == []) else _from_dict(data_class=klass, data=d)
+    @classmethod
+    def from_dict(klass, d):
+        return d if (d == None or d == []) else _from_dict(data_class=klass,
+                                                           data=d)
 
-  @staticmethod
-  def read_json_from_file(json_filename: str):
-    with open(json_filename, "r") as f:
-      return json.load(f)
+    @staticmethod
+    def read_json_from_file(json_filename: str):
+        with open(json_filename, "r") as f:
+            return json.load(f)
 
-  @classmethod
-  def __get_primitive_fields(cls):
-    fields = set()
-    for (k, v) in cls.__annotations__:
-      if type(v) in ['int', 'str']:
-        fields.add(k)
-    return fields
+    @classmethod
+    def __get_primitive_fields(cls):
+        fields = set()
+        for (k, v) in cls.__annotations__:
+            if type(v) in ['int', 'str']:
+                fields.add(k)
+        return fields
+
 
 @dataclass(frozen=True)
 class InvocationSite(JSONData):
-  lineno: int
-  source_path : str
-  deref_field : str
+    lineno: int
+    source_path: str
+    deref_field: str
+
 
 @dataclass(frozen=True)
 class InvocationKey(JSONData):
@@ -82,51 +85,54 @@ class Contexts(JSONData):
     VariableIsFinal: bool
 
     def to_boolean_vector(self):
-      return [1 if b else 0 for b in self.__dict__.values()]
+        return [1 if b else 0 for b in self.__dict__.values()]
 
 
 @dataclass
 class NullModel(JSONData):
-  invocation_key: Optional[InvocationKey]
-  null_value: Optional[str]
-  sink_body: str
-  contexts: Optional[Contexts]
+    invocation_key: Optional[InvocationKey]
+    null_value: Optional[str]
+    sink_body: str
+    contexts: Optional[Contexts]
+
 
 @dataclass
 class NullHandle(JSONData):
-  source_path : str
-  lineno : int
-  handle : str
-  model : NullModel
+    source_path: str
+    lineno: int
+    handle: str
+    model: NullModel
+
 
 class DB:
-  handles : List[NullHandle]
+    handles: List[NullHandle]
 
-  @classmethod
-  def create_from_handles(cls, handles_json):
-    handles = []
-    for h in JSONData.read_json_from_file(handles_json):
-      for m in h['models']:
-         model = NullModel.from_dict(m)
-         handle = NullHandle(h['source_path'], h['lineno'], h['handle'], model) 
-         handles.append(handle)
+    @classmethod
+    def create_from_handles(cls, handles_json):
+        handles = []
+        for h in JSONData.read_json_from_file(handles_json):
+            for m in h['models']:
+                model = NullModel.from_dict(m)
+                handle = NullHandle(h['source_path'], h['lineno'], h['handle'],
+                                    model)
+                handles.append(handle)
 
-    return DB(handles)
-      
-  def __init__(self, handles):
-    self.handles = handles
+        return DB(handles)
 
-  def __add__(self, db):
-    return DB(self.handles + db.handles)
+    def __init__(self, handles):
+        self.handles = handles
 
-  def to_json(self):
-    return json.dumps([asdict(h) for h in self.handles], indent=4)
+    def __add__(self, db):
+        return DB(self.handles + db.handles)
 
-  def serialize(self, path):
-    with open(path, 'wb') as f:
-      pickle.dump(self, f)
+    def to_json(self):
+        return json.dumps([asdict(h) for h in self.handles], indent=4)
 
-  @classmethod
-  def deserialize(cls, path):
-    with open(path, 'rb') as f:
-      return pickle.load(f)
+    def serialize(self, path):
+        with open(path, 'wb') as f:
+            pickle.dump(self, f)
+
+    @classmethod
+    def deserialize(cls, path):
+        with open(path, 'rb') as f:
+            return pickle.load(f)
