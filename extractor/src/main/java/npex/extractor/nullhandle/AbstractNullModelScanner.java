@@ -51,6 +51,9 @@ public abstract class AbstractNullModelScanner extends EarlyTerminatingScanner<L
     }
   }
 
-  protected abstract NullModel createModel(CtInvocation invo);
+  protected boolean isTargetInvocation(CtInvocation invo) {
+    return invo.getTarget().equals(nullExp) || invo.getArguments().contains(nullExp);
+  }
 
+  protected abstract NullModel createModel(CtInvocation invo);
 }

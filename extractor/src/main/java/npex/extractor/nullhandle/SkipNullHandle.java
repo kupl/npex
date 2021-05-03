@@ -33,7 +33,9 @@ import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLocalVariable;
+import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.code.CtRHSReceiver;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableWrite;
@@ -41,8 +43,6 @@ import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
-import spoon.reflect.cu.position.*;
-import spoon.reflect.code.CtLiteral;
 
 public class SkipNullHandle extends AbstractNullHandle<CtIf> {
   public SkipNullHandle(CtIf handle, CtBinaryOperator nullCond) {
@@ -69,24 +69,48 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
         return;
       }
       firstStmt = stmts.get(0);
-      if ((firstStmt instanceof CtInvocation || firstStmt instanceof CtAssignment)) {
-        super.visitCtBlock(blk);
-      } else {
+      super.visitCtBlock(blk);
+      terminate();
+    }
+
+    @Override
+    public void visitCtInvocation(CtInvocation invo) {
+      if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
+        models.add(new NullModel(nullExp, invo, skipValue));
         terminate();
       }
     }
 
     @Override
-    protected NullModel createModel(CtInvocation invo) {
-      if (firstStmt instanceof CtAssignment a) {
-        if (a.getAssigned()instanceof CtVariableWrite w && w.getVariable() instanceof CtLocalVariableReference) {
-          var scanner = new NullValueScanner(a);
-          invo.getParent(new MethodOrConstructorFilter()).accept(scanner);
-          return new NullModel(nullExp, firstStmt, scanner.getResult());
-        }
+    public void visitCtAssignment(CtAssignment assign) {
+      if (!assign.equals(firstStmt)) {
+        return;
       }
 
-      return new NullModel(nullExp, firstStmt, skipValue);
+      CtExpression rhs = assign.getAssignment();
+      if (rhs instanceof CtInvocation invo && isTargetInvocation(invo)) {
+        CtExpression lhs = assign.getAssigned();
+        if (!(lhs instanceof CtVariableWrite)) {
+          terminate();
+          return;
+        }
+
+        CtExpression value;
+        if (assign instanceof CtOperatorAssignment) {
+          value = factory.createLiteral().setValue(0);
+        } else {
+          var scanner = new NullValueScanner(assign);
+          assign.getParent(new MethodOrConstructorFilter()).accept(scanner);
+          value = scanner.getResult();
+        }
+        models.add(new NullModel(nullExp, firstStmt, value));
+        terminate();
+      }
+    }
+
+    /* TODO: Re-organize AbstractNullHandle to remove this! */
+    protected NullModel createModel(CtInvocation invo) {
+      return null;
     }
 
     private class NullValueScanner extends EarlyTerminatingScanner<CtExpression> {
@@ -141,7 +165,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
             value = "false";
             break;
           default:
-            value = null;
+            value = "NPEX_NULL";
         }
         return factory.createCodeSnippetExpression().setValue(value);
       }
