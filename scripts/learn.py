@@ -79,7 +79,13 @@ def generate_answer_sheet(project_dir, model_path, outpath) -> Dict[Tuple[Invoca
   for entry in invo_contexts:
     for key_contexts in entry['keycons']:
       key, contexts = InvocationKey.from_dict(key_contexts['key']), Contexts.from_dict(key_contexts['contexts'])
-      d = {'site': entry['site'], 'null_pos': key.null_pos, 'key': key_contexts['key']}
+
+      #make source_path relative
+      abs_src_path = entry['site']['source_path']
+      rel_src_path = os.path.relpath(abs_src_path, start=project_dir)
+      d_site = {'lineno': entry['site']['lineno'], 'source_path':rel_src_path, 'deref_field': entry['site']['deref_field']}
+      
+      d = {'site': d_site, 'null_pos': key.null_pos, 'key': key_contexts['key']}
       if key not in model.classifiers:
         d['proba'] = {}
       else:
