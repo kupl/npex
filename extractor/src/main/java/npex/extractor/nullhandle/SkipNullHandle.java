@@ -41,6 +41,8 @@ import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
+import spoon.reflect.cu.position.*;
+import spoon.reflect.code.CtLiteral;
 
 public class SkipNullHandle extends AbstractNullHandle<CtIf> {
   public SkipNullHandle(CtIf handle, CtBinaryOperator nullCond) {
@@ -54,6 +56,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
 
   private class NullModelScanner extends AbstractNullModelScanner {
     private CtStatement firstStmt;
+    private CtLiteral skipValue = factory.createLiteral().setValue("NPEX_SKIP_VALUE");
 
     public NullModelScanner(CtExpression nullExp) {
       super(nullExp);
@@ -76,14 +79,14 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     @Override
     protected NullModel createModel(CtInvocation invo) {
       if (firstStmt instanceof CtAssignment a) {
-        if (a.getAssigned() instanceof CtVariableWrite w && w.getVariable() instanceof CtLocalVariableReference) {
+        if (a.getAssigned()instanceof CtVariableWrite w && w.getVariable() instanceof CtLocalVariableReference) {
           var scanner = new NullValueScanner(a);
           invo.getParent(new MethodOrConstructorFilter()).accept(scanner);
           return new NullModel(nullExp, firstStmt, scanner.getResult());
         }
       }
 
-      return new NullModel(nullExp, firstStmt, null);
+      return new NullModel(nullExp, firstStmt, skipValue);
     }
 
     private class NullValueScanner extends EarlyTerminatingScanner<CtExpression> {
@@ -114,7 +117,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
           return;
         }
 
-        if (assignment.getAssigned() instanceof CtVariableWrite write && write.getVariable().equals(varRef)) {
+        if (assignment.getAssigned()instanceof CtVariableWrite write && write.getVariable().equals(varRef)) {
           if (assignment == me) {
             CtBlock lastAssignmentBlock = ((CtStatement) lastAssignment).getParent(CtBlock.class);
             CtBlock myBlock = me.getParent(CtBlock.class);
