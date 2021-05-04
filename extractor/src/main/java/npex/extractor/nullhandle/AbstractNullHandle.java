@@ -35,6 +35,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.factory.CoreFactory;
 import spoon.support.DefaultCoreFactory;
+import npex.common.NPEXException;
 
 public abstract class AbstractNullHandle<T extends CtElement> {
   static final protected Logger logger = LoggerFactory.getLogger(AbstractNullHandle.class);
@@ -55,7 +56,7 @@ public abstract class AbstractNullHandle<T extends CtElement> {
     this.models = scanner.getResult();
   }
 
-  public JSONObject toJSON() {
+  public JSONObject toJSON() throws NPEXException {
     var obj = new JSONObject();
     obj.put("source_path", handle.getPosition().getFile().getAbsolutePath());
     obj.put("lineno", handle.getPosition().getLine());
