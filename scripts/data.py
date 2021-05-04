@@ -63,7 +63,7 @@ class InvocationKey(JSONData):
         return False
 
 
-@dataclass
+@dataclass(frozen=True)
 class Contexts(JSONData):
     UsedAsReturnExpression: bool
     UsedAsArgument: bool
