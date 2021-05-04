@@ -29,6 +29,7 @@ import npex.common.utils.ASTUtils;
 import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
 
@@ -37,6 +38,10 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   }
 
   public boolean isApplicable(CtExpression nullExp) {
+    CtExpression repExpr = extractExprToReplace(nullExp);
+    if (repExpr instanceof CtInvocation invo && invo.getExecutable().getSimpleName().equals("<init>")) {
+      return false;
+    }
     return !nullExp.toString().equals("null");
   }
 
