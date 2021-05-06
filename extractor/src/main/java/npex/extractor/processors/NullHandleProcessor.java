@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,7 @@ import npex.extractor.nullhandle.AbstractNullHandle;
 import npex.extractor.nullhandle.NullHandleFactory;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtCodeElement;
+import npex.common.NPEXException;
 
 public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
   static Logger logger = LoggerFactory.getLogger(NullHandleProcessor.class);
@@ -66,7 +68,15 @@ public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
 
   @Override
   public void processingDone() {
-    JSONArray handlesJsonArray = new JSONArray(handles.stream().map(h -> h.toJSON()).toArray());
+    List<JSONObject> jsons = new ArrayList<>();
+    for (var h : handles) {
+      try {
+        jsons.add(h.toJSON());
+      } catch (NPEXException e) {
+        logger.info(e.getMessage());
+      }
+    }
+    JSONArray handlesJsonArray = new JSONArray(jsons);
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultsOut))) {
       handlesJsonArray.write(writer, 1, 4);
     } catch (IOException e) {

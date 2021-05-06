@@ -57,12 +57,15 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
         if (!kind.equals(handleBoKind)) {
           terminate();
         }
-      }
-      root = bo.getRightHandOperand();
-      if (root instanceof CtBinaryOperator boRHS) {
-        visitCtBinaryOperator(boRHS);
-      } else if (root instanceof CtInvocation invo) {
-        super.visitCtInvocation(invo);
+        root = bo.getRightHandOperand();
+        if (root instanceof CtBinaryOperator boRHS) {
+          visitCtBinaryOperator(boRHS);
+        } else if (root instanceof CtInvocation invo && isTargetInvocation(invo)) {
+          models.add(createModel(invo));
+          terminate();
+        } else {
+          terminate();
+        }
       } else {
         terminate();
       }

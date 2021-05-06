@@ -32,6 +32,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.NPEXException;
 import npex.common.utils.FactoryUtils;
 import npex.extractor.context.ContextExtractor;
 import npex.extractor.invocation.InvocationKey;
@@ -39,6 +40,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.declaration.CtElement;
+import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class NullModel {
@@ -63,10 +65,10 @@ public class NullModel {
     this.contexts = invoInfo != null ? ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx()) : null;
   }
 
-  public JSONObject toJSON() {
+  public JSONObject toJSON() throws NPEXException {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_value", nullValue != null ? abstractNullValue(nullValue) : JSONObject.NULL);
+    obj.put("null_value", abstractNullValue(nullValue));
     obj.put("actual_null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
     obj.put("invocation_key", invoKey != null ? invoKey.toJSON() : JSONObject.NULL);
@@ -74,7 +76,17 @@ public class NullModel {
     return obj;
   }
 
-  private String abstractNullValue(CtExpression nullValue) {
+  private String abstractNullValue(CtExpression nullValue) throws NPEXException {
+    if (invoInfo == null || nullValue == null) {
+      throw new NPEXException(
+          String.format("Cannot extract null values for model {}: invoaction infomation is incomplete!", this));
+    }
+    CtTypeReference valueType = nullValue.getType();
+    CtTypeReference invoRetType = invoInfo.orgInvo().getType();
+    if (valueType != null && !valueType.isSubtypeOf(invoRetType)) {
+      throw new NPEXException(String.format("Cannot extract null values for model {}: {} is not a subtype of {}", this,
+          valueType, invoRetType));
+    }
     if (nullValue instanceof CtLiteral) {
       return nullValue.toString();
     } else {
