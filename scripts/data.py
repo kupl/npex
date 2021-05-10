@@ -77,10 +77,10 @@ class Contexts(JSONData):
     LHSIsPublic: bool
     SinkExprIsAssigned: bool
     SinkExprIsExceptionArgument: bool
-    SinkMethodIsConstructor: bool
-    SinkMethodIsPrivate: bool
-    SinkMethodIsPublic: bool
-    SinkMethodIsStatic: bool
+    CallerMethodIsConstructor: bool
+    CallerMethodIsPrivate: bool
+    CallerMethodIsPublic: bool
+    CallerMethodIsStatic: bool
     VariableIsObjectType: bool
     VariableIsFinal: bool
 

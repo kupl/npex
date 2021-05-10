@@ -7,7 +7,7 @@ import npex.common.filters.MethodOrConstructorFilter;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 
-public abstract class AbstractSinkMethodContext implements Context {
+public abstract class AbstractCallerMethodContext implements Context {
   final static Logger logger = LoggerFactory.getLogger(AbstractVariableTypeContext.class);
 
   public Boolean extract(CtInvocation invo, int nullPos) {
