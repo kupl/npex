@@ -11,9 +11,11 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.reference.CtTypeReference;
 
-public record InvocationInfo(int nullIdx, CtInvocation orgInvo, CtInvocation nullInvo) {
-  static private enum INVO_KIND {
-    CONSTRUCTOR, STATIC, VIRTUAL
+public record InvocationInfo(int nullIdx,CtInvocation orgInvo,CtInvocation nullInvo){
+
+static private enum INVO_KIND {
+  CONSTRUCTOR, STATIC, VIRTUAL
+
   }
 
   static InvocationInfo createNullBaseInvocationInfo(CtInvocation orgInvo, CtInvocation nullInvo) {
@@ -32,8 +34,9 @@ public record InvocationInfo(int nullIdx, CtInvocation orgInvo, CtInvocation nul
     obj.put("method_name", nullInvo.getExecutable().getSimpleName());
     obj.put("return_type", nullInvo.getType() != null ? abstractReturnType(nullInvo.getType()) : JSONObject.NULL);
     obj.put("actual_return_type", nullInvo.getType() != null ? nullInvo.getType().toString() : JSONObject.NULL);
-    obj.put("arguments_types",
-        new JSONArray(getActualArgumentsTypes().stream().map(argTyp -> argTyp.toString()).toArray()));
+    /* TODO: inspect why argTyp becomes null */
+    obj.put("arguments_types", new JSONArray(
+        getActualArgumentsTypes().stream().map(argTyp -> argTyp != null ? argTyp.toString() : "null").toArray()));
     obj.put("invo_kind", getInvocationType().toString());
     obj.put("target_type", targetType != null ? targetType : JSONObject.NULL);
     return obj;
