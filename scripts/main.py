@@ -7,6 +7,7 @@ import os
 import json
 import logging
 import argparse
+from typing import Sized
 import learn
 import pprint
 from data import DB
@@ -15,9 +16,11 @@ JDK_15_PATH = '/usr/lib/jvm/jdk-15.0.1'
 NPEX_DRIVER_JAR_PATH = '/home/june/project/npex/driver/target/driver-1.0-SNAPSHOT.jar'
 logger = open('log.log', 'w')
 
-def run_npex(project_dir, mode, args=''):
-  print(f'Running NPEX-extractor on {project_dir}')
+def run_npex(project_dir, mode, args='', cache_to_delete=None):
+  print(f'Running NPEX-extractor at {project_dir}')
   project_name = os.path.basename(project_dir)
+  if cache_to_delete != None and os.path.exists(cache_to_delete):
+    subprocess.run(f'rm {cache_to_delete}', shell=True, cwd=project_dir)
   cmd = f'{JDK_15_PATH}/bin/java --enable-preview -cp {NPEX_DRIVER_JAR_PATH} npex.driver.Main'
   cmd = f'{cmd} {mode} {project_dir} {args}'
   ret = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -42,6 +45,16 @@ if __name__ == "__main__":
                           help='the number of jobs to run in parallel (default: %(default)s)',
                           default=4)
 
+  build = subparsers.add_parser('build', help='build spoon models')
+  build.add_argument('benchmarks', nargs='+', help='benchmarks directories to build spoon models')
+  build.add_argument('-j',
+                          type=int,
+                          dest='jobs',
+                          help='the number of jobs to run in parallel (default: %(default)s)',
+                          default=4)
+
+
+
   db = subparsers.add_parser('db', help='construct learning DB from collected null handles')
   db.add_argument('benchmarks', nargs='+', help='target projects')
   db.add_argument('db_output', help='output path for constructed DB')
@@ -59,7 +72,11 @@ if __name__ == "__main__":
   args = parser.parse_args()
   if args.subcommand == 'collect':
     with Pool(processes=args.jobs) as pool:
-      dbs = pool.map(partial(run_npex, mode='handle-extractor', args='--cached'), args.benchmarks)
+      dbs = pool.map(partial(run_npex, mode='handle-extractor', args='--cached', cache_to_delete='handles.npex.json'), args.benchmarks)
+
+  elif args.subcommand =='build':
+    with Pool(processes=args.jobs) as pool:
+      pool.map(partial(run_npex, mode='build', args='', cache_to_delete='.spoon-model.cache'), args.benchmarks)
     
   elif args.subcommand == 'db':
     handle_json_files = [js for dir in args.benchmarks if os.path.exists(js := f'{dir}/handles.npex.json')]
