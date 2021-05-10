@@ -15,6 +15,6 @@ public abstract class AbstractCallerMethodContext implements Context {
     return exec != null && predicateOnMethod(exec);
   }
 
-  protected abstract boolean predicateOnMethod(CtExecutable exec);
+  protected abstract boolean predicateOnMethod(CtExecutable callee);
 
 }

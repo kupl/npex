@@ -47,6 +47,8 @@ public class ContextFactory {
     contexts.add(new CallerMethodIsStatic());
     contexts.add(new VariableIsObjectType());
     contexts.add(new VariableIsFinal());
+    contexts.add(new InvocationIsIsolated());
+    contexts.add(new CalleeMethodReturnsVoid());
   }
 
   public static List<Context> getAllContexts() {

@@ -7,6 +7,8 @@ import pickle
 import json
 from re import finditer
 
+from dacite.exceptions import MissingValueError
+
 
 def camel_case_split(identifier):
     matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)',
@@ -83,6 +85,8 @@ class Contexts(JSONData):
     CallerMethodIsStatic: bool
     VariableIsObjectType: bool
     VariableIsFinal: bool
+    InvocationIsIsolated: bool
+    CalleeMethodReturnsVoid: bool
 
     def to_boolean_vector(self):
         return [1 if b else 0 for b in self.__dict__.values()]
@@ -112,7 +116,12 @@ class DB:
         handles = []
         for h in JSONData.read_json_from_file(handles_json):
             for m in h['models']:
-                model = NullModel.from_dict(m)
+                try:
+                    model = NullModel.from_dict(m)
+                except MissingValueError: 
+                    print(m)
+                    continue
+
                 handle = NullHandle(h['source_path'], h['lineno'], h['handle'],
                                     model)
                 handles.append(handle)
