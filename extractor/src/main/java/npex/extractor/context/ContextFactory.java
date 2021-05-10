@@ -41,12 +41,14 @@ public class ContextFactory {
     contexts.add(new IsField());
     contexts.add(new SinkExprIsAssigned());
     contexts.add(new SinkExprIsExceptionArgument());
-    contexts.add(new SinkMethodIsConstructor());
-    contexts.add(new SinkMethodIsPrivate());
-    contexts.add(new SinkMethodIsPublic());
-    contexts.add(new SinkMethodIsStatic());
+    contexts.add(new CallerMethodIsConstructor());
+    contexts.add(new CallerMethodIsPrivate());
+    contexts.add(new CallerMethodIsPublic());
+    contexts.add(new CallerMethodIsStatic());
     contexts.add(new VariableIsObjectType());
     contexts.add(new VariableIsFinal());
+    contexts.add(new InvocationIsIsolated());
+    contexts.add(new CalleeMethodReturnsVoid());
   }
 
   public static List<Context> getAllContexts() {
