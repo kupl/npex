@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import npex.common.DefaultNPEXLauncher;
 import npex.common.NPEXLauncher;
 import npex.extractor.invocation.InvocationContextExtractorLauncher;
 import npex.extractor.nullhandle.NullHandleExtractorLauncher;
@@ -46,8 +47,8 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.ParseResult;
 import picocli.CommandLine.Spec;
 
-@Command(name = "npex", subcommands = { PatchCommand.class, HandleExtractorCommand.class, InvocationExtractor.class,
-    CommandLine.HelpCommand.class }, mixinStandardHelpOptions = true)
+@Command(name = "npex", subcommands = { BuildCommand.class, PatchCommand.class, HandleExtractorCommand.class,
+    InvocationExtractor.class, CommandLine.HelpCommand.class }, mixinStandardHelpOptions = true)
 
 public class Main {
   final static Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -106,6 +107,16 @@ abstract class SpoonCommand implements Runnable {
   }
 
   protected abstract void launch(ParseResult pr) throws IOException;
+
+}
+
+@Command(name = "build")
+class BuildCommand extends SpoonCommand {
+
+  public void launch(ParseResult pr) throws IOException {
+    new DefaultNPEXLauncher(projectRoot, false, classpath);
+  }
+
 }
 
 @Command(name = "patch")
