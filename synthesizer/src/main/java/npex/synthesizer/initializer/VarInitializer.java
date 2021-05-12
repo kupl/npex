@@ -45,7 +45,8 @@ public class VarInitializer extends ValueInitializer<CtVariable> {
     Stream<CtVariable> localVars = executable.getElements(new TypeFilter<>(CtVariable.class)).stream();
     Stream<CtVariable> classMembers = expr.getParent(CtClass.class).getAllFields().stream()
         .map(f -> f.getDeclaration());
-    return Stream.concat(localVars, classMembers).filter(v -> v != null);
+
+    return Stream.concat(localVars, classMembers).filter(v -> v != null && !v.getSimpleName().equals(expr.toString()));
   }
 
   protected CtExpression convertToCtExpression(CtVariable var) {
