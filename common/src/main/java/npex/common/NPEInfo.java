@@ -46,6 +46,7 @@ import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.NamedElementFilter;
+import spoon.reflect.visitor.filter.TypeFilter;
 
 public class NPEInfo {
   String filepath;
@@ -61,11 +62,21 @@ public class NPEInfo {
     int line = js.getInt("line");
     String deref_field = js.getString("deref_field");
     String npe_class_name = js.getString("npe_class");
-    CtClass<?> npe_class = model.getElements(new NamedElementFilter<>(CtClass.class, npe_class_name)).stream()
-        .filter(c -> c.getPosition().getFile().toString().contains(filepath)).findFirst().get();
-
+    CtClass<?> npe_class = findClassFromName(model, filepath, npe_class_name);
     CtMethod<?> npe_method = null;
     return new NPEInfo(filepath, line, deref_field, npe_method, npe_class);
+  }
+
+  private static CtClass findClassFromName(CtModel model, String filepath, String className)
+      throws NoSuchElementException {
+    for (CtClass clazz : model.getElements(new TypeFilter<>(CtClass.class))) {
+      if (clazz.getPosition().getFile().toString().contains(filepath)) {
+        String[] packages = clazz.getQualifiedName().split("\\.");
+        if (packages[packages.length - 1].equals(className))
+          return clazz;
+      }
+    }
+    throw new NoSuchElementException(String.format("Could not find class matched with {} at {}", filepath, className));
   }
 
   public NPEInfo(String filepath, int line, String deref_field, CtMethod<?> npe_method, CtClass<?> npe_class) {
