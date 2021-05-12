@@ -41,12 +41,14 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtTargetedExpression;
 import spoon.reflect.code.CtVariableRead;
+import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.reflect.visitor.filter.TypeFilter;
+import spoon.reflect.code.CtUnaryOperator;
 
 public class NPEInfo {
   String filepath;
@@ -105,9 +107,14 @@ public class NPEInfo {
     npe_class.accept(scanner);
 
     for (CtExpression expr : scanner.getExpressions()) {
-      if (expr instanceof CtVariableRead
-          && deref_field.equals(((CtVariableRead<?>) expr).getVariable().getSimpleName()))
+      if (expr instanceof CtVariableRead read && deref_field.equals(read.getVariable().getSimpleName()))
         return expr;
+
+      /* for unary incr/decr. operator cases: e.g.) Long value = null; ... value++ */
+      if (expr instanceof CtVariableWrite write && write.getParent() instanceof CtUnaryOperator
+          && deref_field.equals(write.getVariable().getSimpleName())) {
+        return expr;
+      }
 
       if (expr instanceof CtFieldAccess fa && deref_field.equals(fa.getVariable().getSimpleName())) {
         return fa;
