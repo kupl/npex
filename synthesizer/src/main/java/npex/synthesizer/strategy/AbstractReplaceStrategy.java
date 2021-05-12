@@ -33,6 +33,7 @@ import npex.common.utils.ASTUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import npex.synthesizer.template.PatchTemplateTernary;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.reference.CtTypeReference;
 
 abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemplateTernary> {
   static Logger logger = LoggerFactory.getLogger(AbstractSkipStrategy.class);
@@ -49,12 +50,15 @@ abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemp
   }
 
   public boolean isApplicable(CtExpression nullExp) {
-    if (extractExprToReplace(nullExp).getType().toString().equals("void"))
-      return false;
-
-    if (extractExprToReplace(nullExp).equals(ASTUtils.getNearestSkippableStatement(nullExp))) {
+    CtExpression repExpr = extractExprToReplace(nullExp);
+    CtTypeReference repType = repExpr.getType();
+    if (repType == null) {
+      logger.error("{}: type of expression to replace is null ({})", getName(), repExpr);
       return false;
     }
+    if (repType.toString().equals("void") || repExpr.equals(ASTUtils.getNearestSkippableStatement(nullExp)))
+      return false;
+
     return true;
   }
 

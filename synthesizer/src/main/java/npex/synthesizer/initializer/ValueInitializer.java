@@ -77,9 +77,14 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
   }
 
   private boolean isTargetedExpressionAccessible(T candidate, CtTargetedExpression target) {
-    if (target instanceof CtFieldAccess) {
-      CtField field = ((CtFieldAccess) target).getVariable().getFieldDeclaration();
+    if (target instanceof CtFieldAccess fa) {
+      CtField field = fa.getVariable().getFieldDeclaration();
+      if (field == null) {
+        logger.error("Cannot find field declaration for {}", fa.getVariable());
+        return false;
+      }
       CtFieldReference candFieldRef = candidate.getType().getDeclaredOrInheritedField(field.getSimpleName());
+
       if (candFieldRef == null) {
         return false;
       }
@@ -90,7 +95,12 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
 
     if (target instanceof CtInvocation) {
       String signature = ((CtInvocation) target).getExecutable().getSignature();
-      return candidate.getType().getAllExecutables().stream()
+      CtTypeReference candType = candidate.getType();
+      if (candType == null) {
+        logger.error("Cannot find type of candidate {}", candType);
+        return false;
+      }
+      return candType.getAllExecutables().stream()
           .anyMatch(e -> e.getSignature().equals(signature) && e.getType().equals(target.getType()));
     }
 
