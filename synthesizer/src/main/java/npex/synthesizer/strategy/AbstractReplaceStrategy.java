@@ -50,32 +50,37 @@ abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemp
   }
 
   public boolean isApplicable(CtExpression nullExp) {
-    CtExpression repExpr = extractExprToReplace(nullExp);
-    CtTypeReference repType = repExpr.getType();
-    if (repType == null) {
-      logger.error("{}: type of expression to replace is null ({})", getName(), repExpr);
-      return false;
-    }
-    if (repType.toString().equals("void") || repExpr.equals(ASTUtils.getNearestSkippableStatement(nullExp)))
-      return false;
-
-    return true;
+    return extractExprToReplace(nullExp).stream().anyMatch(e -> isExprReplaceable(e));
   }
 
   public List<PatchTemplateTernary> enumerate(CtExpression nullExp) {
     List<PatchTemplateTernary> templates = new ArrayList<>();
     int line = nullExp.getPosition().getLine();
-    CtExpression expFrom = extractExprToReplace(nullExp);
-    for (CtExpression expTo : enumerateAvailableExpressions(expFrom)) {
-      String id = String.format("%s_%d_%d", this.getName(), line, idx);
-      templates.add(new PatchTemplateTernary(id, nullExp, expFrom, expTo));
-      idx++;
+    for (CtExpression expRep : extractExprToReplace(nullExp)) {
+      for (CtExpression expTo : enumerateAvailableExpressions(expRep)) {
+        String id = String.format("%s_%d_%d", this.getName(), line, idx);
+        templates.add(new PatchTemplateTernary(id, nullExp, expRep, expTo));
+        idx++;
+      }
     }
 
     return templates;
   }
 
+  protected boolean isExprReplaceable(CtExpression expr) {
+    CtTypeReference typ = expr.getType();
+    if (typ == null) {
+      logger.error("type of expression {} is null", expr);
+      return false;
+    }
+
+    if (typ.toString().equals("void") || expr.equals(ASTUtils.getNearestSkippableStatement(expr)))
+      return false;
+
+    return true;
+  }
+
   protected abstract List<CtExpression> enumerateAvailableExpressions(CtExpression e);
 
-  protected abstract CtExpression extractExprToReplace(CtExpression nullExp);
+  protected abstract List<CtExpression> extractExprToReplace(CtExpression nullExp);
 }

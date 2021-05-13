@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -70,13 +71,24 @@ public class SynthesizerLauncher extends NPEXLauncher {
     try {
       NPEInfo npeInfo = NPEInfo.readFromJSON(factory.getModel(), npeReport.getAbsolutePath());
       CtExpression nullExp = npeInfo.resolve();
+
+      HashMap<String, PatchTemplate> contentsMap = new HashMap<>();
       for (PatchTemplate patch : eneumeratePatches(nullExp)) {
         logger.info("Patch ID: {}", patch.getID());
         logger.info("-- Original statement: {}", patch.getOriginalStatement());
         patch.apply();
         logger.info("-- Patched statement: {}", patch.getPatchedStatement());
-        File patchDir = new File(patchesDir, patch.getID());
-        patch.store(projectRoot.getAbsolutePath(), patchDir);
+        String key = patch.getPatchedStatement().toString();
+        if (contentsMap.containsKey(key)) {
+          logger.info("-- Duplicate patch has been skipped: patch {} is identical to {}!", patch.getID(),
+              contentsMap.get(key).getID());
+          continue;
+        } else {
+          File patchDir = new File(patchesDir, patch.getID());
+          patch.store(projectRoot.getAbsolutePath(), patchDir);
+          npeInfo.writeToJSON(new File(patchDir, "npe.json"));
+          contentsMap.put(key, patch);
+        }
       }
     } catch (IOException | NoSuchElementException e) {
       e.printStackTrace();

@@ -43,6 +43,7 @@ public class SourceChange<T extends CtElement> {
   private T before;
   private T after;
   private File sourceFile;
+  private String contents;
 
   private SourcePosition orgElementPosition;
 
@@ -50,18 +51,19 @@ public class SourceChange<T extends CtElement> {
 
   private final String patchComment = "NPEX_PATCH_BEGINS";
 
-  public SourceChange(T before, T after, CtElement additiveBegin) {
+  public SourceChange(T before, T after, CtElement patchedStatement) {
     this.before = before;
     this.after = after;
     this.after.setAnnotations(new ArrayList<>());
     this.orgElementPosition = before.getPosition();
     this.sourceFile = Misc.getSourceFile(this.before);
+    this.contents = patchedStatement.toString();
 
     /* Insert a comment to identify the begin of patch */
-    CtComment comment = additiveBegin.getFactory().createComment(patchComment, CommentType.BLOCK);
+    CtComment comment = patchedStatement.getFactory().createComment(patchComment, CommentType.BLOCK);
     ArrayList<CtComment> comments = new ArrayList<>();
     comments.add(comment);
-    additiveBegin.setComments(comments);
+    patchedStatement.setComments(comments);
     assert (this.sourceFile.equals(Misc.getSourceFile(this.after)));
   }
 
@@ -86,6 +88,7 @@ public class SourceChange<T extends CtElement> {
     String relativeSourcePath = new File(projectRootPath).toURI().relativize(this.sourceFile.toURI()).getPath();
     json.put("original_filepath", relativeSourcePath);
     json.put("patched_lines", getPatchedLines());
+    json.put("contents", contents);
 
     FileWriter writer = new FileWriter(outFile);
     writer.write(json.toString(4));
