@@ -43,8 +43,9 @@ public class ReplacePointerStrategy extends AbstractReplaceStrategy {
     super(initializer);
   }
 
-  protected CtExpression extractExprToReplace(CtExpression nullExp) {
-    return nullExp;
+  @Override
+  protected List<CtExpression> extractExprToReplace(CtExpression nullExp) {
+    return List.of(nullExp);
   }
 
   private boolean isLiteralNull(CtExpression nullExp) {

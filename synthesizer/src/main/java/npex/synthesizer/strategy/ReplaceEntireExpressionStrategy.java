@@ -29,6 +29,7 @@ import npex.common.utils.ASTUtils;
 import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
+import java.util.ArrayList;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
 
@@ -40,15 +41,18 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
     return !nullExp.toString().equals("null");
   }
 
-  protected CtExpression extractExprToReplace(CtExpression nullExp) {
-    return ASTUtils.getOutermostExpression(nullExp);
+  @Override
+  protected List<CtExpression> extractExprToReplace(CtExpression nullExp) {
+    return List.of(ASTUtils.getOutermostExpression(nullExp));
   }
 
-  protected List<CtExpression> enumerateAvailableExpressions(CtExpression nullExp) {
-    CtExpression exprToRep = extractExprToReplace(nullExp);
-    List<CtExpression> exprs = initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType());
-    if (!exprToRep.getType().isPrimitive()) {
-      exprs.add(FactoryUtils.createNullLiteral());
+  protected List<CtExpression> enumerateAvailableExpressions(CtExpression expr) {
+    List<CtExpression> exprs = new ArrayList<>();
+    for (CtExpression exprToRep : extractExprToReplace(expr)) {
+      exprs.addAll(initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType()));
+      if (!exprToRep.getType().isPrimitive()) {
+        exprs.add(FactoryUtils.createNullLiteral());
+      }
     }
     return exprs;
   }
