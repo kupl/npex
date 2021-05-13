@@ -43,12 +43,24 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
 
   @Override
   protected List<CtExpression> extractExprToReplace(CtExpression nullExp) {
-    return List.of(ASTUtils.getOutermostExpression(nullExp));
+    List<CtExpression> parentExprs = new ArrayList<>();
+    CtExpression outmost = ASTUtils.getOutermostExpression(nullExp);
+    CtExpression par = nullExp.getParent(CtExpression.class);
+    while (par != null) {
+      parentExprs.add(par);
+      if (par.equals(outmost)) {
+        break;
+      }
+      par = par.getParent(CtExpression.class);
+    }
+
+    return parentExprs;
   }
 
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression expr) {
     List<CtExpression> exprs = new ArrayList<>();
     for (CtExpression exprToRep : extractExprToReplace(expr)) {
+      System.out.println("Expression to replcae! " + exprToRep);
       exprs.addAll(initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType()));
       if (!exprToRep.getType().isPrimitive()) {
         exprs.add(FactoryUtils.createNullLiteral());
