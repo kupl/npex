@@ -86,6 +86,7 @@ public class SynthesizerLauncher extends NPEXLauncher {
         } else {
           File patchDir = new File(patchesDir, patch.getID());
           patch.store(projectRoot.getAbsolutePath(), patchDir);
+          npeInfo.writeToJSON(new File(patchDir, "npe.json"));
           contentsMap.put(key, patch);
         }
       }
