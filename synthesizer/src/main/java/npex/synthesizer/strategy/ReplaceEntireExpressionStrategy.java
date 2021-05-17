@@ -30,6 +30,7 @@ import npex.common.utils.ASTUtils;
 import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.path.CtRole;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
 
@@ -47,7 +48,8 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
     CtExpression outmost = ASTUtils.getOutermostExpression(nullExp);
     CtExpression par = nullExp.getParent(CtExpression.class);
     while (par != null) {
-      parentExprs.add(par);
+      if (!par.getRoleInParent().equals(CtRole.STATEMENT))
+        parentExprs.add(par);
       if (par.equals(outmost)) {
         break;
       }
