@@ -23,13 +23,13 @@
  */
 package npex.synthesizer.strategy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import npex.common.utils.ASTUtils;
 import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
-import java.util.ArrayList;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
 
@@ -59,12 +59,9 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
 
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression expr) {
     List<CtExpression> exprs = new ArrayList<>();
-    for (CtExpression exprToRep : extractExprToReplace(expr)) {
-      System.out.println("Expression to replcae! " + exprToRep);
-      exprs.addAll(initializer.getTypeCompatibleExpressions(exprToRep, exprToRep.getType()));
-      if (!exprToRep.getType().isPrimitive()) {
-        exprs.add(FactoryUtils.createNullLiteral());
-      }
+    exprs.addAll(initializer.getTypeCompatibleExpressions(expr, expr.getType()));
+    if (!expr.getType().isPrimitive()) {
+      exprs.add(FactoryUtils.createNullLiteral());
     }
     return exprs;
   }
