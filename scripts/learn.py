@@ -16,6 +16,13 @@ import time
 gc.disable()
 
 
+def multiprocess(f, args, n_cpus):
+    p = Pool(n_cpus)
+    ret = p.map(f, args)
+    p.close()
+    return ret
+
+
 class Model:
     classifiers: Dict[InvocationKey, RandomForestClassifier]
     labels: Dict[InvocationKey, List[str]]
@@ -62,9 +69,7 @@ def train_classifiers(db, model_output_dir, classifier_out_path):
         args.append([key, X, Y, model_output_dir])
 
     #TODO: n_cpus from argument
-    p = Pool(30)
-    results = p.map(train_classifier, args)
-    p.close()
+    results = multiprocess(train_classifier, args, n_cpus=30)
 
     for key, classifier, labels in results:
         model.classifiers[key], model.labels[key] = classifier, labels
@@ -90,6 +95,14 @@ def train_classifier(arg):
     return (key, clf, list(labeldict.keys()))
 
 
+def model_keys_match_up_to_sub_camel_case(arg):
+    model_keys, key = arg
+    if key in model_keys:
+        return key, [key]
+    else:
+        return key, [model_key for model_key in model_keys if key.matches_up_to_sub_camel_case(model_key)]
+
+
 def generate_answer_sheet(project_dir, model_path, outpath):
     print(f"Deserializing {model_path}...")
     model = Model.deserialize(model_path)
@@ -98,25 +111,34 @@ def generate_answer_sheet(project_dir, model_path, outpath):
     print(f"Done ...!")
 
     time_to_predict = 0.0
+    time_to_find_alternative_models = 0.0
 
-    # (key, contexts, classifier * model_key list)
-    inputs = []
+    # inputs: (entry, key_contexts, key, contexts) list
+    # key_to_classifiers: key -> (model_key, classifier) list
     items = model.classifiers.items()
+    model_keys = [model_key for (model_key, _) in items]
+    invo_keys = set()
+    inputs = []
+    _time = time.time()
     for entry in invo_contexts:
         for key_contexts in entry['keycons']:
             key, contexts = InvocationKey.from_dict(key_contexts['key']), Contexts.from_dict(key_contexts['contexts'])
             classifiers = []
-            if key not in model.classifiers:
-                for model_key, classifier in items:
-                    if key.matches_up_to_sub_camel_case(model_key):
-                        classifiers.append((classifier, model_key))
-            else:
-                classifiers = [(model.classifiers[key], key)]
-            inputs.append((entry, key_contexts, key, contexts, classifiers))
+            inputs.append((entry, key_contexts, key, contexts))
+            invo_keys.add(key)
 
-    # (classifier, contexts_list, outputs)
+    key_model_keys = multiprocess(model_keys_match_up_to_sub_camel_case, [(model_keys, key) for key in invo_keys],
+                                  n_cpus=30)
+    key_to_classifiers = {
+        key: [(model.classifiers[model_key], model_key) for model_key in model_keys]
+        for (key, model_keys) in key_model_keys
+    }
+    time_to_find_alternative_models = time.time() - _time
+
+    # outputs: classifier * context -> (model_value * prob) list
     to_computes = {}
-    for (_, _, _, contexts, classifiers) in inputs:
+    for (_, _, key, contexts) in inputs:
+        classifiers = key_to_classifiers[key]
         for (classifier, _) in classifiers:
             if classifier not in to_computes:
                 to_computes[classifier] = []
@@ -130,10 +152,9 @@ def generate_answer_sheet(project_dir, model_path, outpath):
         outputs[classifier] = {}
         for i in range(0, len(contexts_list)):
             outputs[classifier][contexts_list[i]] = output[i]
-        # outputs[classifier] = (contexts_list, output)
 
-    # set of d
-    for (entry, key_contexts, key, contexts, classifiers) in inputs:
+    # (site * pos * key * (value -> prob)) list
+    for (entry, key_contexts, key, contexts) in inputs:
         abs_src_path = entry['site']['source_path']
         rel_src_path = os.path.relpath(abs_src_path, start=project_dir)
         d_site = {
@@ -146,7 +167,7 @@ def generate_answer_sheet(project_dir, model_path, outpath):
 
         probas = [{model.labels[model_key][idx]: prob
                    for (idx, prob) in enumerate(outputs[classifier][contexts])}
-                  for (classifier, model_key) in classifiers]
+                  for (classifier, model_key) in key_to_classifiers[key]]
 
         num_of_matched = len(probas)
         labels = set()
@@ -169,6 +190,7 @@ def generate_answer_sheet(project_dir, model_path, outpath):
         answers.append(d)
 
     print(f"time to predict: {time_to_predict}")
+    print(f"time to find alternative-models: {time_to_find_alternative_models}")
     print(f"generate answer sheets for {len(inputs)} key contexts")
 
     with open(outpath, 'w') as f:
