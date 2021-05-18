@@ -87,7 +87,8 @@ public class ASTUtils {
   }
 
   private static Stream<CtElement> getMatchedElements(CtElement at, CtElement element, Predicate<CtElement> pred) {
-    return StreamSupport.stream(at.asIterable().spliterator(), false).filter(x -> x.equals(element) && pred.test(x));
+    return StreamSupport.stream(at.asIterable().spliterator(), false)
+        .filter(x -> x.equals(element) && pred.test(x) && x.getPosition().getLine() == element.getPosition().getLine());
   }
 
   public static <T extends CtElement> T findMatchedElement(CtElement at, CtElement element)
@@ -119,7 +120,7 @@ public class ASTUtils {
   }
 
   public static boolean isNullCondition(CtBinaryOperator bo) {
-    return bo.getRightHandOperand() instanceof CtLiteral lit && lit.toString().equals("null");
+    return bo.getRightHandOperand()instanceof CtLiteral lit && lit.toString().equals("null");
   }
 
   public static boolean isChildOf(CtElement el, CtElement root) {
