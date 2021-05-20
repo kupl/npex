@@ -50,6 +50,7 @@ class InvocationKey(JSONData):
     null_pos: int
     actuals_length: int
     return_type: str
+    invo_kind: str
 
     def matches_up_to_sub_camel_case(self, key):
         if self.null_pos != key.null_pos or self.actuals_length != key.actuals_length or self.return_type != key.return_type:

@@ -10,13 +10,14 @@ public class InvocationKey {
   final int nullPos;
   final int actualsLength;
   final String returnType;
+  final String invoKind;
 
   public InvocationKey(CtInvocation invo, int nullPos) {
     this.methodName = invo.getExecutable().getSimpleName();
     this.nullPos = nullPos;
     this.actualsLength = invo.getArguments().size();
     this.returnType = abstractReturnType(invo.getType());
-
+    this.invoKind = invo.getExecutable().isStatic() ? "STATIC" : "VIRTUAL";
   }
 
   static private String abstractReturnType(CtTypeReference type) {
@@ -36,6 +37,7 @@ public class InvocationKey {
     obj.put("null_pos", nullPos);
     obj.put("actuals_length", actualsLength);
     obj.put("return_type", returnType);
+    obj.put("invo_kind", invoKind);
     return obj;
   }
 }
