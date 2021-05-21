@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import spoon.Launcher;
 import spoon.MavenLauncher;
 import spoon.MavenLauncher.SOURCE_TYPE;
+import spoon.compiler.Environment;
 import spoon.reflect.factory.Factory;
 import spoon.support.SerializationModelStreamer;
 
@@ -63,11 +64,14 @@ public abstract class NPEXLauncher {
     } else {
       launcher = createJavacLauncher(projectRoot);
     }
+    Environment env = launcher.getEnvironment();
     if (classpath != null)
-      launcher.getEnvironment().setSourceClasspath(classpath);
+      env.setSourceClasspath(classpath);
     else
-      launcher.getEnvironment().setNoClasspath(true);
-    launcher.getEnvironment().setIgnoreDuplicateDeclarations(true);
+      env.setNoClasspath(true);
+    env.setIgnoreDuplicateDeclarations(true);
+    env.setShouldCompile(false);
+    env.disableConsistencyChecks();
     launcher.buildModel();
     new SerializationModelStreamer().save(launcher.getFactory(), new FileOutputStream(spoonModelCacheFile));
     return launcher;
