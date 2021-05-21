@@ -83,7 +83,7 @@ public class NullModel {
     }
     CtTypeReference valueType = nullValue.getType();
     CtTypeReference invoRetType = invoInfo.orgInvo().getType();
-    if (valueType != null && !valueType.isSubtypeOf(invoRetType)) {
+    if (!nullValue.toString().equals("null") && valueType != null && !valueType.isSubtypeOf(invoRetType)) {
       throw new NPEXException(String.format("Cannot extract null values for model {}: {} is not a subtype of {}", this,
           valueType, invoRetType));
     }
