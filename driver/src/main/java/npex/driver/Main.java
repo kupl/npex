@@ -162,12 +162,16 @@ class InvocationExtractor extends SpoonCommand {
       "--results" }, paramLabel = "<RESULTS_JSON>", defaultValue = defaultResultsName, description = "path for results JSON file where collected handles information to be stored (default:<PROJECT_ROOT>/${DEFAULT-VALUE})")
   String resultsPath;
 
+  @Option(names = { "-t", "--trace" }, paramLabel = "<TRACE_JSON>", description = "path for trace JSON")
+  File trace;
+
   public void launch(ParseResult pr) throws IOException {
     if (!pr.hasMatchedOption("--results")) {
       spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
     }
+
     NPEXLauncher launcher = new InvocationContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
-        resultsPath);
+        resultsPath, trace);
     launcher.run();
   }
 

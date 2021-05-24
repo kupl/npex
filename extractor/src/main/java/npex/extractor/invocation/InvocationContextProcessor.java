@@ -4,8 +4,11 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,12 +22,14 @@ import spoon.reflect.code.CtInvocation;
 public class InvocationContextProcessor extends AbstractProcessor<CtInvocation> {
   static Logger logger = LoggerFactory.getLogger(InvocationContextProcessor.class);
   final private File resultsOut;
+  private Set<String> traceMethodNames;
 
   final private Map<InvocationSite, InvocationKeyMap> invoContextsMap = new HashMap<>();
 
-  public InvocationContextProcessor(String resultsPath) {
+  public InvocationContextProcessor(String resultsPath, Set<String> traceMethodNames) throws IOException {
     super();
     this.resultsOut = new File(resultsPath);
+    this.traceMethodNames = traceMethodNames;
   }
 
   @Override
