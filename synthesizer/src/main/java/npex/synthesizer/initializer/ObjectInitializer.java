@@ -28,6 +28,8 @@ import java.util.stream.Stream;
 
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtNewArray;
+import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
 
 @SuppressWarnings("rawtypes")
@@ -37,6 +39,11 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
   }
 
   protected CtExpression convertToCtExpression(CtConstructorCall ctor) {
+    if (ctor.getType().isArray()) {
+      CtNewArray arr = ctor.getFactory().createNewArray();
+      arr.setType(ctor.getType());
+      return arr;
+    }
     return ctor;
   }
 
