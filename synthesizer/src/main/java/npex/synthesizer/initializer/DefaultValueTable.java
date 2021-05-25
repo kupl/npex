@@ -43,6 +43,7 @@ public final class DefaultValueTable {
     table.put("boolean", Arrays.asList(new String[] { "false", "true" }));
     table.put("double", Arrays.asList(new String[] { "0.0", "1.0" }));
     table.put("float", Arrays.asList(new String[] { "0.0", "1.0" }));
+    table.put("java.lang.Boolean", Arrays.asList(new String[] { "java.lang.Boolean.TRUE", "java.lang.Boolean.FALSE" }));
   }
 
   static boolean hasDefaultValue(CtTypeReference<?> typ) {
