@@ -18,22 +18,26 @@ import org.slf4j.LoggerFactory;
 import npex.extractor.context.ContextExtractor;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtClass;
 
 public class InvocationContextProcessor extends AbstractProcessor<CtInvocation> {
   static Logger logger = LoggerFactory.getLogger(InvocationContextProcessor.class);
   final private File resultsOut;
-  private Set<String> traceMethodNames;
+  private Set<String> traceClasses;
 
   final private Map<InvocationSite, InvocationKeyMap> invoContextsMap = new HashMap<>();
 
-  public InvocationContextProcessor(String resultsPath, Set<String> traceMethodNames) throws IOException {
+  public InvocationContextProcessor(String resultsPath, Set<String> traceClasses) throws IOException {
     super();
     this.resultsOut = new File(resultsPath);
-    this.traceMethodNames = traceMethodNames;
+    this.traceClasses = traceClasses;
   }
 
   @Override
   public boolean isToBeProcessed(CtInvocation candidate) {
+    CtClass klass = candidate.getParent(CtClass.class);
+    if (!traceClasses.isEmpty() && klass != null && !traceClasses.contains(klass.getQualifiedName()))
+      return false;
     return candidate.getPosition().isValidPosition();
   }
 
