@@ -39,7 +39,7 @@ public final class DefaultValueTable {
   static Map<String, List<String>> table = new HashMap<>();
   static {
     table.put("int", Arrays.asList(new String[] { "0", "1" }));
-    table.put("String", Arrays.asList(new String[] { "null", "\"\"" }));
+    table.put("java.lang.String", Arrays.asList(new String[] { "null", "\"\"" }));
     table.put("boolean", Arrays.asList(new String[] { "false", "true" }));
     table.put("double", Arrays.asList(new String[] { "0.0", "1.0" }));
     table.put("float", Arrays.asList(new String[] { "0.0", "1.0" }));
@@ -55,7 +55,7 @@ public final class DefaultValueTable {
     if (typ.getSimpleName().equals("void")) {
       return values;
     }
-    for (String s : table.getOrDefault(typ.getSimpleName(), Collections.singletonList("null"))) {
+    for (String s : table.getOrDefault(typ.getQualifiedName(), Collections.singletonList("null"))) {
       CtCodeSnippetExpression e = factory.createCodeSnippetExpression(s);
       CtLiteral lit = factory.createLiteral(e.compile());
       values.add((CtLiteral) lit.setType(typ));
