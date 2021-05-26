@@ -23,17 +23,33 @@
  */
 package npex.synthesizer.initializer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
+import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtNewArray;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.factory.Factory;
+import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
+import spoon.support.DefaultCoreFactory;
 
 @SuppressWarnings("rawtypes")
 public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
+  static final HashMap<CtTypeReference, String> collectionsMap = new HashMap<>();
+  static {
+    TypeFactory tf = new TypeFactory();
+    collectionsMap.put(tf.LIST, "java.util.ArrayList");
+    collectionsMap.put(tf.SET, "java.util.HashSet");
+    collectionsMap.put(tf.MAP, "java.util.HashMap");
+  }
+
   public String getName() {
     return "Object";
   }
@@ -49,7 +65,20 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
 
   protected Stream<CtConstructorCall> enumerate(CtExpression expr) {
     CtTypeReference typ = expr.getType();
-    if (typ == null || !typ.isClass() || typ.isPrimitive() || typ.isInterface()
+    Factory factory = expr.getFactory();
+
+    if (typ == null) {
+      return Stream.empty();
+    }
+
+    CtTypeReference ctype = collectionsMap.keySet().stream().filter(ct -> typ.isSubtypeOf(ct)).findAny().orElse(null);
+    if (ctype != null) {
+      String implTypName = collectionsMap.get(ctype);
+      CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s<>()", implTypName)).compile();
+      return Collections.singleton((CtConstructorCall) ctor).stream();
+    }
+
+    if (!typ.isClass() || typ.isPrimitive() || typ.isInterface()
         || typ.getDeclaration() != null && typ.getDeclaration().isAbstract()) {
       return Stream.empty();
     }
