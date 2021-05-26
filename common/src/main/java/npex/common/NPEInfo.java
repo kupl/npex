@@ -121,7 +121,7 @@ public class NPEInfo {
       }
 
       if (expr instanceof CtInvocation invo) {
-        if (invo.getExecutable().getSignature().contains(deref_field))
+        if (invo.getExecutable().getSimpleName().equals(deref_field))
           return expr;
         continue;
       }
