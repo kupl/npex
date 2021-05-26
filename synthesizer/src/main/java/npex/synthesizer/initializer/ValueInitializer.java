@@ -53,7 +53,7 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
   public List<CtExpression> getTypeCompatibleExpressions(CtExpression expr, CtTypeReference typ) {
     Predicate<T> filter = ty -> {
       try {
-        return ty.getType().isSubtypeOf(typ);
+        return ty.getType().toString().endsWith("<>") || ty.getType().isSubtypeOf(typ);
       } catch (Exception e) {
         return false;
       }
