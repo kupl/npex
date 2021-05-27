@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import spoon.reflect.code.CtCodeSnippetExpression;
@@ -74,7 +75,10 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
     CtTypeReference ctype = collectionsMap.keySet().stream().filter(ct -> typ.isSubtypeOf(ct)).findAny().orElse(null);
     if (ctype != null) {
       String implTypName = collectionsMap.get(ctype);
-      CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s<>()", implTypName)).compile();
+      String typeParams = factory.getEnvironment().getComplianceLevel() >= 8 ? ""
+          : typ.getActualTypeArguments().stream().map(ty -> ty.getQualifiedName()).collect(Collectors.joining(", "));
+      CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s<%s>()", implTypName, typeParams))
+          .compile();
       return Collections.singleton((CtConstructorCall) ctor).stream();
     }
 
