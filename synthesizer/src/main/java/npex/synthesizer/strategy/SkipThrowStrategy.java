@@ -7,10 +7,10 @@ import java.util.Set;
 
 import npex.common.filters.ClassOrInterfaceFilter;
 import npex.common.filters.MethodOrConstructorFilter;
+import spoon.reflect.code.CtCatchVariable;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtThrow;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.factory.Factory;
@@ -23,6 +23,11 @@ public class SkipThrowStrategy extends AbstractSkipStrategy {
     for (CtThrow thr : el.getElements(new TypeFilter<>(CtThrow.class))) {
       throwns.add(thr.getThrownExpression().getType());
     }
+
+    for (CtCatchVariable cv : el.getElements(new TypeFilter<>(CtCatchVariable.class))) {
+      throwns.add(cv.getType());
+    }
+
     return throwns;
   }
 
