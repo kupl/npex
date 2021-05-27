@@ -27,9 +27,11 @@ import java.io.File;
 
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
+import npex.common.filters.ClassOrInterfaceFilter;
 
 public class Misc {
   public static File getSourceFile(CtElement element) {
-    return element.getFactory().CompilationUnit().getOrCreate(element.getParent(CtClass.class)).getFile();
+    return element.getFactory().CompilationUnit().getOrCreate(element.getParent(new ClassOrInterfaceFilter()))
+        .getFile();
   }
 }

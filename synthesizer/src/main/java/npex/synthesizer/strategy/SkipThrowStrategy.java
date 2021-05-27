@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import npex.common.filters.ClassOrInterfaceFilter;
 import npex.common.filters.MethodOrConstructorFilter;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
@@ -27,7 +28,7 @@ public class SkipThrowStrategy extends AbstractSkipStrategy {
 
   private Set<CtTypeReference<? extends Throwable>> collectCandidateExceptionsTypes(CtExecutable exec) {
     var thrownsInSinkMethod = collectThrownTypes(exec);
-    var thrownsInOtherMethods = collectThrownTypes(exec.getParent(CtClass.class));
+    var thrownsInOtherMethods = collectThrownTypes(exec.getParent(new ClassOrInterfaceFilter()));
     var thrownsByThrows = exec.getThrownTypes();
 
     List<Set> nonEmptyThrownSets = new ArrayList<Set>();
