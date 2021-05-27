@@ -62,7 +62,7 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression expr) {
     List<CtExpression> exprs = new ArrayList<>();
     exprs.addAll(initializer.getTypeCompatibleExpressions(expr, expr.getType()));
-    if (!expr.getType().isPrimitive()) {
+    if (expr.getType() != null && !expr.getType().isPrimitive()) {
       exprs.add(FactoryUtils.createNullLiteral());
     }
     return exprs;

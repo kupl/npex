@@ -24,6 +24,7 @@
 package npex.synthesizer.initializer;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,6 +73,10 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
   }
 
   private List<CtExpression> enumerate(CtExpression expr, Predicate<T> pred) {
+    if (expr.getType() == null) {
+      logger.error("Could not find type of {}", expr);
+      return new ArrayList<>();
+    }
     Stream<T> candidates = this.enumerate(expr).filter(c -> !c.equals(expr));
     return candidates.filter(pred).map(c -> convertToCtExpression(c)).collect(Collectors.toList());
   }
