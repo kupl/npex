@@ -40,7 +40,7 @@ public class PrimitiveInitializer extends ValueInitializer<CtLiteral> {
 
   protected Stream<CtLiteral> enumerate(CtExpression expr) {
     CtTypeReference typ = expr.getType();
-    if (!DefaultValueTable.table.containsKey(typ.toString()))
+    if (!DefaultValueTable.hasDefaultValue(typ))
       return Stream.empty();
 
     return DefaultValueTable.getDefaultValues(typ).stream();
