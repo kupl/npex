@@ -28,6 +28,9 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import npex.common.filters.EqualsFilter;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
@@ -44,6 +47,8 @@ import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
 
 public class ASTUtils {
+  final static Logger logger = LoggerFactory.getLogger(ASTUtils.class);
+
   public static CtStatement getNearestSkippableStatement(CtElement el) {
     if (el instanceof CtStatement && el.getParent() instanceof CtBlock)
       return (CtStatement) el;
@@ -98,7 +103,13 @@ public class ASTUtils {
 
   public static <T extends CtElement> T findMatchedElementLookParent(CtElement at, CtElement element)
       throws NoSuchElementException {
-    return (T) getMatchedElements(at, element, x -> x.getParent().equals(element.getParent())).findFirst().get();
+    try {
+      return (T) getMatchedElements(at, element, x -> x.getParent().equals(element.getParent())).findFirst().get();
+    } catch (NoSuchElementException e) {
+      logger.error("Could not find {} in {}", element, at);
+      throw e;
+    }
+
   }
 
   public static CtElement getLoopHeadElement(CtForEach loop) {
