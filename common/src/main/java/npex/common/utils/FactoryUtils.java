@@ -34,4 +34,8 @@ public class FactoryUtils {
     return factory.createLiteral().setValue(null);
   }
 
+  public static CtLiteral createEmptyString() {
+    return factory.createLiteral().setValue("");
+  }
+
 }

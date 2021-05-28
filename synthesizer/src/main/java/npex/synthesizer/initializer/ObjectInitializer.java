@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtNewArray;
+import spoon.reflect.declaration.CtClass;
 import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -79,6 +80,12 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
       return Stream.empty();
     }
 
-    return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
+    if (typ instanceof CtClass klass) {
+      if (klass.getConstructor() != null) {
+        return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
+      }
+    }
+
+    return Stream.empty();
   }
 }
