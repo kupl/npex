@@ -23,6 +23,7 @@
  */
 package npex.common.utils;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -36,6 +37,7 @@ import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtForEach;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLoop;
@@ -136,5 +138,14 @@ public class ASTUtils {
 
   public static boolean isChildOf(CtElement el, CtElement root) {
     return !root.filterChildren(new EqualsFilter(el)).list().isEmpty();
+  }
+
+  public static List<CtExpression> getInvocationArguments(CtInvocation invo, boolean includeBase) {
+    List<CtExpression> args = invo.getArguments();
+
+    if (includeBase && invo.getExecutable().isStatic()) {
+      args.add(invo.getTarget());
+    }
+    return args;
   }
 }

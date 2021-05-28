@@ -23,29 +23,21 @@
  */
 package npex.synthesizer.initializer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtNewArray;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.Factory;
-import spoon.reflect.factory.TypeFactory;
-import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
-import spoon.support.DefaultCoreFactory;
 
 @SuppressWarnings("rawtypes")
 public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
   static final HashMap<CtTypeReference, String> collectionsMap = new HashMap<>();
   static {
-    TypeFactory tf = new TypeFactory();
     collectionsMap.put(tf.LIST, "java.util.ArrayList");
     collectionsMap.put(tf.SET, "java.util.HashSet");
     collectionsMap.put(tf.MAP, "java.util.HashMap");

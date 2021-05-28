@@ -23,8 +23,8 @@
  */
 package npex.synthesizer.initializer;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -38,12 +38,14 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtTargetedExpression;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 @SuppressWarnings("rawtypes")
 public abstract class ValueInitializer<T extends CtTypedElement> {
   final static Logger logger = LoggerFactory.getLogger(ValueInitializer.class);
+  final static TypeFactory tf = new TypeFactory();
 
   public abstract String getName();
 
