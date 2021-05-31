@@ -30,6 +30,7 @@ import npex.common.utils.ASTUtils;
 import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.path.CtRole;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
@@ -64,7 +65,7 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
      * TODO: this part should go to PrimitiveInitializer, which currently can
      * introduce ill-typed patches due to incomplete AST models
      */
-    if (expr.getType() != null && !expr.getType().isPrimitive()) {
+    if (!(expr.getParent() instanceof CtInvocation) && expr.getType() != null && !expr.getType().isPrimitive()) {
       exprs.add(FactoryUtils.createNullLiteral());
     }
     return exprs;
