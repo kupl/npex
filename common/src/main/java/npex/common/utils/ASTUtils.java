@@ -23,16 +23,21 @@
  */
 package npex.common.utils;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import npex.common.filters.EqualsFilter;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtForEach;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLambda;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtLoop;
@@ -44,6 +49,8 @@ import spoon.reflect.cu.position.NoSourcePosition;
 import spoon.reflect.declaration.CtElement;
 
 public class ASTUtils {
+  final static Logger logger = LoggerFactory.getLogger(ASTUtils.class);
+
   public static CtStatement getNearestSkippableStatement(CtElement el) {
     if (el instanceof CtStatement && el.getParent() instanceof CtBlock)
       return (CtStatement) el;
@@ -98,7 +105,13 @@ public class ASTUtils {
 
   public static <T extends CtElement> T findMatchedElementLookParent(CtElement at, CtElement element)
       throws NoSuchElementException {
-    return (T) getMatchedElements(at, element, x -> x.getParent().equals(element.getParent())).findFirst().get();
+    try {
+      return (T) getMatchedElements(at, element, x -> x.getParent().equals(element.getParent())).findFirst().get();
+    } catch (NoSuchElementException e) {
+      logger.error("Could not find {} in {}", element, at);
+      throw e;
+    }
+
   }
 
   public static CtElement getLoopHeadElement(CtForEach loop) {
@@ -125,5 +138,14 @@ public class ASTUtils {
 
   public static boolean isChildOf(CtElement el, CtElement root) {
     return !root.filterChildren(new EqualsFilter(el)).list().isEmpty();
+  }
+
+  public static List<CtExpression> getInvocationArguments(CtInvocation invo, boolean includeBase) {
+    List<CtExpression> args = invo.getArguments();
+
+    if (includeBase && invo.getExecutable().isStatic()) {
+      args.add(invo.getTarget());
+    }
+    return args;
   }
 }

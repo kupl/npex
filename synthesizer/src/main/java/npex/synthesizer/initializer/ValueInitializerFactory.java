@@ -32,7 +32,8 @@ public class ValueInitializerFactory {
   static {
     initializers.put("ObjectInitializer", new ObjectInitializer());
     initializers.put("PrimitiveInitializer", new PrimitiveInitializer());
-    initializers.put("VarInitializer", new VarInitializer());
+    // initializers.put("VarInitializer", new VarInitializer());
+    initializers.put("EqualityInitializer", new EqualityInitializer());
   }
 
   public static Collection<ValueInitializer> getAllInitializers() {

@@ -57,6 +57,7 @@ public abstract class PatchTemplate {
     this.id = id;
     this.astOrg = nullExpOrg.getParent(new MethodOrConstructorFilter());
     this.ast = astOrg.clone();
+    this.ast.setParent(astOrg.getParent());
     this.nullExpOrg = nullExpOrg;
     this.nullExp = ASTUtils.findMatchedElementLookParent(ast, nullExpOrg);
   }

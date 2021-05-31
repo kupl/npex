@@ -24,29 +24,68 @@
 package npex.synthesizer.initializer;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtNewArray;
+import spoon.reflect.declaration.CtClass;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
 @SuppressWarnings("rawtypes")
 public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
+  static final HashMap<CtTypeReference, String> collectionsMap = new HashMap<>();
+  static {
+    collectionsMap.put(tf.LIST, "java.util.ArrayList");
+    collectionsMap.put(tf.SET, "java.util.HashSet");
+    collectionsMap.put(tf.MAP, "java.util.HashMap");
+  }
+
   public String getName() {
     return "Object";
   }
 
   protected CtExpression convertToCtExpression(CtConstructorCall ctor) {
+    if (ctor.getType().isArray()) {
+      CtNewArray arr = ctor.getFactory().createNewArray();
+      arr.setType(ctor.getType());
+      return arr;
+    }
     return ctor;
   }
 
   protected Stream<CtConstructorCall> enumerate(CtExpression expr) {
     CtTypeReference typ = expr.getType();
-    if (typ == null || !typ.isClass() || typ.isPrimitive() || typ.isInterface()
+    Factory factory = expr.getFactory();
+
+    if (typ == null) {
+      return Stream.empty();
+    }
+
+    CtTypeReference ctype = collectionsMap.keySet().stream().filter(ct -> typ.isSubtypeOf(ct)).findAny().orElse(null);
+    if (ctype != null) {
+      String implTypName = collectionsMap.get(ctype);
+      String typeParams = factory.getEnvironment().getComplianceLevel() >= 8 ? ""
+          : typ.getActualTypeArguments().stream().map(ty -> ty.getQualifiedName()).collect(Collectors.joining(", "));
+      CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s<%s>()", implTypName, typeParams))
+          .compile();
+      return Collections.singleton((CtConstructorCall) ctor).stream();
+    }
+
+    if (!typ.isClass() || typ.isPrimitive() || typ.isInterface()
         || typ.getDeclaration() != null && typ.getDeclaration().isAbstract()) {
       return Stream.empty();
     }
 
-    return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
+    if (typ instanceof CtClass klass) {
+      if (klass.getConstructor() != null) {
+        return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
+      }
+    }
+
+    return Stream.empty();
   }
 }

@@ -36,26 +36,29 @@ import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
 public final class DefaultValueTable {
-  static Map<String, List<String>> table = new HashMap<>();
+  static private Map<String, List<String>> table = new HashMap<>();
   static {
     table.put("int", Arrays.asList(new String[] { "0", "1" }));
-    table.put("String", Arrays.asList(new String[] { "null", "\"\"" }));
+    table.put("java.lang.String", Arrays.asList(new String[] { "\"null\"", "\"\"" }));
     table.put("boolean", Arrays.asList(new String[] { "false", "true" }));
     table.put("double", Arrays.asList(new String[] { "0.0", "1.0" }));
     table.put("float", Arrays.asList(new String[] { "0.0", "1.0" }));
+    table.put("java.lang.Boolean", Arrays.asList(new String[] { "java.lang.Boolean.TRUE", "java.lang.Boolean.FALSE" }));
+    table.put("java.lang.Long", Arrays.asList(new String[] { "0L", "1L" }));
+    table.put("java.util.Enumeration", Arrays.asList(new String[] { "java.util.Collections.emptyEnumeration()" }));
   }
 
-  static boolean hasDefaultValue(CtTypeReference<?> typ) {
-    return table.containsKey(typ.getSimpleName());
+  public static boolean hasDefaultValue(CtTypeReference<?> typ) {
+    return table.containsKey(typ.getQualifiedName());
   }
 
   public static <T> List<CtLiteral<T>> getDefaultValues(CtTypeReference<T> typ) throws IllegalArgumentException {
     List<CtLiteral<T>> values = new ArrayList<>();
     Factory factory = typ.getFactory();
-    if (typ.getSimpleName().equals("void")) {
+    if (typ.getQualifiedName().equals("void")) {
       return values;
     }
-    for (String s : table.getOrDefault(typ.getSimpleName(), Collections.singletonList("null"))) {
+    for (String s : table.getOrDefault(typ.getQualifiedName(), Collections.singletonList("null"))) {
       CtCodeSnippetExpression e = factory.createCodeSnippetExpression(s);
       CtLiteral lit = factory.createLiteral(e.compile());
       values.add((CtLiteral) lit.setType(typ));

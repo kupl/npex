@@ -30,6 +30,7 @@ import npex.common.utils.ASTUtils;
 import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.ValueInitializer;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
 import spoon.reflect.path.CtRole;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
@@ -46,14 +47,12 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   protected List<CtExpression> extractExprToReplace(CtExpression nullExp) {
     List<CtExpression> parentExprs = new ArrayList<>();
     CtExpression outmost = ASTUtils.getOutermostExpression(nullExp);
-    CtExpression par = nullExp.getParent(CtExpression.class);
-    while (par != null) {
-      if (!par.getRoleInParent().equals(CtRole.STATEMENT))
-        parentExprs.add(par);
-      if (par.equals(outmost)) {
+    CtExpression cur = nullExp;
+    while (cur != null) {
+      parentExprs.add(cur);
+      if (cur.equals(outmost))
         break;
-      }
-      par = par.getParent(CtExpression.class);
+      cur = cur.getParent(CtExpression.class);
     }
 
     return parentExprs;
@@ -62,7 +61,11 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression expr) {
     List<CtExpression> exprs = new ArrayList<>();
     exprs.addAll(initializer.getTypeCompatibleExpressions(expr, expr.getType()));
-    if (!expr.getType().isPrimitive()) {
+    /*
+     * TODO: this part should go to PrimitiveInitializer, which currently can
+     * introduce ill-typed patches due to incomplete AST models
+     */
+    if (!(expr.getParent() instanceof CtInvocation) && expr.getType() != null && !expr.getType().isPrimitive()) {
       exprs.add(FactoryUtils.createNullLiteral());
     }
     return exprs;

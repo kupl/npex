@@ -5,7 +5,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import npex.common.filters.ClassOrInterfaceFilter;
 import npex.common.filters.MethodOrConstructorFilter;
+import npex.common.utils.FactoryUtils;
+import spoon.reflect.code.CtCatchVariable;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtThrow;
@@ -17,17 +21,22 @@ import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 public class SkipThrowStrategy extends AbstractSkipStrategy {
-  private Set<CtTypeReference<? extends Throwable>> collectThrownTypes(CtElement el) {
-    Set<CtTypeReference<? extends Throwable>> throwns = new HashSet<>();
+  private Set<CtClass<? extends Throwable>> collectThrownTypes(CtElement el) {
+    Set<CtClass<? extends Throwable>> throwns = new HashSet<>();
     for (CtThrow thr : el.getElements(new TypeFilter<>(CtThrow.class))) {
-      throwns.add(thr.getThrownExpression().getType());
+      throwns.add((CtClass) thr.getThrownExpression().getType().getTypeDeclaration());
     }
+
+    for (CtCatchVariable cv : el.getElements(new TypeFilter<>(CtCatchVariable.class))) {
+      throwns.add((CtClass) cv.getType().getTypeDeclaration());
+    }
+
     return throwns;
   }
 
-  private Set<CtTypeReference<? extends Throwable>> collectCandidateExceptionsTypes(CtExecutable exec) {
+  private Set<CtClass<? extends Throwable>> collectCandidateExceptionsTypes(CtExecutable exec) {
     var thrownsInSinkMethod = collectThrownTypes(exec);
-    var thrownsInOtherMethods = collectThrownTypes(exec.getParent(CtClass.class));
+    var thrownsInOtherMethods = collectThrownTypes(exec.getParent(new ClassOrInterfaceFilter()));
     var thrownsByThrows = exec.getThrownTypes();
 
     List<Set> nonEmptyThrownSets = new ArrayList<Set>();
@@ -47,12 +56,20 @@ public class SkipThrowStrategy extends AbstractSkipStrategy {
 
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
     CtExecutable enclosingExecutable = nullExp.getParent(new MethodOrConstructorFilter());
-    Set<CtTypeReference<? extends Throwable>> exnTypes = collectCandidateExceptionsTypes(enclosingExecutable);
+    Set<CtClass<? extends Throwable>> exnTypes = collectCandidateExceptionsTypes(enclosingExecutable);
     List<CtStatement> throwStmts = new ArrayList<>();
     Factory factory = nullExp.getFactory();
-    exnTypes.forEach(ty -> {
-      CtThrow thw = factory.createThrow().setThrownExpression(factory.createConstructorCall(ty));
-      throwStmts.add(thw);
+    exnTypes.forEach(klass -> {
+      CtThrow thw = factory.createThrow();
+      CtConstructorCall call = null;
+      if (klass.getConstructor() != null) {
+        call = factory.createConstructorCall(klass.getReference());
+      } else if (klass.getConstructor(new spoon.reflect.factory.TypeFactory().STRING) != null) {
+        call = factory.createConstructorCall(klass.getReference(), FactoryUtils.createEmptyString());
+      }
+      if (call != null) {
+        throwStmts.add(thw.setThrownExpression(call));
+      }
     });
     return throwStmts;
   }

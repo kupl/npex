@@ -23,6 +23,7 @@
  */
 package npex.synthesizer.initializer;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -37,12 +38,14 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtTargetedExpression;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
 
 @SuppressWarnings("rawtypes")
 public abstract class ValueInitializer<T extends CtTypedElement> {
   final static Logger logger = LoggerFactory.getLogger(ValueInitializer.class);
+  final static TypeFactory tf = new TypeFactory();
 
   public abstract String getName();
 
@@ -53,7 +56,7 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
   public List<CtExpression> getTypeCompatibleExpressions(CtExpression expr, CtTypeReference typ) {
     Predicate<T> filter = ty -> {
       try {
-        return ty.getType().isSubtypeOf(typ);
+        return ty.getType().toString().endsWith("<>") || ty.getType().isSubtypeOf(typ);
       } catch (Exception e) {
         return false;
       }
@@ -72,6 +75,10 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
   }
 
   private List<CtExpression> enumerate(CtExpression expr, Predicate<T> pred) {
+    if (expr.getType() == null) {
+      logger.error("Could not find type of {}", expr);
+      return new ArrayList<>();
+    }
     Stream<T> candidates = this.enumerate(expr).filter(c -> !c.equals(expr));
     return candidates.filter(pred).map(c -> convertToCtExpression(c)).collect(Collectors.toList());
   }

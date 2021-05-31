@@ -45,6 +45,7 @@ import spoon.reflect.code.CtVariableWrite;
 import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.visitor.CtScanner;
 import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.reflect.visitor.filter.TypeFilter;
@@ -55,7 +56,7 @@ public class NPEInfo {
   int line;
   String deref_field;
   String npe_method_name;
-  CtClass<?> npe_class;
+  CtType<?> npe_class;
   CtMethod<?> callee;
 
   public static NPEInfo readFromJSON(CtModel model, String jsonPath) throws IOException, NoSuchElementException {
@@ -65,23 +66,23 @@ public class NPEInfo {
     String deref_field = js.getString("deref_field");
     String npe_method_name = js.getString("npe_method");
     String npe_class_name = js.getString("npe_class");
-    CtClass<?> npe_class = findClassFromName(model, filepath, npe_class_name);
+    CtType<?> npe_class = findClassFromName(model, filepath, npe_class_name);
     return new NPEInfo(filepath, line, deref_field, npe_method_name, npe_class);
   }
 
-  private static CtClass findClassFromName(CtModel model, String filepath, String className)
+  private static CtType findClassFromName(CtModel model, String filepath, String className)
       throws NoSuchElementException {
-    for (CtClass clazz : model.getElements(new TypeFilter<>(CtClass.class))) {
-      if (clazz.getPosition().getFile().toString().contains(filepath)) {
-        String[] packages = clazz.getQualifiedName().split("\\.");
+    for (CtType typ : model.getElements(new TypeFilter<>(CtType.class))) {
+      if (typ.getPosition().getFile().toString().contains(filepath)) {
+        String[] packages = typ.getQualifiedName().split("\\.");
         if (packages[packages.length - 1].equals(className))
-          return clazz;
+          return typ;
       }
     }
     throw new NoSuchElementException(String.format("Could not find class matched with {} at {}", filepath, className));
   }
 
-  public NPEInfo(String filepath, int line, String deref_field, String npe_method_name, CtClass<?> npe_class) {
+  public NPEInfo(String filepath, int line, String deref_field, String npe_method_name, CtType npe_class) {
     this.filepath = filepath;
     this.line = line;
     this.deref_field = deref_field;
@@ -121,7 +122,7 @@ public class NPEInfo {
       }
 
       if (expr instanceof CtInvocation invo) {
-        if (invo.getExecutable().getSignature().contains(deref_field))
+        if (invo.getExecutable().getSimpleName().equals(deref_field))
           return expr;
         continue;
       }
