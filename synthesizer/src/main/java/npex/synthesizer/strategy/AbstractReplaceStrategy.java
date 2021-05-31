@@ -46,7 +46,7 @@ abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemp
   }
 
   public String getName() {
-    return this.getClass().getSimpleName() + initializer.getName();
+    return this.getClass().getSimpleName();
   }
 
   public boolean isApplicable(CtExpression nullExp) {
