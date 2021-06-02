@@ -28,7 +28,7 @@ public class EqualityInitializer extends ValueInitializer<CtBinaryOperator> {
         .filter(arg -> !arg.getType().isPrimitive()).map(arg -> {
           CtBinaryOperator binop = factory.createBinaryOperator();
           binop.setKind(BinaryOperatorKind.EQ);
-          binop.setLeftHandOperand(arg);
+          binop.setLeftHandOperand(arg.clone());
           binop.setRightHandOperand(FactoryUtils.createNullLiteral());
           binop.setType(tf.BOOLEAN_PRIMITIVE);
           return binop;
