@@ -69,7 +69,9 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
 
     CtTypeReference ctype = collectionsMap.keySet().stream().filter(ct -> typ.isSubtypeOf(ct)).findAny().orElse(null);
     if (ctype != null) {
-      String implTypName = collectionsMap.get(ctype);
+      CtType typeDecl = typ.getTypeDeclaration();
+      String implTypName = (typeDecl instanceof CtClass impl && !impl.isAbstract()) ? typeDecl.getQualifiedName()
+          : collectionsMap.get(ctype);
       String typeParams = factory.getEnvironment().getComplianceLevel() >= 8 ? ""
           : typ.getActualTypeArguments().stream().map(ty -> ty.getQualifiedName()).collect(Collectors.joining(", "));
       CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s<%s>()", implTypName, typeParams))
@@ -87,6 +89,7 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
     }
 
     CtType tyDecl = typ.getDeclaration();
+    System.out.println(tyDecl);
     if (tyDecl instanceof CtClass klass && klass.getConstructor() != null) {
       return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
     }
