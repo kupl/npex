@@ -32,7 +32,9 @@ import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtNewArray;
 import spoon.reflect.declaration.CtClass;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.factory.Factory;
+import spoon.reflect.reference.CtArrayTypeReference;
 import spoon.reflect.reference.CtTypeReference;
 
 @SuppressWarnings("rawtypes")
@@ -80,10 +82,13 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
       return Stream.empty();
     }
 
-    if (typ instanceof CtClass klass) {
-      if (klass.getConstructor() != null) {
-        return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
-      }
+    if (typ instanceof CtArrayTypeReference) {
+      return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
+    }
+
+    CtType tyDecl = typ.getDeclaration();
+    if (tyDecl instanceof CtClass klass && klass.getConstructor() != null) {
+      return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
     }
 
     return Stream.empty();
