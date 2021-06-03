@@ -21,7 +21,7 @@ public class EqualityInitializer extends ValueInitializer<CtBinaryOperator> {
 
   protected Stream<CtBinaryOperator> enumerate(CtExpression expr) {
     Factory factory = expr.getFactory();
-    if (!expr.getType().equals(tf.BOOLEAN_PRIMITIVE))
+    if (!(expr instanceof CtInvocation) || !expr.getType().equals(tf.BOOLEAN_PRIMITIVE))
       return Stream.empty();
 
     return ASTUtils.getInvocationArguments((CtInvocation) expr, true).stream()
