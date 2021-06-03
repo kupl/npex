@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import npex.common.filters.ClassOrInterfaceFilter;
 import npex.common.filters.MethodOrConstructorFilter;
@@ -31,13 +32,18 @@ public class SkipThrowStrategy extends AbstractSkipStrategy {
       throwns.add((CtClass) cv.getType().getTypeDeclaration());
     }
 
+    throwns.removeIf(s -> s == null);
+
     return throwns;
   }
 
   private Set<CtClass<? extends Throwable>> collectCandidateExceptionsTypes(CtExecutable exec) {
-    var thrownsInSinkMethod = collectThrownTypes(exec);
-    var thrownsInOtherMethods = collectThrownTypes(exec.getParent(new ClassOrInterfaceFilter()));
-    var thrownsByThrows = exec.getThrownTypes();
+    Set<CtClass<? extends Throwable>> thrownsInSinkMethod = collectThrownTypes(exec);
+    Set<CtClass<? extends Throwable>> thrownsInOtherMethods = collectThrownTypes(
+        exec.getParent(new ClassOrInterfaceFilter()));
+    Set<CtTypeReference> thrownTypes = exec.getThrownTypes();
+    Set<CtClass<? extends Throwable>> thrownsByThrows = new HashSet<>();
+    thrownTypes.stream().filter(ty -> ty != null).forEach(ty -> thrownsByThrows.add((CtClass) ty.getTypeDeclaration()));
 
     List<Set> nonEmptyThrownSets = new ArrayList<Set>();
     nonEmptyThrownSets.add(thrownsInSinkMethod);
