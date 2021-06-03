@@ -48,7 +48,7 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
     List<CtExpression> parentExprs = new ArrayList<>();
     CtExpression outmost = ASTUtils.getOutermostExpression(nullExp);
     CtExpression cur = nullExp;
-    while (cur != null) {
+    while (cur != null && !cur.getRoleInParent().equals(CtRole.STATEMENT)) {
       parentExprs.add(cur);
       if (cur.equals(outmost))
         break;
