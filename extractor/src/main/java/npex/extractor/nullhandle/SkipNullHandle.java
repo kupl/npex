@@ -39,7 +39,6 @@ import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.code.CtRHSReceiver;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableWrite;
-import spoon.reflect.reference.CtLocalVariableReference;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
@@ -106,11 +105,6 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
         models.add(new NullModel(nullExp, firstStmt, value));
         terminate();
       }
-    }
-
-    /* TODO: Re-organize AbstractNullHandle to remove this! */
-    protected NullModel createModel(CtInvocation invo) {
-      return null;
     }
 
     private class NullValueScanner extends EarlyTerminatingScanner<CtExpression> {

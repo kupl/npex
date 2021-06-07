@@ -27,7 +27,6 @@ import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
 
 public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
   public TernaryNullHandle(CtConditional ternary, CtBinaryOperator cond) {
@@ -55,10 +54,5 @@ public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
       terminate();
     }
 
-    @Override
-    protected NullModel createModel(CtInvocation invo) {
-      /* NO-OP */
-      return null;
-    }
   }
 }

@@ -42,18 +42,7 @@ public abstract class AbstractNullModelScanner extends EarlyTerminatingScanner<L
     setResult(models);
   }
 
-  @Override
-  public void visitCtInvocation(CtInvocation invo) {
-    super.visitCtInvocation(invo);
-    if (invo.getTarget().equals(nullExp) || invo.getArguments().contains(nullExp)) {
-      models.add(createModel(invo));
-      terminate();
-    }
-  }
-
   protected boolean isTargetInvocation(CtInvocation invo) {
     return invo.getTarget().equals(nullExp) || invo.getArguments().contains(nullExp);
   }
-
-  protected abstract NullModel createModel(CtInvocation invo);
 }
