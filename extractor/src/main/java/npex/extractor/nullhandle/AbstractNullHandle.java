@@ -45,18 +45,23 @@ public abstract class AbstractNullHandle<T extends CtElement> {
   final protected CtBinaryOperator nullCond;
   final protected CtExpression nullExp;
 
-  final private List<NullModel> models;
+  protected List<NullModel> models;
 
   public AbstractNullHandle(T handle, CtBinaryOperator nullCond) {
     this.handle = handle;
     this.nullCond = nullCond;
     this.nullExp = nullCond.getLeftHandOperand();
+  }
+
+  public void collectModels() {
     AbstractNullModelScanner scanner = createNullModelScanner(nullExp);
     handle.accept(scanner);
     this.models = scanner.getResult();
   }
 
   public JSONObject toJSON() throws NPEXException {
+    if (models == null)
+      throw new NPEXException("toJSON is called before models are collected");
     var obj = new JSONObject();
     obj.put("source_path", handle.getPosition().getFile().getAbsolutePath());
     obj.put("lineno", handle.getPosition().getLine());

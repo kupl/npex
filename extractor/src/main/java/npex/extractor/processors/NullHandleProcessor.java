@@ -71,6 +71,7 @@ public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
     List<JSONObject> jsons = new ArrayList<>();
     for (var h : handles) {
       try {
+        h.collectModels();
         jsons.add(h.toJSON());
       } catch (NPEXException e) {
         logger.info(e.getMessage());
