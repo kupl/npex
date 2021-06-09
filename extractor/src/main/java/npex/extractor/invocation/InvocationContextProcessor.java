@@ -12,7 +12,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.NPEXException;
 import npex.extractor.context.ContextExtractor;
+import npex.extractor.invocation.InvocationContextProcessor.InvocationKeyMap;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtInvocation;
 
@@ -37,8 +39,13 @@ public class InvocationContextProcessor extends AbstractProcessor<CtInvocation> 
     var site = new InvocationSite(invo);
     var keyMap = new InvocationKeyMap();
     for (int nullPos = invo.getExecutable().isStatic() ? 0 : -1; nullPos < invo.getArguments().size(); nullPos++) {
-      keyMap.put(new InvocationKey(invo, nullPos), ContextExtractor.extract(invo, nullPos));
-      invoContextsMap.put(site, keyMap);
+      try {
+        keyMap.put(new InvocationKey(invo, nullPos), ContextExtractor.extract(invo, nullPos));
+        invoContextsMap.put(site, keyMap);
+      } catch (NPEXException e) {
+        logger.error(e.getMessage());
+        continue;
+      }
     }
   }
 

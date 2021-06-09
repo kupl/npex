@@ -2,6 +2,8 @@ package npex.extractor.invocation;
 
 import org.json.JSONObject;
 
+import npex.common.NPEXException;
+import spoon.SpoonException;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -12,11 +14,15 @@ public class InvocationKey {
   final String returnType;
   final String invoKind;
 
-  public InvocationKey(CtInvocation invo, int nullPos) {
+  public InvocationKey(CtInvocation invo, int nullPos) throws NPEXException {
     this.methodName = invo.getExecutable().getSimpleName();
     this.nullPos = nullPos;
     this.actualsLength = invo.getArguments().size();
-    this.returnType = abstractReturnType(invo.getType());
+    try {
+      this.returnType = abstractReturnType(invo.getType());
+    } catch (SpoonException e) {
+      throw new NPEXException("Failed to create invocation key: could not print type name");
+    }
     this.invoKind = invo.getExecutable().isStatic() ? "STATIC" : "VIRTUAL";
   }
 
