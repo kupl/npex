@@ -39,9 +39,12 @@ import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.code.CtRHSReceiver;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableWrite;
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
+import npex.common.NPEXException;
 
 public class SkipNullHandle extends AbstractNullHandle<CtIf> {
   public SkipNullHandle(CtIf handle, CtBinaryOperator nullCond) {
@@ -99,7 +102,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
           value = factory.createLiteral().setValue(0);
         } else {
           var scanner = new NullValueScanner(assign);
-          assign.getParent(new MethodOrConstructorFilter()).accept(scanner);
+          (assign.getParent(CtExecutable.class)).accept(scanner);
           value = scanner.getResult();
         }
         models.add(new NullModel(nullExp, firstStmt, value));
@@ -116,6 +119,9 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
       public NullValueScanner(CtAssignment me) {
         this.me = me;
         this.varRef = ((CtVariableWrite) me.getAssigned()).getVariable();
+        if (this.varRef.getType() == null) {
+          throw new NPEXException("Faield to create NullValueScanner: variable type is null");
+        }
       }
 
       @Override

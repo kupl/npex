@@ -54,7 +54,7 @@ public abstract class AbstractNullHandle<T extends CtElement> {
     this.nullExp = nullCond.getLeftHandOperand();
   }
 
-  public void collectModels() {
+  public void collectModels() throws NPEXException {
     AbstractNullModelScanner scanner = createNullModelScanner(nullExp);
     handle.accept(scanner);
     this.models = scanner.getResult();
@@ -68,7 +68,7 @@ public abstract class AbstractNullHandle<T extends CtElement> {
     obj.put("lineno", handle.getPosition().getLine());
     try {
       obj.put("handle", handle.toString());
-    } catch (SpoonException e) {
+    } catch (RuntimeException e) {
       logger.error(e.getMessage());
       throw new NPEXException("Failed to serialize handle to json: could not print handle");
     }

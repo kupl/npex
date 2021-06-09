@@ -48,15 +48,17 @@ public class NullModel {
   private final CtExpression nullExp;
   private final CtElement sinkBody;
   private final CtExpression nullValue;
+  private final boolean isThrow;
   private final InvocationInfo invoInfo;
   private final InvocationKey invoKey;
 
   final private Map<String, Boolean> contexts;
 
-  public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue) {
+  public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue, boolean isThrow) {
     this.nullExp = nullExp;
     this.sinkBody = sinkBody;
     this.nullValue = nullValue;
+    this.isThrow = isThrow;
 
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
@@ -65,10 +67,15 @@ public class NullModel {
     this.contexts = invoInfo != null ? ContextExtractor.extract(invoInfo.orgInvo(), invoInfo.nullIdx()) : null;
   }
 
+  public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue) {
+    this(nullExp, sinkBody, nullValue, false);
+  }
+
   public JSONObject toJSON() throws NPEXException {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
     obj.put("null_value", abstractNullValue(nullValue));
+    obj.put("is_throw", isThrow);
     obj.put("actual_null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
     obj.put("invocation_info", invoInfo != null ? invoInfo.toJSON() : JSONObject.NULL);
     obj.put("invocation_key", invoKey != null ? invoKey.toJSON() : JSONObject.NULL);
@@ -76,17 +83,33 @@ public class NullModel {
     return obj;
   }
 
-  private String abstractNullValue(CtExpression nullValue) throws NPEXException {
+  protected String abstractNullValue(CtExpression nullValue) throws NPEXException {
     if (invoInfo == null || nullValue == null) {
       throw new NPEXException(
-          String.format("Cannot extract null values for model {}: invoaction infomation is incomplete!", this));
+          String.format("Cannot extract null values for model %s invoaction infomation is incomplete!", this));
     }
     CtTypeReference valueType = nullValue.getType();
     CtTypeReference invoRetType = invoInfo.orgInvo().getType();
-    if (!nullValue.toString().equals("null") && valueType != null && !valueType.isSubtypeOf(invoRetType)) {
-      throw new NPEXException(String.format("Cannot extract null values for model {}: {} is not a subtype of {}", this,
+
+    if (valueType == null) {
+      throw new NPEXException(String.format("Cannot extract null values for model %s its value type is null", this));
+    }
+
+    if (invoRetType == null) {
+      throw new NPEXException(
+          String.format("Cannot extract null values for model %s return type of invocation is null", this));
+    }
+
+    if (valueType.isGenerics()) {
+      throw new NPEXException(
+          String.format("Cannot extract null values for model %s its value type is generics", this));
+    }
+
+    if (!nullValue.toString().equals("null") && !valueType.isSubtypeOf(invoRetType)) {
+      throw new NPEXException(String.format("Cannot extract null values for model %s: %s is not a subtype of %s", this,
           valueType, invoRetType));
     }
+
     if (nullValue instanceof CtLiteral) {
       return nullValue.toString();
     } else {

@@ -74,7 +74,7 @@ public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
         h.collectModels();
         jsons.add(h.toJSON());
       } catch (NPEXException e) {
-        logger.info(e.getMessage());
+        logger.error(e.getMessage());
       }
     }
     JSONArray handlesJsonArray = new JSONArray(jsons);
