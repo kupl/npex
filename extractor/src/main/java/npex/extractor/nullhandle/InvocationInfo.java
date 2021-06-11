@@ -7,11 +7,10 @@ import java.util.stream.Stream;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import spoon.SpoonException;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
-import spoon.reflect.reference.CtTypeReference;
-
-public record InvocationInfo(int nullIdx,CtInvocation orgInvo,CtInvocation nullInvo){
+import spoon.reflect.reference.CtTypeReference;public record InvocationInfo(int nullIdx,CtInvocation orgInvo,CtInvocation nullInvo){
 
 static private enum INVO_KIND {
   CONSTRUCTOR, STATIC, VIRTUAL
@@ -29,7 +28,11 @@ static private enum INVO_KIND {
   public JSONObject toJSON() {
     var obj = new JSONObject();
     CtTypeReference targetType = getInvocationType().equals(INVO_KIND.VIRTUAL) ? orgInvo.getTarget().getType() : null;
-    obj.put("null_invo", nullInvo);
+    try {
+      obj.put("null_invo", nullInvo.toString());
+    } catch (SpoonException e) {
+      obj.put("null_invo", JSONObject.NULL);
+    }
     obj.put("null_idx", nullIdx);
     obj.put("method_name", nullInvo.getExecutable().getSimpleName());
     obj.put("return_type", nullInvo.getType() != null ? abstractReturnType(nullInvo.getType()) : JSONObject.NULL);
