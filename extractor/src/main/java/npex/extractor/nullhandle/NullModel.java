@@ -110,6 +110,11 @@ public class NullModel {
           valueType, invoRetType));
     }
 
+    if (nullValue.toString().equals("null") && invoRetType.isPrimitive()) {
+      throw new NPEXException(String
+          .format("Invocation's return type is primitive but null literal is collected as null value for %s", this));
+    }
+
     if (nullValue instanceof CtLiteral) {
       return nullValue.toString();
     } else {
