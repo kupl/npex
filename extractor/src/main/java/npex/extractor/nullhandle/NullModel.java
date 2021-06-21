@@ -124,6 +124,8 @@ public class NullModel {
 
     if (nullValue instanceof CtLiteral) {
       return nullValue.toString();
+    } else if (nullValue instanceof CtConstructorCall) {
+      return "NPEXNew";
     } else {
       return "NPEXNonLiteral";
     }
