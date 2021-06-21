@@ -25,6 +25,7 @@ package npex.extractor.context;
 
 import npex.common.filters.MethodOrConstructorFilter;
 import npex.common.utils.ASTUtils;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
@@ -32,12 +33,13 @@ import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class NullCheckingExists implements Context {
-  public Boolean extract(CtInvocation invo, int nullPos) {
+  public Boolean extract(CtAbstractInvocation invo, int nullPos) {
     CtExecutable exec = invo.getParent(new MethodOrConstructorFilter());
     if (exec == null) {
       return false;
     }
-    CtExpression nullExp = nullPos == -1 ? invo.getTarget() : (CtExpression) invo.getArguments().get(nullPos);
+    CtExpression nullExp = nullPos == -1 && invo instanceof CtInvocation i ? i.getTarget()
+        : (CtExpression) invo.getArguments().get(nullPos);
     ContextScanner scanner = new ContextScanner(invo, nullExp);
     exec.accept(scanner);
     return scanner.getResult();
@@ -46,7 +48,7 @@ public class NullCheckingExists implements Context {
   private class ContextScanner extends EarlyTerminatingScanner<Boolean> {
     final private CtExpression nullExp;
 
-    public ContextScanner(CtInvocation invo, CtExpression nullExp) {
+    public ContextScanner(CtAbstractInvocation invo, CtExpression nullExp) {
       this.nullExp = nullExp;
       setResult(false);
     }

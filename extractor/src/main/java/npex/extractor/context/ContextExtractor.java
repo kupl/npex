@@ -27,12 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtInvocation;
 
 public class ContextExtractor {
   private static final List<Context> contexts = ContextFactory.getAllContexts();
 
-  public static Map<String, Boolean> extract(CtInvocation invo, int nullPos) {
+  public static Map<String, Boolean> extract(CtAbstractInvocation invo, int nullPos) {
     if (invo == null) {
       return null;
     }

@@ -23,8 +23,8 @@
  */
 package npex.extractor.context;
 
-import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtAbstractInvocation;
 
 public interface Context {
-  Boolean extract(CtInvocation invo, int nullPos);
+  Boolean extract(CtAbstractInvocation invo, int nullPos);
 }

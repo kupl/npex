@@ -23,13 +23,13 @@
  */
 package npex.extractor.context;
 
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.path.CtRole;
 import spoon.reflect.visitor.filter.AbstractFilter;
 
 public class UsedAsArgument implements Context {
-  public Boolean extract(CtInvocation invo, int nullPos) {
+  public Boolean extract(CtAbstractInvocation invo, int nullPos) {
     return invo.getParent(new ArgumentFilter()) != null;
   }
 

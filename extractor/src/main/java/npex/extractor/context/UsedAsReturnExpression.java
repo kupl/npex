@@ -23,11 +23,11 @@
  */
 package npex.extractor.context;
 
-import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtReturn;
 
 public class UsedAsReturnExpression implements Context {
-  public Boolean extract(CtInvocation invo, int nullPos) {
+  public Boolean extract(CtAbstractInvocation invo, int nullPos) {
     return invo.getParent(CtReturn.class) != null;
   }
 }
