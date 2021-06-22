@@ -7,6 +7,8 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtThrow;
+import spoon.reflect.factory.TypeFactory;
+import spoon.reflect.reference.CtTypeReference;
 
 public class ThrowNullHandle extends AbstractNullHandle {
   private final CtBlock parentBlock;
@@ -51,7 +53,7 @@ public class ThrowNullHandle extends AbstractNullHandle {
       if (!isTargetInvocation(invo))
         return;
 
-      models.add(new ThrowNullModel(nullExp, invo, thrownExn));
+      models.add(new NullModel(nullExp, invo, thrownExn));
       terminate();
     }
 

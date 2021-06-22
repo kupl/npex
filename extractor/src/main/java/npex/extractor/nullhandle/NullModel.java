@@ -51,27 +51,21 @@ public class NullModel {
   static Logger logger = LoggerFactory.getLogger(NullModel.class);
   private final CtExpression nullExp;
   private final CtElement sinkBody;
-  private final CtExpression nullValue;
-  private final boolean isThrow;
   private final CtAbstractInvocation invo;
   private final InvocationKey invoKey;
+  private final NullValue nullValue;
 
   final private Map<String, Boolean> contexts;
 
-  public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue, boolean isThrow) {
+  public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValueExpr) {
     this.nullExp = nullExp;
     this.sinkBody = sinkBody;
-    this.nullValue = nullValue;
-    this.isThrow = isThrow;
     NullInvocationScanner scanner = new NullInvocationScanner();
     sinkBody.accept(scanner);
     this.invo = scanner.getResult();
     this.invoKey = invo != null ? InvocationKey.createKey(invo, nullExp) : null;
     this.contexts = invoKey != null ? ContextExtractor.extract(invo, invoKey.nullPos) : null;
-  }
-
-  public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValue) {
-    this(nullExp, sinkBody, nullValue, false);
+    this.nullValue = new NullValue(nullValueExpr, invo);
   }
 
   public JSONObject toJSON() throws NPEXException {
@@ -82,57 +76,14 @@ public class NullModel {
 
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_value", abstractNullValue(nullValue));
-    obj.put("is_throw", isThrow);
-    obj.put("actual_null_value", nullValue != null ? nullValue.toString() : JSONObject.NULL);
+    obj.put("null_value", nullValue.getAbstractValue());
+    obj.put("actual_null_value", nullValue.getRawValue());
     obj.put("invocation_key", invoKey.toJSON());
     obj.put("contexts", new JSONObject(contexts));
     return obj;
   }
 
-  protected String abstractNullValue(CtExpression nullValue) throws NPEXException {
-    if (nullValue == null) {
-      throw new NPEXException(
-          String.format("Cannot extract null values for model %s invoaction infomation is incomplete!", this));
-    }
-    CtTypeReference valueType = nullValue.getType();
-    CtTypeReference invoRetType = invo.getExecutable().getType();
-
-    if (valueType == null) {
-      throw new NPEXException(String.format("Cannot extract null values for model %s its value type is null", this));
-    }
-
-    if (invoRetType == null) {
-      throw new NPEXException(
-          String.format("Cannot extract null values for model %s return type of invocation is null", this));
-    }
-
-    if (valueType.isGenerics()) {
-      throw new NPEXException(
-          String.format("Cannot extract null values for model %s its value type is generics", this));
-    }
-
-    if (!nullValue.toString().equals("null") && !valueType.isSubtypeOf(invoRetType)) {
-      throw new NPEXException(String.format("Cannot extract null values for model %s: %s is not a subtype of %s", this,
-          valueType, invoRetType));
-    }
-
-    if (nullValue.toString().equals("null") && invoRetType.isPrimitive()) {
-      throw new NPEXException(String
-          .format("Invocation's return type is primitive but null literal is collected as null value for %s", this));
-    }
-
-    if (nullValue instanceof CtLiteral) {
-      return nullValue.toString();
-    } else if (nullValue instanceof CtConstructorCall) {
-      return "NPEXNew";
-    } else {
-      return "NPEXNonLiteral";
-    }
-  }
-
   private class NullInvocationScanner extends EarlyTerminatingScanner<CtAbstractInvocation> {
-
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       super.visitCtInvocation(invo);
