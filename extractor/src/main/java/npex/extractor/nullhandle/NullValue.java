@@ -1,18 +1,22 @@
 package npex.extractor.nullhandle;
 
+import java.util.Arrays;
+
 import npex.common.NPEXException;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLiteral;
-import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.factory.TypeFactory;
+import spoon.reflect.reference.CtTypeReference;
 
 public class NullValue {
   final private CtExpression expr;
   final private CtAbstractInvocation invo;
 
   final static CtTypeReference throwableType = (new TypeFactory()).createReference(java.lang.Throwable.class);
+  final static String[] emptyCollections = { "java.util.Collections.EMPTY_LIST", "java.util.Collections.EMPTY_MAP",
+      "java.util.Collections.EMPTY_SET" };
 
   public NullValue(CtExpression expr, CtAbstractInvocation invo) {
     this.expr = expr;
@@ -59,10 +63,20 @@ public class NullValue {
 
     if (expr instanceof CtLiteral) {
       return expr.toString();
-    } else if (expr instanceof CtConstructorCall ccall) {
-      return ccall.getArguments().isEmpty() ? "NPEXDefaultNew" : "NPEXNonDefaultNew";
-    } else {
-      return "NPEXNonLiteral";
     }
+
+    if (expr instanceof CtConstructorCall ccall) {
+      return ccall.getArguments().isEmpty() ? "NPEXDefaultNew" : "NPEXNonDefaultNew";
+    }
+
+    if (expr.toString().equals("java.lang.Object.class")) {
+      return expr.toString();
+    }
+
+    if (Arrays.asList(emptyCollections).contains(expr.toString())) {
+      return "NPEXEmptyCollections";
+    }
+
+    return "NPEXNonLiteral";
   }
 }
