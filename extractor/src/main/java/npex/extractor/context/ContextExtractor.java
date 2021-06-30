@@ -28,10 +28,10 @@ import java.util.List;
 import java.util.Map;
 
 import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtInvocation;
 
 public class ContextExtractor {
   private static final List<Context> contexts = ContextFactory.getAllContexts();
+  private static final List<Context> calleeContexts = ContextFactory.getCalleeContexts();
 
   public static Map<String, Boolean> extract(CtAbstractInvocation invo, int nullPos) {
     if (invo == null) {
@@ -39,7 +39,9 @@ public class ContextExtractor {
     }
     var map = new HashMap<String, Boolean>();
     contexts.forEach(ctx -> map.put(ctx.getClass().getSimpleName(), ctx.extract(invo, nullPos)));
+    if (invo.getExecutable().getExecutableDeclaration() != null) {
+      calleeContexts.forEach(ctx -> map.put(ctx.getClass().getSimpleName(), ctx.extract(invo, nullPos)));
+    }
     return map;
   }
-
 }

@@ -28,6 +28,7 @@ import java.util.List;
 
 public class ContextFactory {
   private final static List<Context> contexts = new ArrayList<>();
+  private final static List<Context> calleeContexts = new ArrayList<>();
   static {
     contexts.add(new NullCheckingExists());
     contexts.add(new UsedAsArgument());
@@ -48,10 +49,21 @@ public class ContextFactory {
     contexts.add(new VariableIsObjectType());
     contexts.add(new VariableIsFinal());
     contexts.add(new InvocationIsIsolated());
-    contexts.add(new CalleeMethodReturnsVoid());
+    contexts.add(new InvocationIsBase());
+    contexts.add(new InvocationIsConstructorArgument());
+
+    calleeContexts.add(new CalleeMethodReturnsVoid());
+    calleeContexts.add(new CalleeMethodReturnsLiteral());
+    calleeContexts.add(new CalleeMethodThrows());
+    calleeContexts.add(new CalleeMethodChecksNull());
+    calleeContexts.add(new CalleeMethodChecksNullForNullParameter());
   }
 
   public static List<Context> getAllContexts() {
     return contexts;
+  }
+
+  public static List<Context> getCalleeContexts() {
+    return calleeContexts;
   }
 }
