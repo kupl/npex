@@ -1,14 +1,13 @@
 package npex.extractor.invocation;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.json.JSONObject;
 
 import npex.common.NPEXException;
 import spoon.SpoonException;
 import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.reference.CtTypeReference;
@@ -19,6 +18,7 @@ public class InvocationKey {
   final public int actualsLength;
   final public String returnType;
   final public String invoKind;
+  final public boolean calleeDefined;
 
   private InvocationKey(CtAbstractInvocation invo, int nullPos) throws NPEXException {
     this.methodName = invo.getExecutable().getSimpleName();
@@ -30,6 +30,7 @@ public class InvocationKey {
       throw new NPEXException("Failed to create invocation key: could not print type name");
     }
     this.invoKind = getInvoKind(invo);
+    this.calleeDefined = invo.getExecutable().getExecutableDeclaration() != null;
   }
 
   static public InvocationKey createKey(CtAbstractInvocation invo, CtExpression nullExp) throws NPEXException {
@@ -80,6 +81,7 @@ public class InvocationKey {
     obj.put("actuals_length", actualsLength);
     obj.put("return_type", returnType);
     obj.put("invo_kind", invoKind);
+    obj.put("callee_defined", calleeDefined);
     return obj;
   }
 }
