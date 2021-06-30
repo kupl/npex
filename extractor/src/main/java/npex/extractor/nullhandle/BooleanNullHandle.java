@@ -23,6 +23,7 @@
  */
 package npex.extractor.nullhandle;
 
+import npex.common.utils.FactoryUtils;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
@@ -62,7 +63,7 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
           visitCtBinaryOperator(boRHS);
         } else if (root instanceof CtInvocation invo && isTargetInvocation(invo)) {
           /* TODO: resolve compound cases e.g.m !(e), e == false ... */
-          CtExpression nullValue = factory.createLiteral().setValue(this.handleBoKind.equals(BinaryOperatorKind.OR));
+          CtExpression nullValue = FactoryUtils.createBooleanLiteral(this.handleBoKind.equals(BinaryOperatorKind.OR));
           models.add(new NullModel(nullExp, root, nullValue));
           terminate();
         } else {

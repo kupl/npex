@@ -25,10 +25,19 @@ package npex.common.utils;
 
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.factory.CoreFactory;
+import spoon.reflect.factory.TypeFactory;
 import spoon.support.DefaultCoreFactory;
 
 public class FactoryUtils {
   static CoreFactory factory = new DefaultCoreFactory();
+  static TypeFactory tFactory = new TypeFactory();
+
+  public static CtLiteral<Boolean> createBooleanLiteral(boolean boolValue) {
+    CtLiteral<Boolean> lit = factory.createLiteral();
+    lit.setType(tFactory.BOOLEAN_PRIMITIVE);
+    lit.setValue(boolValue);
+    return lit;
+  }
 
   public static CtLiteral createNullLiteral() {
     return factory.createLiteral().setValue(null);
