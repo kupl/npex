@@ -33,7 +33,7 @@ public class InvocationKey {
   }
 
   static public InvocationKey createKey(CtAbstractInvocation invo, CtExpression nullExp) throws NPEXException {
-    if (invo instanceof CtInvocation virtualInvo && virtualInvo.getTarget() == nullExp) {
+    if (invo instanceof CtInvocation virtualInvo && virtualInvo.getTarget().equals(nullExp)) {
       return new InvocationKey(invo, -1);
     }
     int nullPos = invo.getArguments().indexOf(nullExp);

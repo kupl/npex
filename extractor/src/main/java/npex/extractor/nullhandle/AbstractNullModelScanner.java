@@ -26,6 +26,7 @@ package npex.extractor.nullhandle;
 import java.util.ArrayList;
 import java.util.List;
 
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.factory.CoreFactory;
@@ -42,7 +43,9 @@ public abstract class AbstractNullModelScanner extends EarlyTerminatingScanner<L
     setResult(models);
   }
 
-  protected boolean isTargetInvocation(CtInvocation invo) {
-    return invo.getTarget() != null && invo.getTarget().equals(nullExp) || invo.getArguments().contains(nullExp);
+  protected boolean isTargetInvocation(CtAbstractInvocation invo) {
+    boolean result = (invo instanceof CtInvocation vInvo && vInvo.getTarget().equals(nullExp))
+        || invo.getArguments().contains(nullExp);
+    return result;
   }
 }

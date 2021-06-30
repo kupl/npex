@@ -27,9 +27,11 @@ import java.util.List;
 
 import npex.common.filters.MethodOrConstructorFilter;
 import npex.common.utils.ASTUtils;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
@@ -77,6 +79,14 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
 
     @Override
     public void visitCtInvocation(CtInvocation invo) {
+      if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
+        models.add(new NullModel(nullExp, invo, skipValue));
+        terminate();
+      }
+    }
+
+    @Override
+    public void visitCtConstructorCall(CtConstructorCall invo) {
       if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
         models.add(new NullModel(nullExp, invo, skipValue));
         terminate();

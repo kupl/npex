@@ -23,29 +23,21 @@
  */
 package npex.extractor.nullhandle;
 
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.NPEXException;
-import npex.common.utils.FactoryUtils;
 import npex.extractor.context.ContextExtractor;
 import npex.extractor.invocation.InvocationKey;
-import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
-import spoon.reflect.code.CtLiteral;
-import spoon.reflect.declaration.CtElement;
-import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.reference.CtExecutableReference;
-import spoon.reflect.reference.CtTypeReference;
-import spoon.reflect.visitor.EarlyTerminatingScanner;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtConstructorCall;
+import spoon.reflect.code.CtExpression;
+import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.visitor.EarlyTerminatingScanner;
 
 public class NullModel {
   static Logger logger = LoggerFactory.getLogger(NullModel.class);
@@ -87,7 +79,7 @@ public class NullModel {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       super.visitCtInvocation(invo);
-      if (invo.getTarget() == nullExp || invo.getArguments().contains(nullExp)) {
+      if (invo.getTarget().equals(nullExp) || invo.getArguments().contains(nullExp)) {
         setResult(invo);
         terminate();
       }
