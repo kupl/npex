@@ -26,11 +26,14 @@ package npex.common.utils;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.factory.CoreFactory;
 import spoon.reflect.factory.TypeFactory;
+import spoon.reflect.reference.CtTypeReference;
 import spoon.support.DefaultCoreFactory;
 
 public class FactoryUtils {
   static CoreFactory factory = new DefaultCoreFactory();
   static TypeFactory tFactory = new TypeFactory();
+
+  public static CtTypeReference<java.lang.Void> VOID_TYPE = tFactory.VOID_PRIMITIVE;
 
   public static CtLiteral<Boolean> createBooleanLiteral(boolean boolValue) {
     CtLiteral<Boolean> lit = factory.createLiteral();

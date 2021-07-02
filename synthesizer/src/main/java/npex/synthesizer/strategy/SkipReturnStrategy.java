@@ -27,12 +27,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import npex.common.utils.FactoryUtils;
 import npex.synthesizer.initializer.DefaultValueTable;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtConstructor;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -40,7 +42,7 @@ public class SkipReturnStrategy extends AbstractSkipStrategy {
 
   @Override
   public boolean _isApplicable(CtExpression nullExp) {
-    return nullExp.getParent(CtConstructor.class) == null;
+    return true;
   }
 
   protected List<CtReturn> createReturnStmts(CtMethod sinkMethod) {
@@ -63,7 +65,8 @@ public class SkipReturnStrategy extends AbstractSkipStrategy {
 
   @Override
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
-    final CtTypeReference retTyp = nullExp.getParent(CtMethod.class).getType();
+    CtTypeReference retTyp = nullExp.getParent(CtConstructor.class) != null ? FactoryUtils.VOID_TYPE
+        : nullExp.getParent(CtMethod.class).getType();
 
     // In case of void method, we just insert 'return;'
     if (retTyp.getSimpleName().equals("void")) {
