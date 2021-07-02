@@ -46,9 +46,6 @@ public class NullHandleFactory {
       handle = createTernaryNullHandle(ternary);
     } else if (element instanceof CtIf ifStmt) {
       handle = createSkipNullHandle(ifStmt);
-      if (handle == null) {
-        handle = createThrowNullHandle(ifStmt);
-      }
     } else {
       return null;
     }
@@ -79,20 +76,6 @@ public class NullHandleFactory {
       if (cond.getKind().equals(BinaryOperatorKind.NE))
         return new SkipNullHandle(ifStmt, cond);
     }
-    return null;
-  }
-
-  private static ThrowNullHandle createThrowNullHandle(CtIf ifStmt) {
-    if (ifStmt.getCondition()instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
-      CtBlock blk = ifStmt.getThenStatement();
-      if (blk == null || blk.getStatements().isEmpty()) {
-        return null;
-      }
-      if (cond.getKind().equals(BinaryOperatorKind.EQ) && blk.getLastStatement()instanceof CtThrow thrownStmt) {
-        return new ThrowNullHandle(ifStmt, cond, thrownStmt);
-      }
-    }
-
     return null;
   }
 
