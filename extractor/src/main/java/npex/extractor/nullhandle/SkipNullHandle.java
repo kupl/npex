@@ -60,7 +60,6 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
 
   private class NullModelScanner extends AbstractNullModelScanner {
     private CtStatement firstStmt;
-    private CtLiteral skipValue = factory.createLiteral().setValue("NPEX_SKIP_VALUE");
 
     public NullModelScanner(CtExpression nullExp) {
       super(nullExp);
@@ -80,7 +79,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
-        models.add(new NullModel(nullExp, invo, skipValue));
+        models.add(new NullModel(nullExp, invo, NullValue.SKIP));
         terminate();
       }
     }
@@ -88,7 +87,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     @Override
     public void visitCtConstructorCall(CtConstructorCall invo) {
       if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
-        models.add(new NullModel(nullExp, invo, skipValue));
+        models.add(new NullModel(nullExp, invo, NullValue.SKIP));
         terminate();
       }
     }
@@ -115,7 +114,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
           (assign.getParent(CtExecutable.class)).accept(scanner);
           value = scanner.getResult();
         }
-        models.add(new NullModel(nullExp, firstStmt, value));
+        models.add(new NullModel(nullExp, firstStmt, NullValue.SKIP));
         terminate();
       }
     }

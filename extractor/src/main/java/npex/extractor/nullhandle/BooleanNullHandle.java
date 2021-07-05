@@ -28,6 +28,7 @@ import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
 
 public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boolean>> {
 
@@ -63,7 +64,8 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
           visitCtBinaryOperator(boRHS);
         } else if (root instanceof CtInvocation invo && isTargetInvocation(invo)) {
           /* TODO: resolve compound cases e.g.m !(e), e == false ... */
-          CtExpression nullValue = FactoryUtils.createBooleanLiteral(this.handleBoKind.equals(BinaryOperatorKind.OR));
+          CtLiteral boolLit = FactoryUtils.createBooleanLiteral(handleBoKind.equals(BinaryOperatorKind.OR));
+          NullValue nullValue = NullValue.create(invo, boolLit);
           models.add(new NullModel(nullExp, root, nullValue));
           terminate();
         } else {

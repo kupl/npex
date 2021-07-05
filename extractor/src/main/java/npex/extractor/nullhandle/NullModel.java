@@ -49,7 +49,7 @@ public class NullModel {
 
   final private Map<String, Boolean> contexts;
 
-  public NullModel(CtExpression nullExp, CtElement sinkBody, CtExpression nullValueExpr) {
+  public NullModel(CtExpression nullExp, CtElement sinkBody, NullValue nullValue) {
     this.nullExp = nullExp;
     this.sinkBody = sinkBody;
     NullInvocationScanner scanner = new NullInvocationScanner();
@@ -57,7 +57,7 @@ public class NullModel {
     this.invo = scanner.getResult();
     this.invoKey = invo != null ? InvocationKey.createKey(invo, nullExp) : null;
     this.contexts = invoKey != null ? ContextExtractor.extract(invo, invoKey.nullPos) : null;
-    this.nullValue = new NullValue(nullValueExpr, invo);
+    this.nullValue = nullValue;
   }
 
   public JSONObject toJSON() throws NPEXException {
@@ -68,8 +68,8 @@ public class NullModel {
 
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
-    obj.put("null_value", nullValue.getAbstractValue());
-    obj.put("actual_null_value", nullValue.getRawValue());
+    obj.put("null_value", nullValue.toJSON());
+    obj.put("actual_null_value", nullValue.getRawString());
     obj.put("invocation_key", invoKey.toJSON());
     obj.put("contexts", new JSONObject(contexts));
     return obj;
