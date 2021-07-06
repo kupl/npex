@@ -74,47 +74,12 @@ class AbstractKey(JSONData):
     invo_kind : str
     callee_defined: bool
 
-
-
-@dataclass(frozen=True)
-class Contexts(JSONData):
-    UsedAsReturnExpression: bool
-    UsedAsArgument: bool
-    UsedAsOperand: bool
-    NullCheckingExists: bool
-    IsField: bool
-    IsParameter: bool
-    IsVariable: bool
-    LHSIsField: bool
-    LHSIsPrivate: bool
-    LHSIsPublic: bool
-    SinkExprIsAssigned: bool
-    SinkExprIsExceptionArgument: bool
-    CallerMethodIsConstructor: bool
-    CallerMethodIsPrivate: bool
-    CallerMethodIsPublic: bool
-    CallerMethodIsStatic: bool
-    VariableIsObjectType: bool
-    VariableIsFinal: bool
-    InvocationIsIsolated: bool
-    InvocationIsBase: bool
-    InvocationIsConstructorArgument: bool
-    CalleeMethodReturnsVoid: Optional[bool] = None
-    CalleeMethodReturnsLiteral: Optional[bool] = None
-    CalleeMethodThrows: Optional[bool] = None
-    CalleeMethodChecksNull: Optional[bool] = None
-    CalleeMethodChecksNullForNullParameter: Optional[bool] = None
-
-    def to_boolean_vector(self):
-        return [1 if b else 0 for b in self.__dict__.values()]
-
-
 @dataclass
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
     null_value: Optional[str]
     sink_body: str
-    contexts: Optional[Contexts]
+    contexts: List[int]
 
     @classmethod
     def from_dict2(klass, d):
@@ -127,7 +92,15 @@ class NullModel(JSONData):
             v['exprs'] = [kind] + sorted(exprs[1:])
             d['null_value'] = ', '.join(v['exprs'])
         return klass.from_dict(d)
-        
+
+    @classmethod
+    def from_dict(klass, d):
+        invocation_key = InvocationKey.from_dict(d['invocation_key'])
+        null_value = d['null_value']
+        sink_body = d['sink_body']
+        contexts = [ 1 if v else 0 for v in d['contexts'].values()]
+        return NullModel(invocation_key, null_value, sink_body, contexts)
+
 
 @dataclass
 class NullHandle(JSONData):
@@ -135,7 +108,6 @@ class NullHandle(JSONData):
     lineno: int
     handle: str
     model: NullModel
-
 
 class DB:
     handles: List[NullHandle]

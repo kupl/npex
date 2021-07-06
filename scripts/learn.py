@@ -7,7 +7,7 @@ from functools import partial
 import pickle
 import glob
 from sklearn.ensemble import RandomForestClassifier  #type: ignore
-from data import InvocationKey, Contexts, DB, JSONData
+from data import InvocationKey, DB, JSONData
 from typing import Dict, Tuple, List
 import json
 import gc
@@ -71,7 +71,7 @@ def train_classifiers(db, model_output_dir, classifier_out_path, keys=set()):
         X, Y = [], []
         for value, contexts in d.items():
             for ctx in contexts:
-                X.append(ctx.to_boolean_vector())
+                X.append(ctx)
                 Y.append(value)
 
         args.append([key, X, Y, model_output_dir])
@@ -124,7 +124,8 @@ def generate_answer_sheet(project_dir, model_path, outpath):
     print(model.classifiers.keys())
     for entry in invo_contexts:
         for key_contexts in entry['keycons']:
-            key, contexts = InvocationKey.from_dict(key_contexts['key']), Contexts.from_dict(key_contexts['contexts'])
+            key, contexts = InvocationKey.from_dict(key_contexts['key']), [ 1 if v else 0 for v in key_contexts['contexts'].values()]
+           
             if key.abstract() in model.classifiers:
                 inputs.append((entry, key_contexts, key, contexts, model.classifiers[key.abstract()]))
 
@@ -142,11 +143,11 @@ def generate_answer_sheet(project_dir, model_path, outpath):
     for classifier, contexts_list in to_computes.items():
         _time = time.time()
         # optimization: predict contexts at once
-        output = classifier.predict_proba([contexts.to_boolean_vector() for contexts in contexts_list])
+        output = classifier.predict_proba(contexts_list)
         time_to_predict += time.time() - _time
         outputs[classifier] = {}
         for i in range(0, len(contexts_list)):
-            outputs[classifier][contexts_list[i]] = output[i]
+            outputs[classifier][str(contexts_list[i])] = output[i]
 
     # Final output: (site * pos * key * (value -> prob)) list
     for (entry, key_contexts, key, contexts, classifier) in inputs:
@@ -162,7 +163,7 @@ def generate_answer_sheet(project_dir, model_path, outpath):
 
         # proba : Label -> float
         proba = {model.labels[key.abstract()][idx]: prob
-                   for (idx, prob) in enumerate(outputs[classifier][contexts])}
+                   for (idx, prob) in enumerate(outputs[classifier][str(contexts)])}
                  
         d['proba'] = proba
         answers.append(d)
