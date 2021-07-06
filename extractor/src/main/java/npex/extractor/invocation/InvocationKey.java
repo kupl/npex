@@ -77,6 +77,8 @@ public class InvocationKey {
       return "java.lang.String";
     else if (type.equals(FactoryUtils.OBJECT_TYPE))
       return "java.lang.Object";
+    else if (type.isSubtypeOf(FactoryUtils.CLASS_TYPE))
+      return "java.lang.Class";
     else
       return "OTHERS";
 
