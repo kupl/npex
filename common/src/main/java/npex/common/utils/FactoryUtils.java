@@ -23,6 +23,7 @@
  */
 package npex.common.utils;
 
+import java.util.Collection;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.factory.CoreFactory;
 import spoon.reflect.factory.TypeFactory;
@@ -37,6 +38,8 @@ public class FactoryUtils {
   public static CtTypeReference<java.lang.Object> OBJECT_TYPE = tFactory.OBJECT;
   public static CtTypeReference<java.lang.String> STRING_TYPE = tFactory.STRING;
   public static CtTypeReference<java.lang.Class> CLASS_TYPE = tFactory.createReference(java.lang.Class.class);
+  public static CtTypeReference<java.util.Collection> COLLECTION_TYPE = tFactory
+      .createReference(java.util.Collection.class);
 
   public static CtLiteral<Boolean> createBooleanLiteral(boolean boolValue) {
     CtLiteral<Boolean> lit = factory.createLiteral();
