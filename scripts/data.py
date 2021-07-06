@@ -40,20 +40,13 @@ class JSONData:
     def asdict(self):
         return dataclasses.asdict(self)
 
-
-@dataclass(frozen=True)
-class InvocationSite(JSONData):
-    lineno: int
-    source_path: str
-    deref_field: str
-
-
 @dataclass(frozen=True)
 class InvocationKey(JSONData):
     method_name: str
     null_pos: int
     actuals_length: int
     return_type: str
+    raw_return_type: str
     invo_kind: str
     callee_defined: bool
 
