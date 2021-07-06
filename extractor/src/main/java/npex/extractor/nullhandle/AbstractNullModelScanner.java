@@ -44,7 +44,7 @@ public abstract class AbstractNullModelScanner extends EarlyTerminatingScanner<L
   }
 
   protected boolean isTargetInvocation(CtAbstractInvocation invo) {
-    boolean result = (invo instanceof CtInvocation vInvo && vInvo.getTarget().equals(nullExp))
+    boolean result = (invo instanceof CtInvocation vInvo && nullExp.equals(vInvo.getTarget()))
         || invo.getArguments().contains(nullExp);
     return result;
   }
