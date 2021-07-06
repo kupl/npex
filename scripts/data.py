@@ -116,6 +116,18 @@ class NullModel(JSONData):
     sink_body: str
     contexts: Optional[Contexts]
 
+    @classmethod
+    def from_dict2(klass, d):
+        v = d['null_value']
+        exprs = v['exprs']
+        if v['kind'] == 'PLAIN':
+            d['null_value'] = exprs[0]
+        else:
+            kind = exprs[0]
+            v['exprs'] = [kind] + sorted(exprs[1:])
+            d['null_value'] = ', '.join(v['exprs'])
+        return klass.from_dict(d)
+        
 
 @dataclass
 class NullHandle(JSONData):
@@ -134,9 +146,8 @@ class DB:
         for h in JSONData.read_json_from_file(handles_json):
             for m in h['models']:
                 try:
-                    model = NullModel.from_dict(m)
-                except MissingValueError:
-                    print(m)
+                    model = NullModel.from_dict2(m)
+                except MissingValueError as e:
                     continue
 
                 handle = NullHandle(h['source_path'], h['lineno'], h['handle'],
