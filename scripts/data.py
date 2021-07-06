@@ -63,6 +63,18 @@ class InvocationKey(JSONData):
 
         return False
 
+    def abstract(self):
+        null_pos_is_base = self.null_pos == -1
+        return AbstractKey(null_pos_is_base, self.return_type, self.invo_kind, self.callee_defined)
+
+@dataclass(frozen=True)
+class AbstractKey(JSONData):
+    nullpos_is_base : bool # is null_pos base?
+    return_type : str
+    invo_kind : str
+    callee_defined: bool
+
+
 
 @dataclass(frozen=True)
 class Contexts(JSONData):
