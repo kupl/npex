@@ -46,6 +46,7 @@ public class ContextFactory {
     contexts.add(new CallerMethodIsPrivate());
     contexts.add(new CallerMethodIsPublic());
     contexts.add(new CallerMethodIsStatic());
+    contexts.add(new CallerMethodReturnsNull());
     contexts.add(new VariableIsObjectType());
     contexts.add(new VariableIsFinal());
     contexts.add(new InvocationIsIsolated());
