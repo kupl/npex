@@ -32,7 +32,7 @@ import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 
-public class NullCheckingExists implements Context {
+public class NullCheckingExists extends Context {
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {
     CtExecutable exec = invo.getParent(new MethodOrConstructorFilter());
     if (exec == null) {

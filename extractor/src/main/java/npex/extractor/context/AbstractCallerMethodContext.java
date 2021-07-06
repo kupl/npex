@@ -5,10 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import npex.common.filters.MethodOrConstructorFilter;
 import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
 
-public abstract class AbstractCallerMethodContext implements Context {
+public abstract class AbstractCallerMethodContext extends Context {
   final static Logger logger = LoggerFactory.getLogger(AbstractVariableTypeContext.class);
 
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {

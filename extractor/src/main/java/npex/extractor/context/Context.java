@@ -25,6 +25,10 @@ package npex.extractor.context;
 
 import spoon.reflect.code.CtAbstractInvocation;
 
-public interface Context {
-  Boolean extract(CtAbstractInvocation invo, int nullPos);
+public abstract class Context {
+  public String getName() {
+    return this.getClass().getSimpleName();
+  }
+
+  abstract Boolean extract(CtAbstractInvocation invo, int nullPos);
 }

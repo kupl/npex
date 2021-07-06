@@ -38,9 +38,10 @@ public class ContextExtractor {
       return null;
     }
     var map = new HashMap<String, Boolean>();
-    contexts.forEach(ctx -> map.put(ctx.getClass().getSimpleName(), ctx.extract(invo, nullPos)));
+
+    contexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(invo, nullPos)));
     if (invo.getExecutable().getExecutableDeclaration() != null) {
-      calleeContexts.forEach(ctx -> map.put(ctx.getClass().getSimpleName(), ctx.extract(invo, nullPos)));
+      calleeContexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(invo, nullPos)));
     }
     return map;
   }

@@ -5,10 +5,9 @@ import org.slf4j.LoggerFactory;
 
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtConstructorCall;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-public class SinkExprIsExceptionArgument implements Context {
+public class SinkExprIsExceptionArgument extends Context {
   static Logger logger = LoggerFactory.getLogger(SinkExprIsExceptionArgument.class);
 
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {

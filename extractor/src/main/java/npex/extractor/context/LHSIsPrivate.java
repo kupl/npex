@@ -4,7 +4,7 @@ import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtVariableWrite;
 
-public class LHSIsPrivate implements Context {
+public class LHSIsPrivate extends Context {
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {
     if (invo.getParent(CtAssignment.class)instanceof CtAssignment assignment) {
       return assignment.getAssigned()instanceof CtVariableWrite write && write.getVariable().getDeclaration() != null
