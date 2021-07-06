@@ -11,8 +11,10 @@ import spoon.SpoonException;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
+import npex.common.helper.TypeHelper;
 
 public class InvocationKey {
   final public String methodName;
@@ -24,13 +26,18 @@ public class InvocationKey {
   final public boolean calleeDefined;
 
   private InvocationKey(CtAbstractInvocation invo, int nullPos) throws NPEXException {
+    CtTypeReference type = TypeHelper.getTypeOfInvocation(invo);
+    if (type == null) {
+      throw new NPEXException("Failed to create invocation key: return type is null");
+    }
+
     final CtExecutableReference exec = invo.getExecutable();
     this.methodName = exec.getSimpleName();
     this.nullPos = nullPos;
     this.actualsLength = invo.getArguments().size();
     try {
-      this.rawReturnType = (exec.getType() == null ? FactoryUtils.VOID_TYPE : exec.getType()).toString();
-      this.returnType = abstractReturnType(exec.getType());
+      this.rawReturnType = type.toString();
+      this.returnType = abstractReturnType(type);
     } catch (SpoonException e) {
       throw new NPEXException("Failed to create invocation key: could not print type name");
     }
@@ -53,7 +60,12 @@ public class InvocationKey {
     List<InvocationKey> keys = new ArrayList<>();
     int begin = invo instanceof CtInvocation vInvo && !vInvo.getExecutable().isStatic() ? -1 : 0;
     for (int nullPos = begin; nullPos < invo.getArguments().size(); nullPos++) {
-      keys.add(new InvocationKey(invo, nullPos));
+      try {
+        InvocationKey key = new InvocationKey(invo, nullPos);
+        keys.add(key);
+      } catch (NPEXException e) {
+        continue;
+      }
     }
     return keys;
   }
@@ -69,7 +81,7 @@ public class InvocationKey {
   }
 
   static private String abstractReturnType(CtTypeReference type) {
-    if (type == null)
+    if (type.equals(FactoryUtils.VOID_TYPE))
       return FactoryUtils.VOID_TYPE.toString();
     else if (type.isPrimitive())
       return type.toString();
