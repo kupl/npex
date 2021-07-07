@@ -50,6 +50,35 @@ public class NullValue {
 		return obj;
 	}
 
+	private static NullValue createNonLiteral(CtExpression raw, CtAbstractInvocation invo) {
+		CtExpression base = invo instanceof CtInvocation vinvo ? vinvo.getTarget() : null;
+		List<CtExpression> args = invo.getArguments();
+		Function<CtExpression, String> convert = e -> {
+			if (e.equals(base))
+				return "$(-1)";
+			else if (args.contains(e))
+				return String.format("$(%d)", args.indexOf(e));
+			else
+				return e.toString();
+		};
+
+		if (raw instanceof CtBinaryOperator bo) {
+			BinaryOperatorKind bokind = bo.getKind();
+			CtExpression lhs = bo.getLeftHandOperand();
+			CtExpression rhs = bo.getRightHandOperand();
+			String[] exprs = new String[] { bokind.toString(), convert.apply(lhs), convert.apply(rhs) };
+			return new NullValue("BINARY", exprs, bo);
+		}
+
+		String converted = convert.apply(raw);
+		if (converted.equals(raw)) {
+			return createPlain("NPEXNonLiteral", raw);
+		}
+
+		return createPlain(converted, raw);
+
+	}
+
 	private static NullValue createPlain(String expr, CtExpression raw) {
 		return new NullValue("PLAIN", new String[] { expr }, raw);
 	}
@@ -80,10 +109,6 @@ public class NullValue {
 			return String.format("$(%d)", args.indexOf(org));
 		else
 			return org.toString();
-	}
-
-	private static NullValue createNonLiteral(CtExpression raw) {
-		return createPlain("NPEXNonLiteral", raw);
 	}
 
 	private static NullValue createLiteral(CtLiteral lit) {
@@ -143,12 +168,6 @@ public class NullValue {
 			return EMPTY_COLLECTIONS;
 		}
 
-		if (raw instanceof CtBinaryOperator bo) {
-			System.out.println(raw);
-			System.out.println(raw.getPosition());
-			return createBinary(bo, invo);
-		}
-
-		return createNonLiteral(raw);
+		return createNonLiteral(raw, invo);
 	}
 }
