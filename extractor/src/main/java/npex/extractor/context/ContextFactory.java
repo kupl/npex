@@ -42,6 +42,7 @@ public class ContextFactory {
     contexts.add(new IsField());
     contexts.add(new SinkExprIsAssigned());
     contexts.add(new SinkExprIsExceptionArgument());
+    contexts.add(new ReturnTypeHasDefault());
     contexts.add(new CallerMethodChecksNull());
     contexts.add(new CallerMethodIsConstructor());
     contexts.add(new CallerMethodIsPrivate());
