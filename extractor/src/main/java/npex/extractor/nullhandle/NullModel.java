@@ -79,7 +79,7 @@ public class NullModel {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       super.visitCtInvocation(invo);
-      if (invo.getTarget().equals(nullExp) || invo.getArguments().contains(nullExp)) {
+      if (nullExp.equals(invo.getTarget()) || invo.getArguments().contains(nullExp)) {
         setResult(invo);
         terminate();
       }
