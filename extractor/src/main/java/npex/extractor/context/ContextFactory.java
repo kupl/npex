@@ -31,7 +31,6 @@ public class ContextFactory {
   private final static List<Context> calleeContexts = new ArrayList<>();
   static {
     // AST context features
-    contexts.add(new NullCheckingExists());
     contexts.add(new UsedAsArgument());
     contexts.add(new UsedAsOperand());
     contexts.add(new UsedAsReturnExpression());
@@ -43,6 +42,7 @@ public class ContextFactory {
     contexts.add(new IsField());
     contexts.add(new SinkExprIsAssigned());
     contexts.add(new SinkExprIsExceptionArgument());
+    contexts.add(new CallerMethodChecksNull());
     contexts.add(new CallerMethodIsConstructor());
     contexts.add(new CallerMethodIsPrivate());
     contexts.add(new CallerMethodIsPublic());
@@ -53,6 +53,7 @@ public class ContextFactory {
     contexts.add(new InvocationIsIsolated());
     contexts.add(new InvocationIsBase());
     contexts.add(new InvocationIsConstructorArgument());
+
     contexts.addAll(NameContext.all);
 
     calleeContexts.add(new CalleeMethodReturnsVoid());
