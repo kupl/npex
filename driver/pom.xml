@@ -24,11 +24,6 @@
       <version>4.6.1</version>
     </dependency>
     <dependency>
-      <groupId>fr.inria.gforge.spoon</groupId>
-      <artifactId>spoon-core</artifactId>
-      <version>8.4.0-beta-11</version>
-    </dependency>
-    <dependency>
 			<groupId>kr.ac.korea.prl</groupId>
 			<artifactId>common</artifactId>
 			<version>1.0-SNAPSHOT</version>
