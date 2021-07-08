@@ -15,12 +15,16 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.NPEXException;
 import npex.extractor.context.ContextExtractor;
+import npex.extractor.invocation.InvocationContextProcessor.InvocationKeyMap;
 import spoon.processing.AbstractProcessor;
+import spoon.reflect.code.CtAbstractInvocation;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtClass;
 
-public class InvocationContextProcessor extends AbstractProcessor<CtInvocation> {
+public class InvocationContextProcessor extends AbstractProcessor<CtAbstractInvocation> {
   static Logger logger = LoggerFactory.getLogger(InvocationContextProcessor.class);
   final private File resultsOut;
   private Set<String> traceClasses;
@@ -34,7 +38,7 @@ public class InvocationContextProcessor extends AbstractProcessor<CtInvocation> 
   }
 
   @Override
-  public boolean isToBeProcessed(CtInvocation candidate) {
+  public boolean isToBeProcessed(CtAbstractInvocation candidate) {
     CtClass klass = candidate.getParent(CtClass.class);
     if (!traceClasses.isEmpty() && klass != null && !traceClasses.contains(klass.getQualifiedName()))
       return false;
@@ -42,13 +46,18 @@ public class InvocationContextProcessor extends AbstractProcessor<CtInvocation> 
   }
 
   @Override
-  public void process(CtInvocation invo) {
+  public void process(CtAbstractInvocation invo) {
     var site = new InvocationSite(invo);
     var keyMap = new InvocationKeyMap();
-    for (int nullPos = invo.getExecutable().isStatic() ? 0 : -1; nullPos < invo.getArguments().size(); nullPos++) {
-      keyMap.put(new InvocationKey(invo, nullPos), ContextExtractor.extract(invo, nullPos));
-      invoContextsMap.put(site, keyMap);
+    for (InvocationKey key : InvocationKey.enumerateKeys(invo)) {
+      try {
+        keyMap.put(key, ContextExtractor.extract(invo, key.nullPos));
+      } catch (NPEXException e) {
+        logger.error(e.getMessage());
+        continue;
+      }
     }
+    invoContextsMap.put(site, keyMap);
   }
 
   @Override
@@ -64,7 +73,6 @@ public class InvocationContextProcessor extends AbstractProcessor<CtInvocation> 
     try (BufferedWriter writer = new BufferedWriter(new FileWriter(resultsOut))) {
       writer.write(sites.toString(4));
     } catch (IOException e) {
-      logger.error(e.getMessage(), e);
     }
     return;
   }

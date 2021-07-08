@@ -29,9 +29,11 @@ import org.slf4j.LoggerFactory;
 import npex.common.utils.ASTUtils;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
+import spoon.reflect.code.CtBlock;
 import spoon.reflect.code.CtCodeElement;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtIf;
+import spoon.reflect.code.CtThrow;
 
 public class NullHandleFactory {
   static Logger logger = LoggerFactory.getLogger(NullHandleFactory.class);
@@ -56,21 +58,21 @@ public class NullHandleFactory {
   }
 
   private static BooleanNullHandle createBooleanNullHandle(CtBinaryOperator bo) {
-    if (bo.getLeftHandOperand() instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
+    if (bo.getLeftHandOperand()instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
       return new BooleanNullHandle(bo, cond);
     }
     return null;
   }
 
   private static TernaryNullHandle createTernaryNullHandle(CtConditional ternary) {
-    if (ternary.getCondition() instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
+    if (ternary.getCondition()instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
       return new TernaryNullHandle(ternary, cond);
     }
     return null;
   }
 
   private static SkipNullHandle createSkipNullHandle(CtIf ifStmt) {
-    if (ifStmt.getCondition() instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
+    if (ifStmt.getCondition()instanceof CtBinaryOperator cond && ASTUtils.isNullCondition(cond)) {
       if (cond.getKind().equals(BinaryOperatorKind.NE))
         return new SkipNullHandle(ifStmt, cond);
     }

@@ -2,6 +2,7 @@ import csv
 from dataclasses import dataclass, asdict
 from typing import Any, Dict, List, Optional, Tuple
 from dacite import from_dict as _from_dict
+import dataclasses
 import pprint
 import pickle
 import json
@@ -36,13 +37,8 @@ class JSONData:
                 fields.add(k)
         return fields
 
-
-@dataclass(frozen=True)
-class InvocationSite(JSONData):
-    lineno: int
-    source_path: str
-    deref_field: str
-
+    def asdict(self):
+        return dataclasses.asdict(self)
 
 @dataclass(frozen=True)
 class InvocationKey(JSONData):
@@ -50,10 +46,12 @@ class InvocationKey(JSONData):
     null_pos: int
     actuals_length: int
     return_type: str
+    raw_return_type: str
     invo_kind: str
+    callee_defined: bool
 
     def matches_up_to_sub_camel_case(self, key):
-        if self.null_pos != key.null_pos or self.actuals_length != key.actuals_length or self.return_type != key.return_type:
+        if self.null_pos != key.null_pos or self.actuals_length != key.actuals_length or self.return_type != key.return_type or self.callee_defined != key.callee_defined:
             return False
 
         lhs_camels = camel_case_split(self.method_name)
@@ -65,40 +63,43 @@ class InvocationKey(JSONData):
 
         return False
 
+    def abstract(self):
+        null_pos_is_base = self.null_pos == -1
+        return AbstractKey(null_pos_is_base, self.return_type, self.invo_kind, self.callee_defined)
 
 @dataclass(frozen=True)
-class Contexts(JSONData):
-    UsedAsReturnExpression: bool
-    UsedAsArgument: bool
-    UsedAsOperand: bool
-    NullCheckingExists: bool
-    IsField: bool
-    IsParameter: bool
-    IsVariable: bool
-    LHSIsField: bool
-    LHSIsPrivate: bool
-    LHSIsPublic: bool
-    SinkExprIsAssigned: bool
-    SinkExprIsExceptionArgument: bool
-    CallerMethodIsConstructor: bool
-    CallerMethodIsPrivate: bool
-    CallerMethodIsPublic: bool
-    CallerMethodIsStatic: bool
-    VariableIsObjectType: bool
-    VariableIsFinal: bool
-    InvocationIsIsolated: bool
-    CalleeMethodReturnsVoid: bool
-
-    def to_boolean_vector(self):
-        return [1 if b else 0 for b in self.__dict__.values()]
-
+class AbstractKey(JSONData):
+    nullpos_is_base : bool # is null_pos base?
+    return_type : str
+    invo_kind : str
+    callee_defined: bool
 
 @dataclass
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
     null_value: Optional[str]
     sink_body: str
-    contexts: Optional[Contexts]
+    contexts: List[int]
+
+    @classmethod
+    def from_dict2(klass, d):
+        v = d['null_value']
+        exprs = v['exprs']
+        if v['kind'] == 'PLAIN':
+            d['null_value'] = exprs[0]
+        else:
+            kind = exprs[0]
+            v['exprs'] = [kind] + sorted(exprs[1:])
+            d['null_value'] = ', '.join(v['exprs'])
+        return klass.from_dict(d)
+
+    @classmethod
+    def from_dict(klass, d):
+        invocation_key = InvocationKey.from_dict(d['invocation_key'])
+        null_value = d['null_value']
+        sink_body = d['sink_body']
+        contexts = [ 1 if v else 0 for v in d['contexts'].values()]
+        return NullModel(invocation_key, null_value, sink_body, contexts)
 
 
 @dataclass
@@ -107,7 +108,6 @@ class NullHandle(JSONData):
     lineno: int
     handle: str
     model: NullModel
-
 
 class DB:
     handles: List[NullHandle]
@@ -118,9 +118,8 @@ class DB:
         for h in JSONData.read_json_from_file(handles_json):
             for m in h['models']:
                 try:
-                    model = NullModel.from_dict(m)
-                except MissingValueError: 
-                    print(m)
+                    model = NullModel.from_dict2(m)
+                except MissingValueError as e:
                     continue
 
                 handle = NullHandle(h['source_path'], h['lineno'], h['handle'],
@@ -135,12 +134,19 @@ class DB:
     def __add__(self, db):
         return DB(self.handles + db.handles)
 
+    def get_all_keys(self):
+        return set([h.model.invocation_key for h in self.handles])
+
     def to_json(self):
         return json.dumps([asdict(h) for h in self.handles], indent=4)
 
-    def serialize(self, path):
-        with open(path, 'wb') as f:
-            pickle.dump(self, f)
+    def serialize(self, path, json=False):
+        if json:
+            with open(path, 'w') as f:
+                f.write(self.to_json())
+        else:
+            with open(path, 'wb') as f:
+                pickle.dump(self, f)
 
     @classmethod
     def deserialize(cls, path):

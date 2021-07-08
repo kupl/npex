@@ -23,10 +23,12 @@
  */
 package npex.extractor.nullhandle;
 
+import npex.common.utils.FactoryUtils;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtLiteral;
 
 public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boolean>> {
 
@@ -61,7 +63,10 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
         if (root instanceof CtBinaryOperator boRHS) {
           visitCtBinaryOperator(boRHS);
         } else if (root instanceof CtInvocation invo && isTargetInvocation(invo)) {
-          models.add(createModel(invo));
+          /* TODO: resolve compound cases e.g.m !(e), e == false ... */
+          CtLiteral boolLit = FactoryUtils.createBooleanLiteral(handleBoKind.equals(BinaryOperatorKind.OR));
+          NullValue nullValue = NullValue.create(invo, boolLit);
+          models.add(new NullModel(nullExp, root, nullValue));
           terminate();
         } else {
           terminate();
@@ -69,13 +74,6 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
       } else {
         terminate();
       }
-    }
-
-    @Override
-    protected NullModel createModel(CtInvocation invo) {
-      /* TODO: resolve compound cases e.g.m !(e), e == false ... */
-      CtExpression nullValue = factory.createLiteral().setValue(this.handleBoKind.equals(BinaryOperatorKind.OR));
-      return new NullModel(nullExp, root, nullValue);
     }
 
   }

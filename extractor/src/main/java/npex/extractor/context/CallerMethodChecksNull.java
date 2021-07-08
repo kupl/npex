@@ -23,41 +23,18 @@
  */
 package npex.extractor.context;
 
-import npex.common.filters.MethodOrConstructorFilter;
+import java.util.List;
+
+import npex.common.filters.ConditionalExpressionFilter;
 import npex.common.utils.ASTUtils;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.visitor.EarlyTerminatingScanner;
 
-public class NullCheckingExists implements Context {
-  public Boolean extract(CtInvocation invo, int nullPos) {
-    CtExecutable exec = invo.getParent(new MethodOrConstructorFilter());
-    if (exec == null) {
-      return false;
-    }
-    CtExpression nullExp = nullPos == -1 ? invo.getTarget() : (CtExpression) invo.getArguments().get(nullPos);
-    ContextScanner scanner = new ContextScanner(invo, nullExp);
-    exec.accept(scanner);
-    return scanner.getResult();
+public class CallerMethodChecksNull extends AbstractCallerMethodContext {
+  @Override
+  protected  boolean predicateOnMethod(CtExecutable caller) {
+    List<CtExpression<Boolean>> conditions = caller.getElements(new ConditionalExpressionFilter());
+    return conditions.stream().anyMatch(c -> c instanceof CtBinaryOperator bo && ASTUtils.isNullCondition(bo));
   }
-
-  private class ContextScanner extends EarlyTerminatingScanner<Boolean> {
-    final private CtExpression nullExp;
-
-    public ContextScanner(CtInvocation invo, CtExpression nullExp) {
-      this.nullExp = nullExp;
-      setResult(false);
-    }
-
-    public void visitCtBinaryOperator(CtBinaryOperator cond) {
-      super.visitCtBinaryOperator(cond);
-      if (ASTUtils.isNullCondition(cond) && cond.getLeftHandOperand().equals(nullExp)) {
-        setResult(true);
-        terminate();
-      }
-    }
-  }
-
 }

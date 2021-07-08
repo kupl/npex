@@ -27,9 +27,11 @@ import java.util.List;
 
 import npex.common.filters.MethodOrConstructorFilter;
 import npex.common.utils.ASTUtils;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtBlock;
+import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtIf;
 import spoon.reflect.code.CtInvocation;
@@ -39,10 +41,12 @@ import spoon.reflect.code.CtOperatorAssignment;
 import spoon.reflect.code.CtRHSReceiver;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.code.CtVariableWrite;
-import spoon.reflect.reference.CtLocalVariableReference;
+import spoon.reflect.declaration.CtElement;
+import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.reference.CtTypeReference;
 import spoon.reflect.reference.CtVariableReference;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
+import npex.common.NPEXException;
 
 public class SkipNullHandle extends AbstractNullHandle<CtIf> {
   public SkipNullHandle(CtIf handle, CtBinaryOperator nullCond) {
@@ -56,7 +60,6 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
 
   private class NullModelScanner extends AbstractNullModelScanner {
     private CtStatement firstStmt;
-    private CtLiteral skipValue = factory.createLiteral().setValue("NPEX_SKIP_VALUE");
 
     public NullModelScanner(CtExpression nullExp) {
       super(nullExp);
@@ -76,7 +79,15 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
-        models.add(new NullModel(nullExp, invo, skipValue));
+        models.add(new NullModel(nullExp, invo, NullValue.SKIP));
+        terminate();
+      }
+    }
+
+    @Override
+    public void visitCtConstructorCall(CtConstructorCall invo) {
+      if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
+        models.add(new NullModel(nullExp, invo, NullValue.SKIP));
         terminate();
       }
     }
@@ -100,17 +111,12 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
           value = factory.createLiteral().setValue(0);
         } else {
           var scanner = new NullValueScanner(assign);
-          assign.getParent(new MethodOrConstructorFilter()).accept(scanner);
+          (assign.getParent(CtExecutable.class)).accept(scanner);
           value = scanner.getResult();
         }
-        models.add(new NullModel(nullExp, firstStmt, value));
+        models.add(new NullModel(nullExp, firstStmt, NullValue.SKIP));
         terminate();
       }
-    }
-
-    /* TODO: Re-organize AbstractNullHandle to remove this! */
-    protected NullModel createModel(CtInvocation invo) {
-      return null;
     }
 
     private class NullValueScanner extends EarlyTerminatingScanner<CtExpression> {
@@ -122,6 +128,9 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
       public NullValueScanner(CtAssignment me) {
         this.me = me;
         this.varRef = ((CtVariableWrite) me.getAssigned()).getVariable();
+        if (this.varRef.getType() == null) {
+          throw new NPEXException("Faield to create NullValueScanner: variable type is null");
+        }
       }
 
       @Override

@@ -24,6 +24,7 @@
 package npex.extractor.nullhandle;
 
 import spoon.reflect.code.BinaryOperatorKind;
+import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
@@ -41,12 +42,14 @@ public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
 
   private class NullModelScanner extends AbstractNullModelScanner {
     final private CtExpression sinkExpr;
-    final private CtExpression nullValue;
 
     public NullModelScanner(CtExpression nullExp, boolean isCondKindEQ) {
       super(nullExp);
       this.sinkExpr = isCondKindEQ ? handle.getElseExpression() : handle.getThenExpression();
-      this.nullValue = isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression();
+      CtAbstractInvocation invo = sinkExpr instanceof CtAbstractInvocation vinvo && isTargetInvocation(vinvo) ? vinvo
+          : null;
+      NullValue nullValue = NullValue.create(invo,
+          isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression());
       models.add(new NullModel(nullExp, sinkExpr, nullValue));
     }
 
@@ -55,10 +58,5 @@ public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
       terminate();
     }
 
-    @Override
-    protected NullModel createModel(CtInvocation invo) {
-      /* NO-OP */
-      return null;
-    }
   }
 }

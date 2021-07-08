@@ -30,12 +30,13 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.NPEXException;
+import spoon.SpoonException;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.factory.CoreFactory;
 import spoon.support.DefaultCoreFactory;
-import npex.common.NPEXException;
 
 public abstract class AbstractNullHandle<T extends CtElement> {
   static final protected Logger logger = LoggerFactory.getLogger(AbstractNullHandle.class);
@@ -45,22 +46,32 @@ public abstract class AbstractNullHandle<T extends CtElement> {
   final protected CtBinaryOperator nullCond;
   final protected CtExpression nullExp;
 
-  final private List<NullModel> models;
+  protected List<NullModel> models;
 
   public AbstractNullHandle(T handle, CtBinaryOperator nullCond) {
     this.handle = handle;
     this.nullCond = nullCond;
     this.nullExp = nullCond.getLeftHandOperand();
+  }
+
+  public void collectModels() throws NPEXException {
     AbstractNullModelScanner scanner = createNullModelScanner(nullExp);
     handle.accept(scanner);
     this.models = scanner.getResult();
   }
 
   public JSONObject toJSON() throws NPEXException {
+    if (models == null)
+      throw new NPEXException("toJSON is called before models are collected");
     var obj = new JSONObject();
     obj.put("source_path", handle.getPosition().getFile().getAbsolutePath());
     obj.put("lineno", handle.getPosition().getLine());
-    obj.put("handle", handle.toString());
+    try {
+      obj.put("handle", handle.toString());
+    } catch (RuntimeException e) {
+      logger.error(e.getMessage());
+      throw new NPEXException("Failed to serialize handle to json: could not print handle");
+    }
     obj.put("models", new JSONArray(models.stream().map(m -> m.toJSON()).toArray()));
     return obj;
   }

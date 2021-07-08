@@ -1,10 +1,11 @@
 package npex.extractor.context;
 
-import npex.common.utils.ASTUtils;
 import spoon.reflect.code.CtAbstractInvocation;
+import spoon.reflect.path.CtRole;
 
-public class InvocationIsIsolated extends Context {
+public class InvocationIsBase extends Context {
+
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {
-    return ASTUtils.getEnclosingStatement(invo).equals(invo);
+    return invo.getRoleInParent().equals(CtRole.TARGET);
   }
 }

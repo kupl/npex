@@ -28,8 +28,9 @@ import java.util.List;
 
 public class ContextFactory {
   private final static List<Context> contexts = new ArrayList<>();
+  private final static List<Context> calleeContexts = new ArrayList<>();
   static {
-    contexts.add(new NullCheckingExists());
+    // AST context features
     contexts.add(new UsedAsArgument());
     contexts.add(new UsedAsOperand());
     contexts.add(new UsedAsReturnExpression());
@@ -41,17 +42,33 @@ public class ContextFactory {
     contexts.add(new IsField());
     contexts.add(new SinkExprIsAssigned());
     contexts.add(new SinkExprIsExceptionArgument());
+    contexts.add(new ReturnTypeHasDefault());
+    contexts.add(new CallerMethodChecksNull());
     contexts.add(new CallerMethodIsConstructor());
     contexts.add(new CallerMethodIsPrivate());
     contexts.add(new CallerMethodIsPublic());
     contexts.add(new CallerMethodIsStatic());
+    contexts.add(new CallerMethodReturnsNull());
     contexts.add(new VariableIsObjectType());
     contexts.add(new VariableIsFinal());
     contexts.add(new InvocationIsIsolated());
-    contexts.add(new CalleeMethodReturnsVoid());
+    contexts.add(new InvocationIsBase());
+    contexts.add(new InvocationIsConstructorArgument());
+
+    contexts.addAll(NameContext.all);
+
+    calleeContexts.add(new CalleeMethodReturnsVoid());
+    calleeContexts.add(new CalleeMethodReturnsLiteral());
+    calleeContexts.add(new CalleeMethodThrows());
+    calleeContexts.add(new CalleeMethodChecksNull());
+    calleeContexts.add(new CalleeMethodChecksNullForNullParameter());
   }
 
   public static List<Context> getAllContexts() {
     return contexts;
+  }
+
+  public static List<Context> getCalleeContexts() {
+    return calleeContexts;
   }
 }
