@@ -46,11 +46,10 @@ public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
     public NullModelScanner(CtExpression nullExp, boolean isCondKindEQ) {
       super(nullExp);
       this.sinkExpr = isCondKindEQ ? handle.getElseExpression() : handle.getThenExpression();
-      CtAbstractInvocation invo = sinkExpr instanceof CtAbstractInvocation vinvo && isTargetInvocation(vinvo) ? vinvo
-          : null;
-      NullValue nullValue = NullValue.create(invo,
-          isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression());
-      models.add(new NullModel(nullExp, sinkExpr, nullValue));
+      if (sinkExpr instanceof CtAbstractInvocation invo && isTargetInvocation(invo)) {
+        NullValue nullValue = NullValue.fromExpression(invo, isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression());
+        models.add(new NullModel(nullExp, sinkExpr, nullValue));
+      }
     }
 
     @Override
