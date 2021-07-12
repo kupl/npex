@@ -65,7 +65,7 @@ public class BooleanNullHandle extends AbstractNullHandle<CtBinaryOperator<Boole
         } else if (root instanceof CtInvocation invo && isTargetInvocation(invo)) {
           /* TODO: resolve compound cases e.g.m !(e), e == false ... */
           CtLiteral boolLit = FactoryUtils.createBooleanLiteral(handleBoKind.equals(BinaryOperatorKind.OR));
-          NullValue nullValue = NullValue.create(invo, boolLit);
+          NullValue nullValue = NullValue.fromExpression(invo, boolLit);
           models.add(new NullModel(nullExp, root, nullValue));
           terminate();
         } else {
