@@ -7,6 +7,7 @@ import java.util.function.Function;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 import npex.common.utils.FactoryUtils;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtAbstractInvocation;
@@ -102,19 +103,15 @@ public class NullValue {
   private static String convertLiteral(CtExpression raw) {
     if (raw instanceof CtLiteral lit) {
       return defaultValues.contains(lit.toString()) ? "NPEX_DEFAULT_LITERAL" : "NPEX_NON_DEFAULT_LITERAL";
-    }
-
-    if (raw instanceof CtVariableRead read) {
+    } else if (raw instanceof CtVariableRead read) {
       try {
         CtVariable var = read.getVariable().getDeclaration();
-        if (var.isFinal() && var.getDefaultExpression()instanceof CtLiteral lit) {
-          return lit.toString();
-        }
+        if (var.isFinal() && var.getDefaultExpression()instanceof CtLiteral lit)
+          return defaultValues.contains(lit.toString()) ? "NPEX_DEFAULT_LITERAL" : "NPEX_NON_DEFAULT_LITERAL";
       } catch (NullPointerException e) {
         return null;
       }
     }
-
     return null;
   }
 }
