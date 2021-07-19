@@ -79,7 +79,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     @Override
     public void visitCtInvocation(CtInvocation invo) {
       if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
-        models.add(new NullModel(nullExp, invo, NullValue.SKIP));
+        models.add(new NullModel(nullExp, invo, NullValue.createSkip(invo)));
         terminate();
       }
     }
@@ -87,7 +87,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     @Override
     public void visitCtConstructorCall(CtConstructorCall invo) {
       if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
-        models.add(new NullModel(nullExp, invo, NullValue.SKIP));
+        models.add(new NullModel(nullExp, invo, NullValue.createSkip(invo)));
         terminate();
       }
     }
@@ -114,7 +114,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
           (assign.getParent(CtExecutable.class)).accept(scanner);
           value = scanner.getResult();
         }
-        models.add(new NullModel(nullExp, firstStmt, NullValue.SKIP));
+        models.add(new NullModel(nullExp, firstStmt, NullValue.createSkip(invo)));
         terminate();
       }
     }

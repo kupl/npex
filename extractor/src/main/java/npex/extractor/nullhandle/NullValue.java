@@ -46,7 +46,8 @@ public class NullValue {
 			"java.util.Collections.EMPTY_MAP", "java.util.Collections.EMPTY_SET" });
 	private static final List<String> defaultValues = Arrays.asList(new String[]{ "0", "0L", "0.0F", "false", "java.lang.Boolean.FALSE", "\"\"", "'\\u0000'" });
 
-	public static final NullValue SKIP = new NullValue("PLAIN", new String[] { "NPEX_SKIP_VALUE" }, null);
+	private static final NullValue SKIP = new NullValue("PLAIN", new String[] { "NPEX_SKIP_VALUE" }, null);
+	private static final NullValue THIS = new NullValue("PLAIN", new String[] { "this" }, null);
 
  
   private NullValue(String kind, String[] exprs, CtExpression raw) {
@@ -83,6 +84,44 @@ public class NullValue {
       logger.error(e.getMessage());
       return null;
     }
+  }
+
+  public static NullValue createSkip(CtAbstractInvocation invo) {
+    return SKIP;
+  }
+
+  /* A method that creates a skip value. In case of a builder pattern method, where
+  the method is virtual and returns 'this', create a null value with 'this'. */
+  public static NullValue createSkip(CtInvocation invo) {
+    CtExecutableReference execRef = invo.getExecutable();
+    if (execRef.isStatic() || execRef.isConstructor()) {
+      return SKIP;
+    }
+
+    CtExecutable exec = execRef.getExecutableDeclaration();
+    if (exec == null) {
+      return SKIP;
+    }
+
+    if (builderPatternTable.containsKey(exec)) {
+      return builderPatternTable.get(exec) ? THIS : SKIP;
+    }
+
+    if (exec != null) {
+      List<CtReturn> returns = exec.getElements(new TypeFilter<>(CtReturn.class));
+      Predicate<CtReturn> returnsThis = ret -> {
+        CtExpression rexp = ret.getReturnedExpression();
+        return rexp != null && rexp.toString().equals("this");
+      };
+
+      if (!returns.isEmpty() && returns.stream().allMatch(returnsThis)) {
+        builderPatternTable.put(exec, true);
+        return THIS;
+      } else {
+        builderPatternTable.put(exec, false);
+      }
+    }
+    return SKIP;
   }
 
  private static String convert(CtExpression raw, CtAbstractInvocation invo) {
