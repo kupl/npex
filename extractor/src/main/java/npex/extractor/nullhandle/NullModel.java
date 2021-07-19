@@ -62,8 +62,11 @@ public class NullModel {
 
   public JSONObject toJSON() throws NPEXException {
     if (invoKey == null) {
-      throw new NPEXException(
-          String.format("Could not serialize null model at %s: invocation key is NULL", nullExp.getPosition()));
+      throw new NPEXException(nullExp, "Could not serialize null model: invocation key is NULL");
+    }
+
+    if (nullValue == null) {
+      throw new NPEXException(nullExp, "Could not serialize null model: null value is NULL");
     }
 
     var obj = new JSONObject();

@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import npex.common.NPEXException;
 import npex.extractor.context.ContextExtractor;
 import npex.extractor.invocation.InvocationContextProcessor.InvocationKeyMap;
+import spoon.SpoonException;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtConstructorCall;
@@ -52,7 +53,7 @@ public class InvocationContextProcessor extends AbstractProcessor<CtAbstractInvo
     for (InvocationKey key : InvocationKey.enumerateKeys(invo)) {
       try {
         keyMap.put(key, ContextExtractor.extract(invo, key.nullPos));
-      } catch (NPEXException e) {
+      } catch (SpoonException | NPEXException e) {
         logger.error(e.getMessage());
         continue;
       }

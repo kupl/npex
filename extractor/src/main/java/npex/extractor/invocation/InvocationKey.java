@@ -6,15 +6,17 @@ import java.util.List;
 import org.json.JSONObject;
 
 import npex.common.NPEXException;
-import npex.common.utils.FactoryUtils;
+import npex.common.helper.TypeHelper;
+import npex.common.utils.TypeUtil;
 import spoon.SpoonException;
 import spoon.reflect.code.CtAbstractInvocation;
+import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
-import spoon.reflect.declaration.CtTypedElement;
+import spoon.reflect.declaration.CtType;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
-import npex.common.helper.TypeHelper;
 
 public class InvocationKey {
   final public String methodName;
@@ -25,10 +27,11 @@ public class InvocationKey {
   final public String invoKind;
   final public boolean calleeDefined;
 
+  private static final CtType stringBuilderAppend = TypeUtil.STRING.getTypeDeclaration();
   private InvocationKey(CtAbstractInvocation invo, int nullPos) throws NPEXException {
-    CtTypeReference type = TypeHelper.getTypeOfInvocation(invo);
+    CtTypeReference type = TypeHelper.getType(invo);
     if (type == null) {
-      throw new NPEXException("Failed to create invocation key: return type is null");
+      throw new NPEXException(invo, "Failed to create invocation key: return type is null");
     }
 
     final CtExecutableReference exec = invo.getExecutable();
@@ -39,10 +42,16 @@ public class InvocationKey {
       this.rawReturnType = type.toString();
       this.returnType = abstractReturnType(type);
     } catch (SpoonException e) {
-      throw new NPEXException("Failed to create invocation key: could not print type name");
+      throw new NPEXException(invo, "Failed to create invocation key: could not print type name");
     }
     this.invoKind = getInvoKind(invo);
-    this.calleeDefined = exec.getExecutableDeclaration() != null;
+    boolean calleeDefined;
+    try {
+      calleeDefined = !exec.getExecutableDeclaration().getBody().getStatements().isEmpty();
+    } catch (NullPointerException e) {
+      calleeDefined = false;
+    }
+    this.calleeDefined = calleeDefined;
   }
 
   static public InvocationKey createKey(CtAbstractInvocation invo, CtExpression nullExp) throws NPEXException {
@@ -51,10 +60,11 @@ public class InvocationKey {
     }
     int nullPos = invo.getArguments().indexOf(nullExp);
     if (nullPos == -1) {
-      throw new NPEXException(String.format("Could not find null expr %s in invocation %s", nullExp, invo));
+      throw new NPEXException(invo, String.format("Could not find null expr %s in invocation %s", nullExp, invo));
     }
     return new InvocationKey(invo, nullPos);
   }
+
 
   static public List<InvocationKey> enumerateKeys(CtAbstractInvocation invo) throws NPEXException {
     List<InvocationKey> keys = new ArrayList<>();
@@ -81,17 +91,17 @@ public class InvocationKey {
   }
 
   static private String abstractReturnType(CtTypeReference type) {
-    if (type.equals(FactoryUtils.VOID_TYPE))
-      return FactoryUtils.VOID_TYPE.toString();
+    if (type.equals(TypeUtil.VOID))
+      return TypeUtil.VOID.toString();
     else if (type.isPrimitive())
       return type.toString();
-    else if (type.equals(FactoryUtils.STRING_TYPE))
+    else if (type.equals(TypeUtil.STRING))
       return "java.lang.String";
-    else if (type.equals(FactoryUtils.OBJECT_TYPE))
+    else if (type.equals(TypeUtil.OBJECT))
       return "java.lang.Object";
-    else if (type.isSubtypeOf(FactoryUtils.COLLECTION_TYPE))
+    else if (type.isSubtypeOf(TypeUtil.COLLECTION))
       return "java.util.Collection";
-    else if (type.isSubtypeOf(FactoryUtils.CLASS_TYPE))
+    else if (type.isSubtypeOf(TypeUtil.CLASS))
       return "java.lang.Class";
     else
       return "OTHERS";

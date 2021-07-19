@@ -23,6 +23,8 @@
  */
 package npex.common;
 
+import spoon.reflect.declaration.CtElement;
+
 public class NPEXException extends RuntimeException {
   public NPEXException() {
     super();
@@ -32,4 +34,7 @@ public class NPEXException extends RuntimeException {
     super(msg);
   }
 
+  public NPEXException(CtElement e, String msg) {
+    super(String.format("%s-%s: %s", e.getPosition(), e, msg));
+  }
 }
