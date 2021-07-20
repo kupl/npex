@@ -2,32 +2,29 @@ package npex.extractor.invocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.json.JSONObject;
 
 import npex.common.NPEXException;
 import npex.common.helper.TypeHelper;
 import npex.common.utils.TypeUtil;
-import spoon.SpoonException;
+import npex.extractor.context.ContextExtractor;
 import spoon.reflect.code.CtAbstractInvocation;
-import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
-import spoon.reflect.declaration.CtType;
-import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class InvocationKey {
-  final public String methodName;
+  final public String methodName; // simple name
   final public int nullPos;
   final public int actualsLength;
-  final public String rawReturnType;
   final public String returnType;
   final public String invoKind;
   final public boolean calleeDefined;
-
-  private static final CtType stringBuilderAppend = TypeUtil.STRING.getTypeDeclaration();
+  final public MethodSignature methodSignature;
+	final public CtAbstractInvocation invo;
   private InvocationKey(CtAbstractInvocation invo, int nullPos) throws NPEXException {
     CtTypeReference type = TypeHelper.getType(invo);
     if (type == null) {
@@ -38,12 +35,7 @@ public class InvocationKey {
     this.methodName = exec.getSimpleName();
     this.nullPos = nullPos;
     this.actualsLength = invo.getArguments().size();
-    try {
-      this.rawReturnType = type.toString();
-      this.returnType = abstractReturnType(type);
-    } catch (SpoonException e) {
-      throw new NPEXException(invo, "Failed to create invocation key: could not print type name");
-    }
+    this.returnType = abstractReturnType(type);
     this.invoKind = getInvoKind(invo);
     boolean calleeDefined;
     try {
@@ -52,9 +44,11 @@ public class InvocationKey {
       calleeDefined = false;
     }
     this.calleeDefined = calleeDefined;
+    this.methodSignature = new MethodSignature(type, invo, nullPos);
+		this.invo = invo;
   }
 
-  static public InvocationKey createKey(CtAbstractInvocation invo, CtExpression nullExp) throws NPEXException {
+	static public InvocationKey createKey(CtAbstractInvocation invo, CtExpression nullExp) throws NPEXException {
     if (invo instanceof CtInvocation virtualInvo && virtualInvo.getTarget().equals(nullExp)) {
       return new InvocationKey(invo, -1);
     }
@@ -64,7 +58,6 @@ public class InvocationKey {
     }
     return new InvocationKey(invo, nullPos);
   }
-
 
   static public List<InvocationKey> enumerateKeys(CtAbstractInvocation invo) throws NPEXException {
     List<InvocationKey> keys = new ArrayList<>();
@@ -105,7 +98,6 @@ public class InvocationKey {
       return "java.lang.Class";
     else
       return "OTHERS";
-
   }
 
   public JSONObject toJSON() {
@@ -113,10 +105,14 @@ public class InvocationKey {
     obj.put("method_name", methodName);
     obj.put("null_pos", nullPos);
     obj.put("actuals_length", actualsLength);
-    obj.put("raw_return_type", rawReturnType);
+    obj.put("method_sig", methodSignature.toJSON());
     obj.put("return_type", returnType);
     obj.put("invo_kind", invoKind);
     obj.put("callee_defined", calleeDefined);
     return obj;
+  }
+
+  public Map<String, Boolean> extract() {
+    return ContextExtractor.extract(this);
   }
 }

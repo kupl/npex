@@ -27,22 +27,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import spoon.reflect.code.CtAbstractInvocation;
+import npex.extractor.invocation.InvocationKey;
 
 public class ContextExtractor {
-  private static final List<Context> contexts = ContextFactory.getAllContexts();
+  private static final List<Context> normalContexts = ContextFactory.getAllContexts();
   private static final List<Context> calleeContexts = ContextFactory.getCalleeContexts();
 
-  public static Map<String, Boolean> extract(CtAbstractInvocation invo, int nullPos) {
-    if (invo == null) {
-      return null;
-    }
+  public static Map<String, Boolean> extract(InvocationKey key) {
     var map = new HashMap<String, Boolean>();
 
-    contexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(invo, nullPos)));
-    if (invo.getExecutable().getExecutableDeclaration() != null) {
-      calleeContexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(invo, nullPos)));
+    normalContexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(key.invo, key.nullPos)));
+    if (key.calleeDefined) {
+      calleeContexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(key.invo, key.nullPos)));
     }
+
     return map;
   }
 }

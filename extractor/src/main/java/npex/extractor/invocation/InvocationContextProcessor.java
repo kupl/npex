@@ -52,7 +52,7 @@ public class InvocationContextProcessor extends AbstractProcessor<CtAbstractInvo
     var keyMap = new InvocationKeyMap();
     for (InvocationKey key : InvocationKey.enumerateKeys(invo)) {
       try {
-        keyMap.put(key, ContextExtractor.extract(invo, key.nullPos));
+        keyMap.put(key, key.extract());
       } catch (SpoonException | NPEXException e) {
         logger.error(e.getMessage());
         continue;

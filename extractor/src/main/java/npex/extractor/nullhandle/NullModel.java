@@ -56,7 +56,7 @@ public class NullModel {
     sinkBody.accept(scanner);
     this.invo = scanner.getResult();
     this.invoKey = invo != null ? InvocationKey.createKey(invo, nullExp) : null;
-    this.contexts = invoKey != null ? ContextExtractor.extract(invo, invoKey.nullPos) : null;
+    this.contexts = invoKey != null ? invoKey.extract() : null;
     this.nullValue = nullValue;
   }
 

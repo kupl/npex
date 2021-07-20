@@ -40,15 +40,21 @@ class JSONData:
     def asdict(self):
         return dataclasses.asdict(self)
 
+@dataclasses(frozen=True)
+class MethodSignature(JSONData):
+    method_name: str
+    return_type: str
+    arg_types: List[str]
+
 @dataclass(frozen=True)
 class InvocationKey(JSONData):
     method_name: str
     null_pos: int
     actuals_length: int
     return_type: str
-    raw_return_type: str
     invo_kind: str
     callee_defined: bool
+    method_signature: MethodSignature
 
     def matches_up_to_sub_camel_case(self, key):
         if self.null_pos != key.null_pos or self.actuals_length != key.actuals_length or self.return_type != key.return_type or self.callee_defined != key.callee_defined:
