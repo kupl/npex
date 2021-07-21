@@ -23,6 +23,7 @@
  */
 package npex.common;
 
+import spoon.reflect.cu.SourcePosition;
 import spoon.reflect.declaration.CtElement;
 
 public class NPEXException extends RuntimeException {
@@ -35,6 +36,6 @@ public class NPEXException extends RuntimeException {
   }
 
   public NPEXException(CtElement e, String msg) {
-    super(String.format("%s-%s: %s", e.getPosition(), e, msg));
+    super(String.format("%s-%s: %s", e != null ? e.getPosition() : SourcePosition.NOPOSITION, e, msg));
   }
 }
