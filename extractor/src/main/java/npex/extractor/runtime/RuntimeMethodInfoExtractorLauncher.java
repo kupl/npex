@@ -21,29 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.extractor.context;
+package npex.extractor.runtime;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.io.IOException;
 
-import npex.extractor.invocation.InvocationKey;
-import npex.extractor.runtime.RuntimeMethodInfo;
+import npex.common.NPEXException;
+import npex.common.NPEXLauncher;
 
-public class ContextExtractor {
-  private static final List<Context> normalContexts = ContextFactory.getAllContexts();
-  private static final List<Context> calleeContexts = ContextFactory.getCalleeContexts();
+public class RuntimeMethodInfoExtractorLauncher extends NPEXLauncher {
+  public RuntimeMethodInfoExtractorLauncher(File projectRoot, boolean loadFromCache, String[] classpath, String resultsPath)
+      throws IOException {
+    super(projectRoot, loadFromCache, classpath);
+    spoonLauncher.addProcessor(new RuntimeMethodInfoProcessor(resultsPath));
+  } 
 
-  public static Map<String, Boolean> extract(InvocationKey key) {
-    var map = new HashMap<String, Boolean>();
-
-    normalContexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(key.invo, key.nullPos)));
-    if (key.isRuntimeCallee) {
-      map.putAll(RuntimeMethodInfo.getContexts(key.methodSignature));
-    } else if (key.calleeDefined) {
-      calleeContexts.forEach(ctx -> map.put(ctx.getName(), ctx.extract(key.invo, key.nullPos)));
-    } 
-
-    return map;
+  public void run() throws NPEXException {
+    spoonLauncher.process();
   }
 }

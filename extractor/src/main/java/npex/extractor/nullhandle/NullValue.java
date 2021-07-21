@@ -16,6 +16,7 @@ import npex.common.NPEXException;
 import npex.common.helper.TypeHelper;
 import npex.common.utils.FactoryUtils;
 import npex.common.utils.TypeUtil;
+import npex.extractor.runtime.RuntimeMethodInfo;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtBinaryOperator;
@@ -30,6 +31,7 @@ import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtPackage;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -108,6 +110,11 @@ public class NullValue {
     }
 
     if (exec != null) {
+      String packagePath = exec.getParent(CtPackage.class).toString();
+      if (packagePath.startsWith("java.util") || packagePath.startsWith("java.lang")) {
+        return RuntimeMethodInfo.hasCalleeBuilderPatterns(exec) ? THIS : SKIP;
+      }
+
       List<CtReturn> returns = exec.getElements(new TypeFilter<>(CtReturn.class));
       Predicate<CtReturn> returnsThis = ret -> {
         CtExpression rexp = ret.getReturnedExpression();
@@ -138,11 +145,16 @@ public class NullValue {
       return "null";
    }
 
-   if (!type.isSubtypeOf(invoRetType)) {
-     String msg = String.format("null-value's type (%s) should be subtype of invocation's return type (%s)", type,
-              invoRetType);
-			throw new NPEXException(invo, msg);
-		}
+
+   try {
+     if (!type.isSubtypeOf(invoRetType)) {
+       String msg = String.format("null-value's type (%s) should be subtype of invocation's return type (%s)", type,
+           invoRetType);
+       throw new NPEXException(invo, msg);
+     }
+   } catch (NullPointerException e) {
+     throw new NPEXException(invo, e.getMessage());
+    }
 
 
     result = convertLiteral(raw);

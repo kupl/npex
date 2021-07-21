@@ -10,6 +10,7 @@ import npex.common.NPEXException;
 import npex.common.helper.TypeHelper;
 import npex.common.utils.TypeUtil;
 import npex.extractor.context.ContextExtractor;
+import npex.extractor.runtime.RuntimeMethodInfo;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
@@ -17,36 +18,39 @@ import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
 public class InvocationKey {
+  final public MethodSignature methodSignature;
   final public String methodName; // simple name
   final public int nullPos;
   final public int actualsLength;
   final public String returnType;
   final public String invoKind;
+  final public boolean isRuntimeCallee;
   final public boolean calleeDefined;
-  final public MethodSignature methodSignature;
 	final public CtAbstractInvocation invo;
-  private InvocationKey(CtAbstractInvocation invo, int nullPos) throws NPEXException {
-    CtTypeReference type = TypeHelper.getType(invo);
-    if (type == null) {
-      throw new NPEXException(invo, "Failed to create invocation key: return type is null");
-    }
 
-    final CtExecutableReference exec = invo.getExecutable();
-    this.methodName = exec.getSimpleName();
-    this.nullPos = nullPos;
-    this.actualsLength = invo.getArguments().size();
-    this.returnType = abstractReturnType(type);
-    this.invoKind = getInvoKind(invo);
-    boolean calleeDefined;
-    try {
-      calleeDefined = !exec.getExecutableDeclaration().getBody().getStatements().isEmpty();
-    } catch (NullPointerException e) {
-      calleeDefined = false;
+    private InvocationKey(CtAbstractInvocation invo, int nullPos) throws NPEXException {
+      CtTypeReference type = TypeHelper.getType(invo);
+      if (type == null) {
+        throw new NPEXException(invo, "Failed to create invocation key: return type is null");
+      }
+      final CtExecutableReference exec = invo.getExecutable();
+
+      this.methodSignature = new MethodSignature(invo, nullPos);
+      this.methodName = exec.getSimpleName();
+      this.nullPos = nullPos;
+      this.actualsLength = invo.getArguments().size();
+      this.returnType = abstractReturnType(type);
+      this.invoKind = getInvoKind(invo);
+      this.isRuntimeCallee = RuntimeMethodInfo.isRuntimeCallee(methodSignature);
+      boolean calleeDefined;
+      try {
+        calleeDefined = isRuntimeCallee ? true : !exec.getExecutableDeclaration().getBody().getStatements().isEmpty();
+      } catch (NullPointerException e) {
+        calleeDefined = false;
+      }
+      this.calleeDefined = calleeDefined;
+      this.invo = invo;
     }
-    this.calleeDefined = calleeDefined;
-    this.methodSignature = new MethodSignature(type, invo, nullPos);
-		this.invo = invo;
-  }
 
 	static public InvocationKey createKey(CtAbstractInvocation invo, CtExpression nullExp) throws NPEXException {
     if (invo instanceof CtInvocation virtualInvo && virtualInvo.getTarget().equals(nullExp)) {
@@ -102,10 +106,10 @@ public class InvocationKey {
 
   public JSONObject toJSON() {
     var obj = new JSONObject();
+    obj.put("method_signature", methodSignature.toJSON());
     obj.put("method_name", methodName);
     obj.put("null_pos", nullPos);
     obj.put("actuals_length", actualsLength);
-    obj.put("method_sig", methodSignature.toJSON());
     obj.put("return_type", returnType);
     obj.put("invo_kind", invoKind);
     obj.put("callee_defined", calleeDefined);
