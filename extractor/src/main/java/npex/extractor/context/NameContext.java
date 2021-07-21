@@ -5,7 +5,7 @@ import java.util.List;
 
 import spoon.reflect.code.CtAbstractInvocation;
 
-public class NameContext extends Context {
+public class NameContext implements Context {
 	private final String name;
 	private final String keyword;
 
@@ -29,7 +29,7 @@ public class NameContext extends Context {
 		return name;
 	}
 
-	Boolean extract(CtAbstractInvocation invo, int nullPos) {
+	public Boolean extract(CtAbstractInvocation invo, int nullPos) {
 		return invo.getExecutable().getSimpleName().contains(keyword);
 	}
 

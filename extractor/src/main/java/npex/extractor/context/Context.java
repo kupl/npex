@@ -23,12 +23,18 @@
  */
 package npex.extractor.context;
 
+import npex.common.NPEXException;
 import spoon.reflect.code.CtAbstractInvocation;
+import spoon.reflect.declaration.CtExecutable;
 
-public abstract class Context {
-  public String getName() {
+public interface Context {
+  default public String getName() {
     return this.getClass().getSimpleName();
   }
 
-  abstract Boolean extract(CtAbstractInvocation invo, int nullPos);
+  Boolean extract(CtAbstractInvocation invo, int nullPos);
+
+  default Boolean extract(CtExecutable exec, int nullPos) {
+    throw new NPEXException("Not implemented");
+  }
 }

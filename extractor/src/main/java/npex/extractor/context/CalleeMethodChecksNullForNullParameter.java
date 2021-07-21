@@ -12,7 +12,8 @@ import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtParameter;
 
 public class CalleeMethodChecksNullForNullParameter extends AbstractCalleeMethodContext {
-  protected boolean extract(CtExecutable callee, int nullPos) {
+  @Override
+  public Boolean extract(CtExecutable callee, int nullPos) {
     if (nullPos == -1 || callee.getParameters().size() <= nullPos)
       return false;
 

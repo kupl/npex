@@ -16,7 +16,8 @@ public class CalleeMethodReturnsLiteral extends AbstractCalleeMethodContext {
     return e instanceof CtLiteral;
   }
 
-  protected boolean extract(CtExecutable callee, int nullPos) {
+  @Override
+  public Boolean extract(CtExecutable callee, int nullPos) {
     return callee.getElements(new TypeFilter<>(CtReturn.class)).stream()
         .anyMatch(ret -> isEvaluatedToLiteral(ret.getReturnedExpression()));
   }

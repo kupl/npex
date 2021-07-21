@@ -10,7 +10,7 @@ import spoon.reflect.declaration.CtConstructor;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
 
-public class ReturnTypeHasDefault extends Context {
+public class ReturnTypeHasDefault implements Context {
 	public Boolean extract(CtAbstractInvocation invo, int nullPos) {
 		// Primitives have default values
     CtTypeReference retType = TypeHelper.getType(invo);
