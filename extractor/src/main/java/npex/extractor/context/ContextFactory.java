@@ -62,6 +62,8 @@ public class ContextFactory {
     calleeContexts.add(new CalleeMethodThrows());
     calleeContexts.add(new CalleeMethodChecksNull());
     calleeContexts.add(new CalleeMethodChecksNullForNullParameter());
+    calleeContexts.add(new CalleeMethodReturnsNew());
+    calleeContexts.add(new CalleeMethodUsedAsBase());
   }
 
   public static List<Context> getAllContexts() {
