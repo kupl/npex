@@ -5,6 +5,7 @@ from dacite import from_dict as _from_dict
 import dataclasses
 import pprint
 import pickle
+import os
 import json
 from re import finditer
 
@@ -44,7 +45,7 @@ class JSONData:
 class MethodSignature(JSONData):
     method_name: str
     return_type: str
-    arg_types: List[str]
+    null_pos: int
 
 @dataclass(frozen=True)
 class InvocationKey(JSONData):
@@ -73,6 +74,7 @@ class InvocationKey(JSONData):
         null_pos_is_base = self.null_pos == -1
         return AbstractKey(null_pos_is_base, self.return_type, self.invo_kind, self.callee_defined)
 
+# A classifier identifes abstract keys only
 @dataclass(frozen=True)
 class AbstractKey(JSONData):
     nullpos_is_base : bool # is null_pos base?
@@ -84,12 +86,16 @@ class AbstractKey(JSONData):
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
     null_value: Optional[str]
+    raw: Optional[str]
+    isConstant: bool
     sink_body: str
     contexts: List[int]
 
     @classmethod
     def from_dict2(klass, d):
         v = d['null_value']
+        isConstant = True if v['raw'] == 'java.lang.Object.class' else v['isConstant']
+        raw = v['raw']
         exprs = v['exprs']
         if v['kind'] == 'PLAIN':
             d['null_value'] = exprs[0]
@@ -97,15 +103,15 @@ class NullModel(JSONData):
             kind = exprs[0]
             v['exprs'] = [kind] + sorted(exprs[1:])
             d['null_value'] = ', '.join(v['exprs'])
-        return klass.from_dict(d)
+        return klass.from_dict(d, isConstant, raw)
 
     @classmethod
-    def from_dict(klass, d):
+    def from_dict(klass, d, isConstant, raw):
         invocation_key = InvocationKey.from_dict(d['invocation_key'])
         null_value = d['null_value']
         sink_body = d['sink_body']
         contexts = [ 1 if v else 0 for v in d['contexts'].values()]
-        return NullModel(invocation_key, null_value, sink_body, contexts)
+        return NullModel(invocation_key, null_value, raw, isConstant, sink_body, contexts)
 
 
 @dataclass
@@ -131,7 +137,6 @@ class DB:
                 handle = NullHandle(h['source_path'], h['lineno'], h['handle'],
                                     model)
                 handles.append(handle)
-
         return DB(handles)
 
     def __init__(self, handles):
@@ -156,5 +161,10 @@ class DB:
 
     @classmethod
     def deserialize(cls, path):
-        with open(path, 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open(path, 'rb') as f:
+                return pickle.load(f)
+        except AttributeError:
+           print(f'{path}: Could not deserialize DB, check its version!') 
+           os.remove(path)
+           return DB(handles=[])
