@@ -35,6 +35,7 @@ public class InvocationContextExtractorLauncher extends NPEXLauncher {
         }
       }
     }
+    spoonLauncher.addProcessor(new StringPlusContextProcessor(traceClassNames));
     spoonLauncher.addProcessor(new InvocationContextProcessor(resultsPath, traceClassNames));
   }
 
