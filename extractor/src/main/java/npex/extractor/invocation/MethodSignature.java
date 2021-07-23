@@ -4,14 +4,15 @@ import java.io.Serializable;
 
 import org.json.JSONObject;
 
-import npex.common.NPEXException;
-import spoon.SpoonException;
+import npex.common.helper.TypeHelper;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.declaration.CtExecutable;
-import spoon.reflect.declaration.CtParameter;
+import spoon.reflect.reference.CtExecutableReference;
+import spoon.reflect.reference.CtTypeReference;
 
 public class MethodSignature implements Serializable {
   final public String methodName;
+  // final public String[] argTypes;
   final public String returnType;
   final public int nullPos;
 
@@ -25,23 +26,27 @@ public class MethodSignature implements Serializable {
    return toString().hashCode(); 
   }
 
-  public MethodSignature(CtExecutable exec) throws NPEXException {
-    this(exec, -1);
+  private MethodSignature(String signature, CtTypeReference returnType, int nullPos) {
+    this.methodName = signature;
+    this.returnType = returnType.toString();
+    this.nullPos = nullPos;
   }
 
-  public MethodSignature(CtAbstractInvocation invo, int nullPos) throws NPEXException {
-    this(invo.getExecutable().getExecutableDeclaration(), nullPos);
+  public MethodSignature(CtAbstractInvocation invo, int nullPos) {
+    this(invo.getExecutable().getSignature(),  TypeHelper.getType(invo), nullPos);
+  }
+  public MethodSignature(CtExecutableReference exec, int nullPos) {
+    this(exec.getSignature(), exec.getType(), nullPos);
   }
 
-  public MethodSignature(CtExecutable exec, int nullPos) throws NPEXException {
-    try {
-      this.methodName = exec.getSignature();
-      this.returnType = exec.getType().toString();
-      this.nullPos = nullPos;
-    } catch (NullPointerException | SpoonException e) {
-      throw new NPEXException(exec, "Failed to create method signature: could not print type name");
-    }
+  public MethodSignature(CtExecutable exec, int nullPos) {
+    this(exec.getReference(), nullPos);
   }
+
+  public MethodSignature(CtExecutable exec)  {
+    this(exec.getReference(), -1);
+  }
+  
   public JSONObject toJSON() {
     var obj = new JSONObject();
     obj.put("method_name", methodName);
@@ -49,9 +54,7 @@ public class MethodSignature implements Serializable {
     obj.put("null_pos", nullPos);
 		return obj;
   }
-
   public String toString() {
     return this.methodName + this.nullPos+ this.returnType;
   }
-
 }

@@ -41,7 +41,7 @@ class JSONData:
     def asdict(self):
         return dataclasses.asdict(self)
 
-@dataclasses(frozen=True)
+@dataclass(frozen=True)
 class MethodSignature(JSONData):
     method_name: str
     return_type: str
@@ -120,6 +120,10 @@ class NullHandle(JSONData):
     lineno: int
     handle: str
     model: NullModel
+
+    def __str__(self):
+        return json.dumps(self.asdict(), indent=4)
+
 
 class DB:
     handles: List[NullHandle]
