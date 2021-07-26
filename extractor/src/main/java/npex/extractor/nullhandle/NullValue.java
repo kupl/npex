@@ -78,7 +78,7 @@ public class NullValue {
       throw new NPEXException(invo, msg);
     }
 
-    if (raw.equals(FactoryUtils.NULL_LIT) && invoRetType.isSubtypeOf(TypeUtil.OBJECT)) {
+    if (TypeUtil.isNullLiteral(raw) && invoRetType.isSubtypeOf(TypeUtil.OBJECT)) {
         return new NullValue("PLAIN", new String[] {"null"}, raw);
     }
 

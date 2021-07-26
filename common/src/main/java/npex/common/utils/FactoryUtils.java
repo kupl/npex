@@ -40,11 +40,6 @@ public class FactoryUtils {
   public static CtTypeReference<java.lang.Class> CLASS_TYPE = tFactory.createReference(java.lang.Class.class);
   public static CtTypeReference<java.util.Collection> COLLECTION_TYPE = tFactory
       .createReference(java.util.Collection.class);
-  public static CtLiteral NULL_LIT = factory.createLiteral().setValue(null);
-  static {
-    NULL_LIT.setType(TypeUtil.NULL_TYPE);
-  }
-
 
   public static CtLiteral<Boolean> createBooleanLiteral(boolean boolValue) {
     CtLiteral<Boolean> lit = factory.createLiteral();
