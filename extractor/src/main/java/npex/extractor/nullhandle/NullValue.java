@@ -71,6 +71,22 @@ public class NullValue {
 	}
 
   public static NullValue fromExpression(CtAbstractInvocation invo, CtExpression raw) {
+    CtTypeReference type = TypeHelper.getType(raw);
+    CtTypeReference invoRetType = TypeHelper.getType(invo);
+    if (type == null || invoRetType == null) {
+      String msg = String.format("Cannot extract null values for %s: type information is unavailable", invo);
+      throw new NPEXException(invo, msg);
+    }
+
+    if (raw.equals(FactoryUtils.NULL_LIT) && invoRetType.isSubtypeOf(TypeUtil.OBJECT)) {
+        return new NullValue("PLAIN", new String[] {"null"}, raw);
+    }
+
+    if (!type.isSubtypeOf(invoRetType)) {
+      logger.error("null-value {}'s type {} should be subtype of invocation's type {}", raw, type, invoRetType);
+      return null;
+    }
+
     try {
       if (raw instanceof CtBinaryOperator bo) {
         BinaryOperatorKind bokind = bo.getKind();
@@ -131,32 +147,8 @@ public class NullValue {
     return SKIP;
   }
 
- private static String convert(CtExpression raw, CtAbstractInvocation invo) {
-   String result;
-   CtTypeReference type = TypeHelper.getType(raw);
-   CtTypeReference invoRetType = TypeHelper.getType(invo);
-
-   if (type == null || invoRetType == null) {
-     String msg = String.format("Cannot extract null values for %s: type information is unavailable", invo);
-     throw new NPEXException(invo, msg);
-   }
-
-   if (raw.equals(FactoryUtils.NULL_LIT) && invoRetType.isSubtypeOf(TypeUtil.OBJECT)) {
-      return "null";
-   }
-
-
-   try {
-     if (!type.isSubtypeOf(invoRetType)) {
-       String msg = String.format("null-value's type (%s) should be subtype of invocation's return type (%s)", type,
-           invoRetType);
-       throw new NPEXException(invo, msg);
-     }
-   } catch (NullPointerException e) {
-     throw new NPEXException(invo, e.getMessage());
-    }
-
-
+  private static String convert(CtExpression raw, CtAbstractInvocation invo) { 
+    String result;
     result = convertLiteral(raw);
     if (result != null) {
       return result;
