@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import npex.common.NPEXException;
 import npex.common.helper.TypeHelper;
-import npex.common.utils.FactoryUtils;
 import npex.common.utils.TypeUtil;
 import npex.extractor.runtime.RuntimeMethodInfo;
 import spoon.reflect.code.BinaryOperatorKind;
@@ -190,7 +189,9 @@ public class NullValue {
 
 
   private static String convertLiteral(CtExpression raw) {
-    if (isLiteral(raw)) {
+    if (TypeUtil.isNullLiteral(raw)) {
+      return "null";
+    } else if (isLiteral(raw)) {
       return defaultValues.contains(raw.toString()) ? "NPEX_DEFAULT_LITERAL" : "NPEX_NON_DEFAULT_LITERAL";
     } else if (raw instanceof CtVariableRead read) {
       try {
