@@ -60,6 +60,10 @@ public class NullValue {
     this.negated = false;
   }
 
+  public boolean isSkip() {
+    return this == SKIP;
+  }
+
 	public JSONObject toJSON() {
 		var obj = new JSONObject();
 		obj.put("kind", kind);
