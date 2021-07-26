@@ -38,9 +38,11 @@ import spoon.reflect.visitor.filter.TypeFilter;
 
 public class NullValue {
   static Logger logger = LoggerFactory.getLogger(NullValue.class);
-	final private String kind;
-	final private String[] exprs;
-	final private CtExpression raw;
+
+  final private String kind;
+  final private String[] exprs;
+  final private CtExpression raw;
+  private boolean negated;
 
 	private static final HashMap<CtExecutable, Boolean> builderPatternTable = new HashMap<>();
 	private static final List<String> emptyCollections = Arrays.asList(new String[]{ "java.util.Collections.EMPTY_LIST",
@@ -55,15 +57,32 @@ public class NullValue {
     this.kind = kind;
     this.exprs = exprs;
     this.raw = raw;
+    this.negated = false;
   }
+
 	public JSONObject toJSON() {
 		var obj = new JSONObject();
 		obj.put("kind", kind);
     obj.put("exprs", new JSONArray(exprs));
-    obj.put("raw", raw == null ? JSONObject.NULL : raw.toString());
     obj.put("isConstant", raw != null ? isConstant(raw) : false);
+    obj.put("raw", raw == null ? JSONObject.NULL : (negated ? String.format("!(%s)", raw.toString()) : raw.toString()));
 		return obj;
 	}
+
+  public NullValue negate() {
+    if (kind.equals("BINARY") && (exprs[0].equals("NE") || exprs[0].equals("EQ")) {
+      this.exprs[0] = this.exprs[0].equals("EQ") ? "NE" : "EQ";
+      this.negated = true;
+      return this;
+    } else if (kind.equals("PLAIN") && (exprs[0].equals("true") || exprs[0].equals("false"))) {
+      this.exprs[0] = Boolean.toString(!Boolean.valueOf(this.exprs[0]));
+      this.negated = true;
+      return this;
+    } else {
+      logger.error("Could not negate null value: {}", toJSON().toString());
+      return null;
+    }
+  }
 
 	public String getRawString() {
 		return raw != null ? raw.toString() : null;
@@ -81,8 +100,13 @@ public class NullValue {
         return new NullValue("PLAIN", new String[] {"null"}, raw);
     }
 
-    if (!type.isSubtypeOf(invoRetType)) {
-      logger.error("null-value {}'s type {} should be subtype of invocation's type {}", raw, type, invoRetType);
+    try {
+      if (!type.isSubtypeOf(invoRetType)) {
+        logger.error("{}: null-value {}'s type {} should be subtype of invocation's type {}", raw.getPosition(), raw, type, invoRetType);
+        return null;
+      } 
+    } catch (NullPointerException e) {
+      logger.error("{}: null-value {}'s type {} should be subtype of invocation's type {}", raw.getPosition(), raw, invoRetType, invoRetType);
       return null;
     }
 

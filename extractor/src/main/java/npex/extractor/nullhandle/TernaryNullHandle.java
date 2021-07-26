@@ -28,7 +28,8 @@ import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtBinaryOperator;
 import spoon.reflect.code.CtConditional;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
+import spoon.reflect.code.CtUnaryOperator;
+import spoon.reflect.code.UnaryOperatorKind;
 
 public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
   public TernaryNullHandle(CtConditional ternary, CtBinaryOperator cond) {
@@ -49,6 +50,12 @@ public class TernaryNullHandle extends AbstractNullHandle<CtConditional> {
       if (sinkExpr instanceof CtAbstractInvocation invo && isTargetInvocation(invo)) {
         NullValue nullValue = NullValue.fromExpression(invo, isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression());
         models.add(new NullModel(nullExp, sinkExpr, nullValue));
+      } else if (sinkExpr instanceof CtUnaryOperator un && un.getKind().equals(UnaryOperatorKind.NOT)
+          && isTargetInvocation(un.getOperand())) {
+        NullValue nullValue = NullValue.fromExpression((CtAbstractInvocation) un.getOperand(), isCondKindEQ ? handle.getThenExpression() : handle.getElseExpression());
+        if (nullValue.negate() != null) {
+          models.add(new NullModel(nullExp, sinkExpr, nullValue));
+        }
       }
     }
 
