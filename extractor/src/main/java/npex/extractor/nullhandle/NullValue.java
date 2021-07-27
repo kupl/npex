@@ -74,7 +74,7 @@ public class NullValue {
 	}
 
   public NullValue negate() {
-    if (kind.equals("BINARY") && (exprs[0].equals("NE") || exprs[0].equals("EQ")) {
+    if (kind.equals("BINARY") && (exprs[0].equals("NE") || exprs[0].equals("EQ"))) {
       this.exprs[0] = this.exprs[0].equals("EQ") ? "NE" : "EQ";
       this.negated = true;
       return this;
