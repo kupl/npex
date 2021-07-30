@@ -30,7 +30,9 @@ import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtField;
+import spoon.reflect.declaration.CtModifiable;
 import spoon.reflect.declaration.CtPackage;
+import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -42,21 +44,26 @@ public class NullValue {
   final private String kind;
   final private String[] exprs;
   final private CtExpression raw;
+  final private CtTypeReference type;
+  final private CtAbstractInvocation invo;
   private boolean negated;
 
-	private static final HashMap<CtExecutable, Boolean> builderPatternTable = new HashMap<>();
-	private static final List<String> emptyCollections = Arrays.asList(new String[]{ "java.util.Collections.EMPTY_LIST",
-			"java.util.Collections.EMPTY_MAP", "java.util.Collections.EMPTY_SET" });
-	private static final List<String> defaultValues = Arrays.asList(new String[]{ "0", "0L", "0.0F", "false", "java.lang.Boolean.FALSE", "\"\"", "'\\u0000'" });
+  private static final HashMap<CtExecutable, Boolean> builderPatternTable = new HashMap<>();
+  private static final List<String> emptyCollections = Arrays.asList(new String[] { "java.util.Collections.EMPTY_LIST",
+      "java.util.Collections.EMPTY_MAP", "java.util.Collections.EMPTY_SET" });
+  private static final List<String> defaultValues = Arrays
+      .asList(new String[] { "0", "0L", "0.0F", "false", "java.lang.Boolean.FALSE", "\"\"", "'\\u0000'" });
 
-	private static final NullValue SKIP = new NullValue("PLAIN", new String[] { "NPEX_SKIP_VALUE" }, null);
-	private static final NullValue THIS = new NullValue("PLAIN", new String[] { "this" }, null);
+  private static final NullValue SKIP = new NullValue("PLAIN", new String[] { "NPEX_SKIP_VALUE" }, null, null, null);
+  private static final NullValue THIS = new NullValue("PLAIN", new String[] { "this" }, null, null, null);
 
- 
-  private NullValue(String kind, String[] exprs, CtExpression raw) {
+  private NullValue(String kind, String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
     this.kind = kind;
     this.exprs = exprs;
     this.raw = raw;
+    this.type = type;
+    this.invo = invo;
+
     this.negated = false;
   }
 
@@ -64,14 +71,14 @@ public class NullValue {
     return this == SKIP;
   }
 
-	public JSONObject toJSON() {
-		var obj = new JSONObject();
-		obj.put("kind", kind);
+  public JSONObject toJSON() {
+    var obj = new JSONObject();
+    obj.put("kind", kind);
     obj.put("exprs", new JSONArray(exprs));
-    obj.put("isConstant", raw != null ? isConstant(raw) : false);
+    obj.put("isConstant", isCommonlyAccessible());
     obj.put("raw", raw == null ? JSONObject.NULL : (negated ? String.format("!(%s)", raw.toString()) : raw.toString()));
-		return obj;
-	}
+    return obj;
+  }
 
   public NullValue negate() {
     if (kind.equals("BINARY") && (exprs[0].equals("NE") || exprs[0].equals("EQ"))) {
@@ -88,9 +95,51 @@ public class NullValue {
     }
   }
 
-	public String getRawString() {
-		return raw != null ? raw.toString() : null;
-	}
+  public String getRawString() {
+    return raw != null ? raw.toString() : null;
+  }
+
+  /**
+   * Decide whether a raw expression for null value is commonly accessible from everywhere: 
+   *  1. any literals,
+   *  2. public static methods with no arguments and fields in public classes (classes under the java package), and 
+   *  3. variables * accessed from a null invocation (e.g., <code>p</code> and <code>q</code> in
+   * <code> p != null ? p.foo(q)</code>), but we do not consider this case here because it is already
+   * converted to the corresponding symbol
+   */
+  public boolean isCommonlyAccessible() {
+    if (raw == null || invo == null)
+      return false;
+
+    if (raw instanceof CtLiteral || raw instanceof CtUnaryOperator un && un.getOperand() instanceof CtLiteral) {
+      return true;
+    }
+
+    try {
+      if (raw instanceof CtAbstractInvocation invo && invo.getArguments().isEmpty()) {
+        CtExecutableReference ref = invo.getExecutable();
+        CtTypeReference declType = ref.getDeclaringType();
+        if (declType.getPackage().getQualifiedName().startsWith("java") && declType.getTypeDeclaration().isTopLevel()) {
+          return ref.getExecutableDeclaration()instanceof CtModifiable mod && mod.isPublic() && mod.isStatic();
+        }
+        return false;
+      }
+
+      if (raw instanceof CtFieldRead fr) {
+        CtTypeReference declType = fr.getVariable().getDeclaringType();
+        if (declType.getPackage().getQualifiedName().startsWith("java") && declType.getTypeDeclaration().isTopLevel()) {
+          CtField field = fr.getVariable().getDeclaration();
+          return field.isPublic() && field.isStatic();
+        }
+        return false;
+      }
+    } catch (NullPointerException e) {
+      logger.error("Failed to decide whether {} at {} is ubiquotos: NPE occurs - {}!", raw, raw.getPosition(),
+          e.getMessage());
+    }
+    return false;
+
+  }
 
   public static NullValue fromExpression(CtAbstractInvocation invo, CtExpression raw) {
     CtTypeReference type = TypeHelper.getType(raw);
@@ -101,16 +150,18 @@ public class NullValue {
     }
 
     if (TypeUtil.isNullLiteral(raw) && invoRetType.isSubtypeOf(TypeUtil.OBJECT)) {
-        return new NullValue("PLAIN", new String[] {"null"}, raw);
+      return new NullValue("PLAIN", new String[] { "null" }, raw, TypeUtil.NULL_TYPE, invo);
     }
 
     try {
       if (!type.isSubtypeOf(invoRetType)) {
-        logger.error("{}: null-value {}'s type {} should be subtype of invocation's type {}", raw.getPosition(), raw, type, invoRetType);
+        logger.error("{}: null-value {}'s type {} should be subtype of invocation's type {}", raw.getPosition(), raw,
+            type, invoRetType);
         return null;
-      } 
+      }
     } catch (NullPointerException e) {
-      logger.error("{}: null-value {}'s type {} should be subtype of invocation's type {}", raw.getPosition(), raw, invoRetType, invoRetType);
+      logger.error("{}: null-value {}'s type {} should be subtype of invocation's type {}", raw.getPosition(), raw,
+          invoRetType, invoRetType);
       return null;
     }
 
@@ -120,10 +171,10 @@ public class NullValue {
         CtExpression lhs = bo.getLeftHandOperand();
         CtExpression rhs = bo.getRightHandOperand();
         String[] exprs = new String[] { bokind.toString(), convert(lhs, invo), convert(rhs, invo) };
-        return new NullValue("BINARY", exprs, bo);
+        return new NullValue("BINARY", exprs, bo, type, invo);
       } else {
         String converted = convert(raw, invo);
-        return new NullValue("PLAIN", new String[] { converted }, raw);
+        return new NullValue("PLAIN", new String[] { converted }, raw, type, invo);
       }
     } catch (NPEXException e) {
       logger.error(e.getMessage());
@@ -135,8 +186,11 @@ public class NullValue {
     return SKIP;
   }
 
-  /* A method that creates a skip value. In case of a builder pattern method, where
-  the method is virtual and returns 'this', create a null value with 'this'. */
+  /*
+   * A method that creates a skip value. In case of a builder pattern method,
+   * where the method is virtual and returns 'this', create a null value with
+   * 'this'.
+   */
   public static NullValue createSkip(CtInvocation invo) {
     CtExecutableReference execRef = invo.getExecutable();
     if (execRef.isStatic() || execRef.isConstructor()) {
@@ -174,7 +228,7 @@ public class NullValue {
     return SKIP;
   }
 
-  private static String convert(CtExpression raw, CtAbstractInvocation invo) { 
+  private static String convert(CtExpression raw, CtAbstractInvocation invo) {
     String result;
     result = convertLiteral(raw);
     if (result != null) {
@@ -204,17 +258,17 @@ public class NullValue {
         return e.toString();
     };
 
-		String converted = symbolize.apply(raw);
+    String converted = symbolize.apply(raw);
     return raw.toString().equals(converted) ? "NPEXNonLiteral" : converted;
   }
 
   private static boolean isLiteral(CtExpression e) {
     if (e instanceof CtLiteral)
       return true;
-    
-    return e instanceof CtUnaryOperator un && un.getKind().equals(UnaryOperatorKind.NEG) && un.getOperand() instanceof CtLiteral;
-  }
 
+    return e instanceof CtUnaryOperator un && un.getKind().equals(UnaryOperatorKind.NEG)
+        && un.getOperand() instanceof CtLiteral;
+  }
 
   private static String convertLiteral(CtExpression raw) {
     if (TypeUtil.isNullLiteral(raw)) {
