@@ -259,6 +259,11 @@ public class NullValue {
       return raw.toString();
     }
 
+    // deal with literal NULL
+    if (TypeUtil.isNullLiteral(raw)) {
+      return "null";
+    }
+
     if (raw instanceof CtLiteral) {
       return "NPEXOtherLiteral";
     }

@@ -97,7 +97,7 @@ class NullModel(JSONData):
     def from_dict2(klass, d):
         nvd = d['null_value']
         exprs = nvd['exprs']
-        if nvd['kind'] ==  ['BINARY']:
+        if nvd['kind'] == 'BINARY':
             opkind = exprs[0]
             # sorting the exprs here is for normalization purpose: e.g.) EQ, x, y == EQ, y, x
             null_value = ', '.join([opkind] + sorted(exprs[1:]))
