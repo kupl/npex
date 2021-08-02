@@ -72,10 +72,18 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
       CtType typeDecl = typ.getTypeDeclaration();
       String implTypName = (typeDecl instanceof CtClass impl && !impl.isAbstract()) ? typeDecl.getQualifiedName()
           : collectionsMap.get(ctype);
-      String typeParams = factory.getEnvironment().getComplianceLevel() >= 8 ? ""
-          : typ.getActualTypeArguments().stream().map(ty -> ty.getQualifiedName()).collect(Collectors.joining(", "));
-      CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s<%s>()", implTypName, typeParams))
-          .compile();
+
+      String codeSnippetStr;
+      if (typ.isGenerics()) {
+        String typeParams = factory.getEnvironment().getComplianceLevel() >= 8 ? ""
+            : typ.getActualTypeArguments().stream().map(ty -> ty.getQualifiedName()).collect(Collectors.joining(", "));
+        codeSnippetStr = String.format("new %s<%s>()", implTypName, typeParams);
+      } else {
+        codeSnippetStr = String.format("new %s()", implTypName);
+      }
+
+      CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s()", implTypName)).compile();
+
       return Collections.singleton((CtConstructorCall) ctor).stream();
     }
 
