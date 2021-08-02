@@ -108,7 +108,15 @@ public class NullValue {
    * converted to the corresponding symbol
    */
   public boolean isCommonlyAccessible() {
+    if (raw == null)
+      return false;
+
     if (raw instanceof CtLiteral || raw instanceof CtUnaryOperator un && un.getOperand() instanceof CtLiteral) {
+      return true;
+    }
+
+    // '.class' does not has an actual field declaration so we explicitly handle that here
+    if (raw.toString().endsWith(".class") && raw.toString().startsWith("java.")) {
       return true;
     }
 
@@ -130,13 +138,8 @@ public class NullValue {
         }
         return false;
       }
-
-      if (raw != null && raw.toString().equals("java.lang.Object.class")) {
-        return true;
-      }
-
     } catch (NullPointerException e) {
-      logger.error("Failed to decide whether {} at {} is ubiquotos: NPE occurs - {}!", raw, raw.getPosition(),
+      logger.error("Failed to decide whether {} at {} is commonly accessibile due to an NPE - {}!", raw, raw.getPosition(),
           e.getMessage());
     }
     return false;
