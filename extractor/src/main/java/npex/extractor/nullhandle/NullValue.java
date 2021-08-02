@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.CommonExpressionTable;
 import npex.common.NPEXException;
 import npex.common.helper.TypeHelper;
 import npex.common.utils.TypeUtil;
@@ -28,7 +29,6 @@ import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableRead;
-import spoon.reflect.code.UnaryOperatorKind;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtModifiable;
@@ -244,21 +244,27 @@ public class NullValue {
 
   private static String convert(CtExpression raw, CtAbstractInvocation invo) {
     String result;
-    result = convertLiteral(raw);
-    if (result != null) {
-      return result;
+
+    // deal with final variable initialzations
+    if (raw instanceof CtVariableRead read) {
+      try {
+        CtVariable var = read.getVariable().getDeclaration();
+        if (var.isFinal() && var.getDefaultExpression() != null)
+          raw = var.getDefaultExpression();
+      } catch (NullPointerException e) {
+      }
     }
 
-    if (raw.toString().equals("java.lang.Object.class")) {
-      return "java.lang.Object.class";
+    if (CommonExpressionTable.isCommon(raw)) {
+      return raw.toString();
+    }
+
+    if (raw instanceof CtLiteral) {
+      return "NPEXOtherLiteral";
     }
 
     if (raw instanceof CtConstructorCall ccall) {
       return ccall.getArguments().isEmpty() ? "NPEXDefaultNew" : "NPEXNonDefaultNew";
-    }
-
-    if (emptyCollections.contains(raw.toString())) {
-      return "NPEXEmptyCollections";
     }
 
     CtExpression base = invo instanceof CtInvocation vinvo ? vinvo.getTarget() : null;
@@ -273,32 +279,7 @@ public class NullValue {
     };
 
     String converted = symbolize.apply(raw);
-    return raw.toString().equals(converted) ? "NPEXNonLiteral" : converted;
-  }
-
-  private static boolean isLiteral(CtExpression e) {
-    if (e instanceof CtLiteral)
-      return true;
-
-    return e instanceof CtUnaryOperator un && un.getKind().equals(UnaryOperatorKind.NEG)
-        && un.getOperand() instanceof CtLiteral;
-  }
-
-  private static String convertLiteral(CtExpression raw) {
-    if (TypeUtil.isNullLiteral(raw)) {
-      return "null";
-    } else if (isLiteral(raw)) {
-      return defaultValues.contains(raw.toString()) ? "NPEX_DEFAULT_LITERAL" : "NPEX_NON_DEFAULT_LITERAL";
-    } else if (raw instanceof CtVariableRead read) {
-      try {
-        CtVariable var = read.getVariable().getDeclaration();
-        if (var.isFinal() && var.getDefaultExpression()instanceof CtLiteral lit)
-          return defaultValues.contains(lit.toString()) ? "NPEX_DEFAULT_LITERAL" : "NPEX_NON_DEFAULT_LITERAL";
-      } catch (NullPointerException e) {
-        return null;
-      }
-    }
-    return null;
+    return raw.toString().equals(converted) ? "NPEXNonLiteral" : converted;   
   }
 
   private static NullValue createPlain(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
