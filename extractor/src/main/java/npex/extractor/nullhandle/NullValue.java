@@ -79,6 +79,7 @@ public class NullValue {
     obj.put("kind", kind);
     obj.put("exprs", new JSONArray(exprs));
     obj.put("raw", raw == null ? JSONObject.NULL : (negated ? String.format("!(%s)", raw.toString()) : raw.toString()));
+    obj.put("raw_type", type == null ? JSONObject.NULL : type.toString());
     obj.put("has_common_access", isCommonlyAccessible());
     return obj;
   }
@@ -96,10 +97,6 @@ public class NullValue {
       logger.error("Could not negate null value: {}", toJSON().toString());
       return null;
     }
-  }
-
-  public String getRawString() {
-    return raw != null ? raw.toString() : null;
   }
 
   /**
@@ -146,6 +143,10 @@ public class NullValue {
 
   }
 
+  public boolean isNotToLearn() {
+    return kind.equals(kind.DONT_LEARN);
+  }
+
   public static NullValue fromExpression(CtAbstractInvocation invo, CtExpression raw) {
     CtTypeReference type = TypeHelper.getType(raw);
     CtTypeReference invoRetType = TypeHelper.getType(invo);
@@ -189,7 +190,7 @@ public class NullValue {
 
   public static NullValue fromRawExpressionOnly(CtExpression raw) {
     String[] exprs = new String[] { raw.toString() };
-    return createDontLearn(exprs, raw, null, null);
+    return createDontLearn(exprs, raw, raw.getType(), null);
   }
 
   public static NullValue createSkip(CtAbstractInvocation invo) {

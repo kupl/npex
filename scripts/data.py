@@ -88,8 +88,9 @@ class NullModel(JSONData):
     null_value: Optional[str]
     null_value_kind: str
     raw: Optional[str]
+    raw_type: Optional[str]
     has_common_access: bool
-    sink_body: str
+    sink_body: Optional[str]
     contexts: List[int]
 
     @classmethod
@@ -106,6 +107,7 @@ class NullModel(JSONData):
         d['null_value'] = null_value
         d['null_value_kind'] = nvd['kind']
         d['raw'] = nvd['raw']
+        d['raw_type'] = nvd['raw_type']
         d['has_common_access'] = nvd['has_common_access']
         return klass.from_dict(d)
 
@@ -114,7 +116,7 @@ class NullModel(JSONData):
     def from_dict(klass, d):
         invocation_key = InvocationKey.from_dict(d['invocation_key'])
         contexts = [ 1 if v else 0 for v in d['contexts'].values()]
-        return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['has_common_access'], d['sink_body'], contexts)
+        return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['raw_type'], d['has_common_access'], d['sink_body'], contexts)
 
 
 @dataclass

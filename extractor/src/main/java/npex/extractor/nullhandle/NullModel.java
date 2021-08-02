@@ -23,6 +23,7 @@
  */
 package npex.extractor.nullhandle;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.NPEXException;
-import npex.extractor.context.ContextExtractor;
 import npex.extractor.invocation.InvocationKey;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtConstructorCall;
@@ -61,6 +61,15 @@ public class NullModel {
   }
 
   public JSONObject toJSON() throws NPEXException {
+    if (nullValue != null && nullValue.isNotToLearn()) {
+      var obj = new JSONObject();
+      obj.put("sink_body", JSONObject.NULL);
+      obj.put("null_value", nullValue.toJSON());
+      obj.put("invocation_key", JSONObject.NULL);
+      obj.put("contexts", new JSONObject(Collections.EMPTY_MAP));
+      return obj;
+    }
+
     if (invoKey == null) {
       throw new NPEXException(nullExp, "Could not serialize null model: invocation key is NULL");
     }
@@ -72,7 +81,6 @@ public class NullModel {
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
     obj.put("null_value", nullValue.toJSON());
-    obj.put("actual_null_value", nullValue.getRawString());
     obj.put("invocation_key", invoKey.toJSON());
     obj.put("contexts", new JSONObject(contexts));
     return obj;
