@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import npex.common.NPEXException;
 import npex.common.helper.TypeHelper;
 import npex.common.utils.TypeUtil;
+import npex.extractor.nullhandle.NullValue.KIND;
 import npex.extractor.runtime.RuntimeMethodInfo;
 import spoon.reflect.code.BinaryOperatorKind;
 import spoon.reflect.code.CtAbstractInvocation;
@@ -32,7 +33,6 @@ import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtModifiable;
 import spoon.reflect.declaration.CtPackage;
-import spoon.reflect.declaration.CtType;
 import spoon.reflect.declaration.CtVariable;
 import spoon.reflect.reference.CtExecutableReference;
 import spoon.reflect.reference.CtTypeReference;
@@ -41,7 +41,11 @@ import spoon.reflect.visitor.filter.TypeFilter;
 public class NullValue {
   static Logger logger = LoggerFactory.getLogger(NullValue.class);
 
-  final private String kind;
+  public enum KIND {
+    PLAIN, BINARY, DONT_LEARN
+  }
+
+  final private KIND kind;
   final private String[] exprs;
   final private CtExpression raw;
   final private CtTypeReference type;
@@ -54,16 +58,15 @@ public class NullValue {
   private static final List<String> defaultValues = Arrays
       .asList(new String[] { "0", "0L", "0.0F", "false", "java.lang.Boolean.FALSE", "\"\"", "'\\u0000'" });
 
-  private static final NullValue SKIP = new NullValue("PLAIN", new String[] { "NPEX_SKIP_VALUE" }, null, null, null);
-  private static final NullValue THIS = new NullValue("PLAIN", new String[] { "this" }, null, null, null);
+  private static final NullValue SKIP = createPlain(new String[] { "NPEX_SKIP_VALUE" }, null, null, null);
+  private static final NullValue THIS = createPlain(new String[] { "this" }, null, null, null);
 
-  private NullValue(String kind, String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+  private NullValue(KIND kind, String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
     this.kind = kind;
     this.exprs = exprs;
     this.raw = raw;
     this.type = type;
     this.invo = invo;
-
     this.negated = false;
   }
 
@@ -75,17 +78,17 @@ public class NullValue {
     var obj = new JSONObject();
     obj.put("kind", kind);
     obj.put("exprs", new JSONArray(exprs));
-    obj.put("isConstant", isCommonlyAccessible());
     obj.put("raw", raw == null ? JSONObject.NULL : (negated ? String.format("!(%s)", raw.toString()) : raw.toString()));
+    obj.put("has_common_access", isCommonlyAccessible());
     return obj;
   }
 
   public NullValue negate() {
-    if (kind.equals("BINARY") && (exprs[0].equals("NE") || exprs[0].equals("EQ"))) {
+    if (kind.equals(KIND.BINARY) && (exprs[0].equals("NE") || exprs[0].equals("EQ"))) {
       this.exprs[0] = this.exprs[0].equals("EQ") ? "NE" : "EQ";
       this.negated = true;
       return this;
-    } else if (kind.equals("PLAIN") && (exprs[0].equals("true") || exprs[0].equals("false"))) {
+    } else if (kind.equals(KIND.PLAIN) && (exprs[0].equals("true") || exprs[0].equals("false"))) {
       this.exprs[0] = Boolean.toString(!Boolean.valueOf(this.exprs[0]));
       this.negated = true;
       return this;
@@ -108,9 +111,6 @@ public class NullValue {
    * converted to the corresponding symbol
    */
   public boolean isCommonlyAccessible() {
-    if (raw == null || invo == null)
-      return false;
-
     if (raw instanceof CtLiteral || raw instanceof CtUnaryOperator un && un.getOperand() instanceof CtLiteral) {
       return true;
     }
@@ -133,6 +133,11 @@ public class NullValue {
         }
         return false;
       }
+
+      if (raw != null && raw.toString().equals("java.lang.Object.class")) {
+        return true;
+      }
+
     } catch (NullPointerException e) {
       logger.error("Failed to decide whether {} at {} is ubiquotos: NPE occurs - {}!", raw, raw.getPosition(),
           e.getMessage());
@@ -150,7 +155,7 @@ public class NullValue {
     }
 
     if (TypeUtil.isNullLiteral(raw) && invoRetType.isSubtypeOf(TypeUtil.OBJECT)) {
-      return new NullValue("PLAIN", new String[] { "null" }, raw, TypeUtil.NULL_TYPE, invo);
+      return createPlain(new String[] { "null" }, raw, TypeUtil.NULL_TYPE, invo);
     }
 
     try {
@@ -171,15 +176,20 @@ public class NullValue {
         CtExpression lhs = bo.getLeftHandOperand();
         CtExpression rhs = bo.getRightHandOperand();
         String[] exprs = new String[] { bokind.toString(), convert(lhs, invo), convert(rhs, invo) };
-        return new NullValue("BINARY", exprs, bo, type, invo);
+        return createBinary(exprs, bo, type, invo);
       } else {
         String converted = convert(raw, invo);
-        return new NullValue("PLAIN", new String[] { converted }, raw, type, invo);
+        return createPlain(new String[] { converted }, raw, type, invo);
       }
     } catch (NPEXException e) {
       logger.error(e.getMessage());
       return null;
     }
+  }
+
+  public static NullValue fromRawExpressionOnly(CtExpression raw) {
+    String[] exprs = new String[] { raw.toString() };
+    return createDontLearn(exprs, raw, null, null);
   }
 
   public static NullValue createSkip(CtAbstractInvocation invo) {
@@ -287,23 +297,15 @@ public class NullValue {
     return null;
   }
 
-  private static boolean isConstant(CtExpression raw) {
-    if (isLiteral(raw))
-      return true;
+  private static NullValue createPlain(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+    return new NullValue(KIND.PLAIN, exprs, raw, type, invo);
+  }
 
-    if (raw instanceof CtFieldRead read) {
-      try {
-        CtField fld = read.getVariable().getFieldDeclaration();
-        String pkgName = fld.getDeclaringType().getPackage().getQualifiedName();
-        if (pkgName.startsWith("java.lang") || pkgName.equals("java.util")) {
-          if (fld.isStatic() && fld.isFinal() && fld.isPublic()) {
-            return true;
-          }
-        }
-      } catch (Exception e) {
-        return false;
-      }
-    }
-    return false;
+  private static NullValue createBinary(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+    return new NullValue(KIND.BINARY, exprs, raw, type, invo);
+  }
+
+  private static NullValue createDontLearn(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+    return new NullValue(KIND.DONT_LEARN, exprs, raw, type, invo);
   }
 }

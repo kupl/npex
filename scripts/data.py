@@ -86,32 +86,35 @@ class AbstractKey(JSONData):
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
     null_value: Optional[str]
+    null_value_kind: str
     raw: Optional[str]
-    isConstant: bool
+    has_common_access: bool
     sink_body: str
     contexts: List[int]
 
     @classmethod
     def from_dict2(klass, d):
-        v = d['null_value']
-        isConstant = True if v['raw'] == 'java.lang.Object.class' else v['isConstant']
-        raw = v['raw']
-        exprs = v['exprs']
-        if v['kind'] == 'PLAIN':
-            d['null_value'] = exprs[0]
+        nvd = d['null_value']
+        exprs = nvd['exprs']
+        if nvd['kind'] ==  ['BINARY']:
+            opkind = exprs[0]
+            # sorting the exprs here is for normalization purpose: e.g.) EQ, x, y == EQ, y, x
+            null_value = ', '.join([opkind] + sorted(exprs[1:]))
         else:
-            kind = exprs[0]
-            v['exprs'] = [kind] + sorted(exprs[1:])
-            d['null_value'] = ', '.join(v['exprs'])
-        return klass.from_dict(d, isConstant, raw)
+            null_value = exprs[0]
+
+        d['null_value'] = null_value
+        d['null_value_kind'] = nvd['kind']
+        d['raw'] = nvd['raw']
+        d['has_common_access'] = nvd['has_common_access']
+        return klass.from_dict(d)
+
 
     @classmethod
-    def from_dict(klass, d, isConstant, raw):
+    def from_dict(klass, d):
         invocation_key = InvocationKey.from_dict(d['invocation_key'])
-        null_value = d['null_value']
-        sink_body = d['sink_body']
         contexts = [ 1 if v else 0 for v in d['contexts'].values()]
-        return NullModel(invocation_key, null_value, raw, isConstant, sink_body, contexts)
+        return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['has_common_access'], d['sink_body'], contexts)
 
 
 @dataclass

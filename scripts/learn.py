@@ -54,7 +54,7 @@ class Model:
         return ret
 
 def construct_training_data(db, is_data_for_null_classifier):
-    models = [h.model for h in db.handles]
+    models = [h.model for h in db.handles if h.model.null_value.kind != "DONT_LEARN"]
     
     # Data cleansing: exclude non-void SKIP models
     models = [m for m in models if not (m.invocation_key.return_type != 'void' and m.null_value == 'NPEX_SKIP_VALUE')]
