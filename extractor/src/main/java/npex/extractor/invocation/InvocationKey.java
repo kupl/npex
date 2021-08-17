@@ -11,6 +11,7 @@ import npex.common.helper.TypeHelper;
 import npex.common.utils.TypeUtil;
 import npex.extractor.context.ContextExtractor;
 import npex.extractor.runtime.RuntimeMethodInfo;
+import spoon.SpoonException;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
@@ -35,11 +36,15 @@ public class InvocationKey {
       }
       final CtExecutableReference exec = invo.getExecutable();
 
-      this.methodSignature = new MethodSignature(invo, nullPos);
+      try {
+        this.methodSignature = new MethodSignature(invo, nullPos);
+        this.returnType = abstractReturnType(type);
+      } catch (SpoonException e) {
+        throw new NPEXException(invo, "Failed to create method signature: could not print the return type");
+      }
       this.methodName = exec.getSimpleName();
       this.nullPos = nullPos;
       this.actualsLength = invo.getArguments().size();
-      this.returnType = abstractReturnType(type);
       this.invoKind = getInvoKind(invo);
       this.isRuntimeCallee = RuntimeMethodInfo.isRuntimeCallee(methodSignature);
       boolean calleeDefined;
@@ -87,7 +92,7 @@ public class InvocationKey {
     }
   }
 
-  static private String abstractReturnType(CtTypeReference type) {
+  static private String abstractReturnType(CtTypeReference type) throws SpoonException {
     if (type.equals(TypeUtil.VOID))
       return TypeUtil.VOID.toString();
     else if (type.isPrimitive())
