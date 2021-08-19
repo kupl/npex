@@ -27,7 +27,7 @@ public class CommonExpressionTable {
 		map.put(TypeUtil.INTEGER_PRIMITIVE, Arrays.asList(new String[] {"0", "-1", "1"}));
 		map.put(TypeUtil.LONG_PRIMITIVE, Arrays.asList(new String[] {"0L", "-1L", "java.lang.Long.MAX_VALUE"}));
 		map.put(TypeUtil.FLOAT_PRIMITIVE, Arrays.asList(new String[] { "0.0F", "1.0F", "java.lang.Float.MAX_VALUE" }));
-		map.put(TypeUtil.DOUBLE_PRIMITIVE, Arrays.asList(new String[] {"0,0", "java.lang.Double.NaN", "1.0"}));
+		map.put(TypeUtil.DOUBLE_PRIMITIVE, Arrays.asList(new String[] {"0.0", "java.lang.Double.NaN", "1.0"}));
 		map.put(TypeUtil.BOOLEAN_PRIMITIVE, Arrays.asList(new String[] {"false", "true"}));
 		map.put(TypeUtil.CHAR_PRIMITIVE, Arrays.asList(new String[] {"'\u0000'", "'0'"}));
 
