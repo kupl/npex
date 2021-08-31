@@ -97,7 +97,6 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
     }
 
     CtType tyDecl = typ.getDeclaration();
-    System.out.println(tyDecl);
     if (tyDecl instanceof CtClass klass && klass.getConstructor() != null) {
       return Collections.singleton(expr.getFactory().createConstructorCall(typ)).stream();
     }
