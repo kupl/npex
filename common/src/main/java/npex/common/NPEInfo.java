@@ -33,6 +33,8 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import spoon.reflect.CtModel;
 import spoon.reflect.code.CtExpression;
@@ -40,18 +42,17 @@ import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtTargetedExpression;
+import spoon.reflect.code.CtUnaryOperator;
 import spoon.reflect.code.CtVariableRead;
 import spoon.reflect.code.CtVariableWrite;
-import spoon.reflect.declaration.CtClass;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.declaration.CtType;
 import spoon.reflect.visitor.CtScanner;
-import spoon.reflect.visitor.filter.NamedElementFilter;
 import spoon.reflect.visitor.filter.TypeFilter;
-import spoon.reflect.code.CtUnaryOperator;
 
 public class NPEInfo {
+  final static Logger logger = LoggerFactory.getLogger(NPEXLauncher.class);
   String filepath;
   int line;
   String deref_field;
@@ -75,11 +76,16 @@ public class NPEInfo {
     for (CtType typ : model.getElements(new TypeFilter<>(CtType.class))) {
       if (typ.getPosition().getFile().toString().contains(filepath)) {
         String[] packages = typ.getQualifiedName().split("\\.");
-        if (packages[packages.length - 1].equals(className))
+        String classNameOfTyp = packages[packages.length - 1];
+        if (classNameOfTyp.contains("$")) {
+          String[] splitted = classNameOfTyp.split("\\$");
+          classNameOfTyp = splitted[splitted.length - 1];
+        }
+        if (classNameOfTyp.equals(className))
           return typ;
       }
     }
-    throw new NoSuchElementException(String.format("Could not find class matched with {} at {}", filepath, className));
+    throw new NoSuchElementException(String.format("Could not find class matched with %s at %s", filepath, className));
   }
 
   public NPEInfo(String filepath, int line, String deref_field, String npe_method_name, CtType npe_class) {
