@@ -103,4 +103,48 @@ public class ObjectInitializer extends ValueInitializer<CtConstructorCall> {
 
     return Stream.empty();
   }
+
+  public static Stream<CtConstructorCall> enumerate(CtTypeReference typ) {
+     if (typ == null) {
+      return Stream.empty();
+    }
+    Factory factory = typ.getFactory();
+
+    CtTypeReference ctype = collectionsMap.keySet().stream().filter(ct -> typ.isSubtypeOf(ct)).findAny().orElse(null);
+    if (ctype != null) {
+      CtType typeDecl = typ.getTypeDeclaration();
+      String implTypName = (typeDecl instanceof CtClass impl && !impl.isAbstract()) ? typeDecl.getQualifiedName()
+          : collectionsMap.get(ctype);
+
+      String codeSnippetStr;
+      if (typ.isGenerics()) {
+        String typeParams = factory.getEnvironment().getComplianceLevel() >= 8 ? ""
+            : typ.getActualTypeArguments().stream().map(ty -> ty.getQualifiedName()).collect(Collectors.joining(", "));
+        codeSnippetStr = String.format("new %s<%s>()", implTypName, typeParams);
+      } else {
+        codeSnippetStr = String.format("new %s()", implTypName);
+      }
+
+      CtExpression ctor = factory.createCodeSnippetExpression(String.format("new %s()", implTypName)).compile();
+
+      return Collections.singleton((CtConstructorCall) ctor).stream();
+    }
+
+    if (!typ.isClass() || typ.isPrimitive() || typ.isInterface()
+        || typ.getDeclaration() != null && typ.getDeclaration().isAbstract()) {
+      return Stream.empty();
+    }
+
+    if (typ instanceof CtArrayTypeReference) {
+      return Collections.singleton(typ.getFactory().createConstructorCall(typ)).stream();
+    }
+
+    CtType tyDecl = typ.getDeclaration();
+    if (tyDecl instanceof CtClass klass && klass.getConstructor() != null) {
+      return Collections.singleton(typ.getFactory().createConstructorCall(typ)).stream();
+    }
+
+    return Stream.empty();
+  }
+
 }
