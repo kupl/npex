@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -59,7 +60,7 @@ public class NullValue {
       .asList(new String[] { "0", "0L", "0.0F", "false", "java.lang.Boolean.FALSE", "\"\"", "'\\u0000'" });
 
   private static final NullValue SKIP = createPlain(new String[] { "NPEX_SKIP_VALUE" }, null, null, null);
-  private static final NullValue THIS = createPlain(new String[] { "this" }, null, null, null);
+  private static final NullValue THIS = createPlain(new String[] { "$(-1)" }, null, null, null);
 
   private NullValue(KIND kind, String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
     this.kind = kind;

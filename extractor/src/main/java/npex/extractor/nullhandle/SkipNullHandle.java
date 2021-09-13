@@ -78,7 +78,7 @@ public class SkipNullHandle extends AbstractNullHandle<CtIf> {
     public void visitCtInvocation(CtInvocation invo) {
       if (invo.equals(firstStmt) && isTargetInvocation(invo)) {
         NullValue nullValue = NullValue.createSkip(invo);
-        if (!nullValue.isSkip() || TypeHelper.getType(invo).equals(TypeUtil.VOID)) {
+        if (!nullValue.isSkip() || TypeUtil.VOID.equals(TypeHelper.getType(invo))) {
           models.add(new NullModel(nullExp, invo, nullValue));
         }
         terminate();

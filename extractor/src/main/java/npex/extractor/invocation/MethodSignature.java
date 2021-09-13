@@ -5,6 +5,7 @@ import java.io.Serializable;
 import org.json.JSONObject;
 
 import npex.common.helper.TypeHelper;
+import spoon.SpoonException;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.reference.CtExecutableReference;
@@ -26,7 +27,7 @@ public class MethodSignature implements Serializable {
    return toString().hashCode(); 
   }
 
-  private MethodSignature(String signature, CtTypeReference returnType, int nullPos) {
+  private MethodSignature(String signature, CtTypeReference returnType, int nullPos) throws SpoonException {
     this.methodName = signature;
     this.returnType = returnType.toString();
     this.nullPos = nullPos;

@@ -77,7 +77,9 @@ public class NPEInfo {
       if (typ.getPosition().getFile().toString().contains(filepath)) {
         String[] packages = typ.getQualifiedName().split("\\.");
         String classNameOfTyp = packages[packages.length - 1];
-        if (classNameOfTyp.contains("$")) {
+        if (classNameOfTyp.equals(className)) {
+          return typ;
+        } else if (classNameOfTyp.contains("$")) {
           String[] splitted = classNameOfTyp.split("\\$");
           classNameOfTyp = splitted[splitted.length - 1];
         }

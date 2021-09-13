@@ -9,8 +9,12 @@ public class NameContext implements Context {
 	private final String name;
 	private final String keyword;
 
-	private static final String[] frequentNames = { "Code", "hash", "append", "equals", "on", "Error", "Success", "get",
-			"set", "is", "add", "close", "Empty", "Value", "put", "String", "to", "remove", "write", "contains" };
+	private static final String[] frequentNames = {
+		"get", "is", "set", "equals", "Code", "hash", "close", "Empty", "add", "Value",
+		"String", "to", "contains", "Name", "remove", "<init>", "write", "Class", "clone", "stop"
+	};
+
+
 
 	public static final List<NameContext> all = new ArrayList<>();
 	static {

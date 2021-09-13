@@ -39,6 +39,8 @@ public class ContextFactory {
     contexts.add(new LHSIsField());
     contexts.add(new LHSIsPrivate());
     contexts.add(new LHSIsPublic());
+    contexts.add(new LHSIsArray());
+
     contexts.add(new IsField());
     contexts.add(new SinkExprIsAssigned());
     contexts.add(new SinkExprIsExceptionArgument());

@@ -14,14 +14,22 @@ public class TypeUtil {
   public static final CtTypeReference<java.lang.String> STRING = f.STRING;
   public static final CtTypeReference<java.lang.Boolean> BOOLEAN = f.BOOLEAN;
 	public static final CtTypeReference<java.lang.Integer> INTEGER = f.INTEGER;
-  public static final CtTypeReference<java.lang.Long> LONG = f.LONG;
   public static final CtTypeReference<java.lang.Float> FLOAT = f.FLOAT;
   public static final CtTypeReference<java.lang.Double> DOUBLE = f.DOUBLE;
-  public static final CtTypeReference<java.lang.Void> VOID_PRIMITIVE = f.VOID_PRIMITIVE;
-  public static final CtTypeReference<java.lang.Boolean> BOOLEAN_PRIMITIVE = f.BOOLEAN_PRIMITIVE;
+
+  public static final CtTypeReference<?> NULL_TYPE = f.NULL_TYPE;
+
+  /* 8 Java primitives */
+  public static final CtTypeReference<java.lang.Short> SHORT_PRIMITIVE = f.SHORT_PRIMITIVE;
+  public static final CtTypeReference<java.lang.Byte> BYTE_PRIMITIVE = f.BYTE_PRIMITIVE;
   public static final CtTypeReference<java.lang.Integer> INTEGER_PRIMITIVE = f.INTEGER_PRIMITIVE;
+  public static final CtTypeReference<java.lang.Long> LONG_PRIMITIVE = f.LONG_PRIMITIVE;
   public static final CtTypeReference<java.lang.Float> FLOAT_PRIMITIVE = f.FLOAT_PRIMITIVE;
   public static final CtTypeReference<java.lang.Double> DOUBLE_PRIMITIVE = f.DOUBLE_PRIMITIVE;
+  public static final CtTypeReference<java.lang.Boolean> BOOLEAN_PRIMITIVE = f.BOOLEAN_PRIMITIVE;
+  public static final CtTypeReference<java.lang.Character> CHAR_PRIMITIVE = f.CHARACTER_PRIMITIVE;
+
+  public static final CtTypeReference<java.lang.Void> VOID_PRIMITIVE = f.VOID_PRIMITIVE;
   public static final CtTypeReference<java.lang.Object> OBJECT = f.OBJECT;
   
 	public static final CtTypeReference<java.util.Collection> COLLECTION = f.COLLECTION;

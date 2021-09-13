@@ -39,15 +39,17 @@ public class NullHandleFactory {
   static Logger logger = LoggerFactory.getLogger(NullHandleFactory.class);
 
   public static AbstractNullHandle createNullHandle(CtCodeElement element) {
-    AbstractNullHandle handle;
+    AbstractNullHandle handle = null;
     if (element instanceof CtBinaryOperator bo) {
       handle = createBooleanNullHandle(bo);
     } else if (element instanceof CtConditional ternary) {
       handle = createTernaryNullHandle(ternary);
     } else if (element instanceof CtIf ifStmt) {
       handle = createSkipNullHandle(ifStmt);
-    } else {
-      return null;
+      // This handle is for constant frequency investigation.
+      if (handle == null) {
+        return SkipReturnNullHandle.collect(ifStmt);
+      }
     }
 
     if (handle == null) {

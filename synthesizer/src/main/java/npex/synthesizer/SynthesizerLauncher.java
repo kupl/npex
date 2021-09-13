@@ -37,6 +37,7 @@ import npex.common.NPEXLauncher;
 import npex.synthesizer.strategy.PatchStrategy;
 import npex.synthesizer.strategy.PatchStrategyFactory;
 import npex.synthesizer.template.PatchTemplate;
+import spoon.MavenLauncher.SOURCE_TYPE;
 import spoon.reflect.code.CtExpression;
 
 @SuppressWarnings("rawtypes")
@@ -46,7 +47,7 @@ public class SynthesizerLauncher extends NPEXLauncher {
 
   public SynthesizerLauncher(File projectRoot, boolean loadFromCache, String[] classpath, File npeReport)
       throws IOException {
-    super(projectRoot, loadFromCache, classpath);
+    super(projectRoot, loadFromCache, classpath, SOURCE_TYPE.APP_SOURCE);
     this.npeReport = npeReport;
   }
 

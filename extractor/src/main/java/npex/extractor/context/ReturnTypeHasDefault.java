@@ -21,7 +21,7 @@ public class ReturnTypeHasDefault implements Context {
 		Predicate<CtExecutableReference> hasDefault =  exRef -> exRef.getExecutableDeclaration() instanceof CtConstructor ctor && ctor.getParameters().size() == 0;
 		try {
 			return retType.getTypeDeclaration() != null && retType.getTypeDeclaration().getAllExecutables().stream().anyMatch(hasDefault);
-		} catch (SpoonException e) {
+		} catch (Throwable e) {
 			return false;
 		}
 		
