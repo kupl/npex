@@ -55,10 +55,10 @@ public abstract class NPEXLauncher {
   final protected Factory factory;
   final protected Launcher spoonLauncher;
 
-  private Launcher buildSpoonLauncher(File projectRoot, String[] classpath) throws IOException {
+  private Launcher buildSpoonLauncher(File projectRoot, String[] classpath, SOURCE_TYPE sourceType) throws IOException {
     Launcher launcher;
     if (new File(projectRoot, "pom.xml").exists()) {
-      launcher = createMavenLauncher(projectRoot);
+      launcher = createMavenLauncher(projectRoot, sourceType);
     } else if (new File(projectRoot, "ant").exists() || (new File(projectRoot, "build.xml").exists())) {
       launcher = createAntLauncher(projectRoot);
     } else {
@@ -84,21 +84,30 @@ public abstract class NPEXLauncher {
     return new Launcher(factory);
   }
 
-  public NPEXLauncher(File projectRoot, boolean loadFromCache, String[] classpath) throws IOException {
+  public NPEXLauncher(File projectRoot, boolean loadFromCache, String[] classpath, SOURCE_TYPE sourceType) throws IOException {
     this.projectRoot = projectRoot;
     this.projectName = projectRoot.getName();
     this.spoonModelCacheFile = new File(projectRoot, SPOON_MODEL_CACHE_NAME);
-    this.spoonLauncher = loadFromCache ? spoonLauncherFromCache() : buildSpoonLauncher(projectRoot, classpath);
+    this.spoonLauncher = loadFromCache ? spoonLauncherFromCache() : buildSpoonLauncher(projectRoot, classpath, sourceType);
+    var env = spoonLauncher.getEnvironment();
+    env.setIgnoreDuplicateDeclarations(true);
+    env.setShouldCompile(false);
+    env.disableConsistencyChecks();
+    System.out.println(spoonLauncher.getEnvironment().getNoClasspath());
     this.factory = spoonLauncher.getFactory();
   }
 
-  public NPEXLauncher(File projectRoot) throws IOException {
-    this(projectRoot, false, new String[] {});
+  public NPEXLauncher(File projectRoot, boolean loadFromCache, String[] classpath) throws IOException {
+    this(projectRoot, loadFromCache, classpath, SOURCE_TYPE.ALL_SOURCE);
   }
 
-  static private MavenLauncher createMavenLauncher(File projectRoot) {
+  public NPEXLauncher(File projectRoot) throws IOException {
+    this(projectRoot, false, new String[] {}, SOURCE_TYPE.ALL_SOURCE);
+  }
+
+  static private MavenLauncher createMavenLauncher(File projectRoot, SOURCE_TYPE sourceType) {
     logger.info("Parsing maven project ...");
-    return new MavenLauncher(projectRoot.getAbsolutePath(), SOURCE_TYPE.ALL_SOURCE);
+    return new MavenLauncher(projectRoot.getAbsolutePath(), sourceType);
   }
 
   static private Launcher createAntLauncher(File projectRoot) {

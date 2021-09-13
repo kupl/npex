@@ -28,7 +28,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.path.CtRole;
 import spoon.reflect.visitor.filter.AbstractFilter;
 
-public class UsedAsArgument extends Context {
+public class UsedAsArgument implements Context {
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {
     return invo.getParent(new ArgumentFilter()) != null;
   }

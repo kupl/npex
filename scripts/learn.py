@@ -1,8 +1,10 @@
 #!/usr/bin/python3.8
 from re import I
+from scipy.sparse import construct
 import sklearn  #type: ignore
 import os
 from functools import partial
+from collections import defaultdict
 
 import pickle
 import glob
@@ -13,6 +15,7 @@ import json
 import gc
 import time
 import xml.etree.ElementTree as ET
+
 from multiprocessing import Pool
 
 # For optimization
@@ -27,6 +30,8 @@ def multiprocess(f, args, n_cpus):
 
 
 class Model:
+    null_classifier_wcallee: RandomForestClassifier
+    null_classifier_wocallee: RandomForestClassifier
     classifiers: Dict[InvocationKey, RandomForestClassifier]
     labels: Dict[InvocationKey, List[str]]
 
@@ -48,23 +53,44 @@ class Model:
         print(f"{time.time() - _time} elapsed to deserialize to {path}")
         return ret
 
+def construct_training_data(db, is_data_for_null_classifier):
+    models = [h.model for h in db.handles if h.model.null_value_kind != "DONT_LEARN"]
+    
+    # Data cleansing: exclude non-void SKIP models
+    models = [m for m in models if not (m.invocation_key.return_type != 'void' and m.null_value == 'NPEX_SKIP_VALUE')]
 
-def construct_training_data(db):
-    data = dict()
-    for h in db.handles:
-        if h.model.invocation_key:
-            value, contexts = h.model.null_value, h.model.contexts
-            d_key = data.setdefault(h.model.invocation_key.abstract(), dict())
-            d_key.setdefault(value, []).append(contexts)
-    return data
+    if is_data_for_null_classifier:
+        data = defaultdict(lambda: defaultdict(list))
+
+        # Filter out models with non-object type values 
+        object_types = ['java.lang.String', 'java.lang.Object', 'java.util.Collection', 'java.lang.Class', 'OTHERS']
+        models = [m for m in models if m.invocation_key.return_type in object_types]
+
+        for m in models:
+            category ='wcallee' if m.invocation_key.callee_defined else 'wocallee'
+            data[category]['X'].append(m.contexts)
+            data[category]['Y'].append(0 if m.null_value == "null" else 1)
+        return data
+    
+    else:
+        data = defaultdict(lambda: defaultdict(list))
+
+        # Filter out models with null value
+        models = [m for m in models if m.null_value != 'null']
+
+        for m in models:
+            value, contexts = m.null_value, m.contexts
+            data[m.invocation_key.abstract()][value].append(contexts)
+        return data
 
 
 def train_classifiers(db, model_output_dir, classifier_out_path, keys=set()):
     model = Model()
     args = []
-    training_data = construct_training_data(db)
+
+    ### Train non-null classifiers
+    training_data = construct_training_data(db, is_data_for_null_classifier=False)
     if len(keys) > 0:
-        old_length = len(training_data)
         training_data = { key: training_data[key] for key in training_data.keys() if key in keys }
 
     for key, d in training_data.items():
@@ -83,6 +109,16 @@ def train_classifiers(db, model_output_dir, classifier_out_path, keys=set()):
     for key, classifier, labels in results:
         model.classifiers[key], model.labels[key] = classifier, labels
 
+
+    ### Train null classifiers
+    datasets = construct_training_data(db, is_data_for_null_classifier=True)
+    cls_wcallee, cls_wocallee = RandomForestClassifier(), RandomForestClassifier()
+    cls_wcallee.fit(datasets['wcallee']['X'], datasets['wcallee']['Y'])
+    cls_wocallee.fit(datasets['wocallee']['X'], datasets['wocallee']['Y'])
+    model.null_classifier_wcallee = cls_wcallee
+    model.null_classifier_wocallee = cls_wocallee
+
+    ### Serialize classifiers
     model.serialize(classifier_out_path)
 
 
@@ -94,14 +130,6 @@ def train_classifier(arg):
     clf = RandomForestClassifier()
     clf.fit(X, Y)
 
-    # model_name = f'{key.method_name}_{key.actuals_length}_{key.null_pos}'
-
-    # pickle learned classifer
-    # if model_output_dir != None:
-    #     model_classifier = f'{model_output_dir}/{model_name}.classifier'
-    #     model_file = open(model_classifier, 'wb')
-    #     pickle.dump(clf, model_file, protocol=5)
-    # print(f'{model_name}: {clf.score(X, Y)}, # data: {len(Y)}')
     return (key, clf, list(labeldict.keys()))
 
 
@@ -121,7 +149,6 @@ def generate_answer_sheet(project_dir, model_path, outpath):
     invo_contexts = JSONData.read_json_from_file(f'{project_dir}/invo-ctx.npex.json')
     inputs = []
     answers = []
-    print(model.classifiers.keys())
     for entry in invo_contexts:
         for key_contexts in entry['keycons']:
             key, contexts = InvocationKey.from_dict(key_contexts['key']), [ 1 if v else 0 for v in key_contexts['contexts'].values()]
@@ -151,6 +178,7 @@ def generate_answer_sheet(project_dir, model_path, outpath):
 
     # Final output: (site * pos * key * (value -> prob)) list
     for (entry, key_contexts, key, contexts, classifier) in inputs:
+        ### Non-null classifier prediction
         abs_src_path = entry['site']['source_path']
         rel_src_path = os.path.relpath(abs_src_path, start=project_dir)
         d_site = {
@@ -166,6 +194,18 @@ def generate_answer_sheet(project_dir, model_path, outpath):
                    for (idx, prob) in enumerate(outputs[classifier][str(contexts)])}
                  
         d['proba'] = proba
+
+
+        ### Null classifier prediction
+        clf = model.null_classifier_wcallee if key.callee_defined else model.null_classifier_wocallee
+        proba = clf.predict_proba([contexts])[0]
+        labeled_proba = {
+            'null': proba[0],
+            'nonnull': proba[1]
+        }
+
+        d['null_proba'] = labeled_proba
+
         answers.append(d)
 
     print(f"time to predict: {time_to_predict}")
@@ -174,67 +214,4 @@ def generate_answer_sheet(project_dir, model_path, outpath):
     with open(outpath, 'w') as f:
         f.write(json.dumps(answers, indent=4))
 
-
-################## Target-project-aware DB construction ###################
-def extract_artifact_name(dir):
-  if os.path.exists(pom := f'{dir}/pom.xml'):
-    tree = ET.parse(pom)
-    group = tree.findtext('{*}groupId') # asterisk here resolves namespace issues
-    id = tree.findtext('{*}artifactId')
-    return f'{group}.{id}' if group != None else id
-  elif os.path.exists(artifact_name_file:= f'{dir}/.artifact-id'):
-    with open(artifact_name_file, 'r') as f:
-      id = (f.readlines()[0]).strip()
-      return id
-
-def get_project_root(dir):
-    if os.path.exists(f'{dir}/pom.xml'):
-        return dir
-    elif os.path.exists(f'{dir}/.artifact-id'):
-        return f'{dir}/source'
-    else:
-        assert(False)
-
-
-
-# learning DB for target project t = U - {d | d \in U whose artifact_id = T's one } + t,
-# where U = directories in learning_benchmarks_dir whose null handles are extracted
-def construct_learning_database_for_target_project(entire_benchmarks_directories, target_project_dir, db_outfile=None):
-    print(f'Constructing learning DB for {target_project_dir}')
-    if not os.path.exists(f'{get_project_root(target_project_dir)}/handles.npex.json'):
-        print(f'Could not find handle for {target_project_dir}')
-        return None
-
-    db_outfile = f'{get_project_root(target_project_dir)}/db.npex' if db_outfile  == None else db_outfile
-    U = set([dir for dir in entire_benchmarks_directories if os.path.exists(f'{dir}/handles.npex.json')])
-    artifact_id = extract_artifact_name(target_project_dir)
-    same_project = set([d for d in U if extract_artifact_name(d) == artifact_id])
-    same_project_removed = list(U - same_project)
-    handles_existing_projects = [d for d in same_project_removed if os.path.exists(f'{get_project_root(target_project_dir)}/handles.npex.json')]
-    handles_existing_projects.append(target_project_dir)
-    db = DB(handles=[])
-    for dir in handles_existing_projects:
-        db += DB.create_from_handles(f'{get_project_root(dir)}/handles.npex.json')
-    db.serialize(db_outfile)
-    db.serialize(f'{db_outfile}.json', json=True)
-
-def construct_learning_database_for_entire_evaluation_set(crawled_benchmarks_dir, evaluation_benchmarks_dir, ncpus):
-    evaluation_benchmarks = [dir for dir in glob.glob(f'{evaluation_benchmarks_dir}/*') if os.path.exists(f'{get_project_root(dir)}/handles.npex.json')]
-    entire_benchmarks_directories = []
-    entire_benchmarks_directories.extend(glob.glob(f'{crawled_benchmarks_dir}/*'))
-    entire_benchmarks_directories.extend(glob.glob(f'{evaluation_benchmarks_dir}/*'))
-    print(evaluation_benchmarks)
-    with Pool(processes=ncpus) as pool:
-        job = partial(construct_learning_database_for_target_project, entire_benchmarks_directories)
-        pool.map(job, evaluation_benchmarks)
-
-def train_all(evaluation_benchmarks_dir, models_output_dir):
-    for bench in glob.glob(f'{evaluation_benchmarks_dir}/*'):
-        bug_id = os.path.basename(bench)
-        db, model_dir = DB.deserialize(f'{bench}/db.npex'), f'{models_output_dir}/{bug_id}'
-        os.makedirs(model_dir)
-        classifier_path = f'{models_output_dir}/{bug_id}.classifier'
-        print(f'Learning model for {bug_id}')
-        train_classifiers(db, model_dir, classifier_path)
-
-    
+    return answers

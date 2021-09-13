@@ -7,7 +7,7 @@ import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.visitor.filter.TypeFilter;
 
-public class SinkExprIsExceptionArgument extends Context {
+public class SinkExprIsExceptionArgument implements Context {
   static Logger logger = LoggerFactory.getLogger(SinkExprIsExceptionArgument.class);
 
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {

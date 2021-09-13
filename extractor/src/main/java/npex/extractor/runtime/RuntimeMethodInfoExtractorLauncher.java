@@ -21,26 +21,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package npex.synthesizer;
+package npex.extractor.runtime;
 
 import java.io.File;
+import java.io.IOException;
 
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import npex.common.NPEXException;
+import npex.common.NPEXLauncher;
 
-public class TestSingleProject {
-  final static protected Logger logger = LoggerFactory.getLogger(TestSingleProject.class);
+public class RuntimeMethodInfoExtractorLauncher extends NPEXLauncher {
+  public RuntimeMethodInfoExtractorLauncher(File projectRoot, boolean loadFromCache, String[] classpath, String resultsPath)
+      throws IOException {
+    super(projectRoot, loadFromCache, classpath);
+    spoonLauncher.addProcessor(new RuntimeMethodInfoProcessor(resultsPath));
+  } 
 
-  @Test
-  public void test() {
-    String projectID = "Lang-33";
-    // String NPEXDataPath = "/media/4tb/npex/NPEX_DATA";
-    String NPEXDataPath = "/media/4tb/npex/originals/benchmarks-commits/benchmarks-defects4j/";
-    String projectPath = String.format("%s/%s-buggy/", NPEXDataPath, projectID);
-    String npePath = String.format("%s/npe.json", projectPath);
-
-    SynthesizerLauncher launcher = new SynthesizerLauncher(new File(projectPath), new File(npePath));
-    launcher.run();
+  public void run() throws NPEXException {
+    spoonLauncher.process();
   }
 }

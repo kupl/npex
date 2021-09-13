@@ -5,6 +5,7 @@ from dacite import from_dict as _from_dict
 import dataclasses
 import pprint
 import pickle
+import os
 import json
 from re import finditer
 
@@ -41,14 +42,20 @@ class JSONData:
         return dataclasses.asdict(self)
 
 @dataclass(frozen=True)
+class MethodSignature(JSONData):
+    method_name: str
+    return_type: str
+    null_pos: int
+
+@dataclass(frozen=True)
 class InvocationKey(JSONData):
     method_name: str
     null_pos: int
     actuals_length: int
     return_type: str
-    raw_return_type: str
     invo_kind: str
     callee_defined: bool
+    method_signature: MethodSignature
 
     def matches_up_to_sub_camel_case(self, key):
         if self.null_pos != key.null_pos or self.actuals_length != key.actuals_length or self.return_type != key.return_type or self.callee_defined != key.callee_defined:
@@ -67,6 +74,7 @@ class InvocationKey(JSONData):
         null_pos_is_base = self.null_pos == -1
         return AbstractKey(null_pos_is_base, self.return_type, self.invo_kind, self.callee_defined)
 
+# A classifier identifes abstract keys only
 @dataclass(frozen=True)
 class AbstractKey(JSONData):
     nullpos_is_base : bool # is null_pos base?
@@ -78,28 +86,37 @@ class AbstractKey(JSONData):
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
     null_value: Optional[str]
-    sink_body: str
+    null_value_kind: str
+    raw: Optional[str]
+    raw_type: Optional[str]
+    has_common_access: bool
+    sink_body: Optional[str]
     contexts: List[int]
 
     @classmethod
     def from_dict2(klass, d):
-        v = d['null_value']
-        exprs = v['exprs']
-        if v['kind'] == 'PLAIN':
-            d['null_value'] = exprs[0]
+        nvd = d['null_value']
+        exprs = nvd['exprs']
+        if nvd['kind'] == 'BINARY':
+            opkind = exprs[0]
+            # sorting the exprs here is for normalization purpose: e.g.) EQ, x, y == EQ, y, x
+            null_value = ', '.join([opkind] + sorted(exprs[1:]))
         else:
-            kind = exprs[0]
-            v['exprs'] = [kind] + sorted(exprs[1:])
-            d['null_value'] = ', '.join(v['exprs'])
+            null_value = exprs[0]
+
+        d['null_value'] = null_value
+        d['null_value_kind'] = nvd['kind']
+        d['raw'] = nvd['raw']
+        d['raw_type'] = nvd['raw_type']
+        d['has_common_access'] = nvd['has_common_access']
         return klass.from_dict(d)
+
 
     @classmethod
     def from_dict(klass, d):
         invocation_key = InvocationKey.from_dict(d['invocation_key'])
-        null_value = d['null_value']
-        sink_body = d['sink_body']
         contexts = [ 1 if v else 0 for v in d['contexts'].values()]
-        return NullModel(invocation_key, null_value, sink_body, contexts)
+        return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['raw_type'], d['has_common_access'], d['sink_body'], contexts)
 
 
 @dataclass
@@ -108,6 +125,10 @@ class NullHandle(JSONData):
     lineno: int
     handle: str
     model: NullModel
+
+    def __str__(self):
+        return json.dumps(self.asdict(), indent=4)
+
 
 class DB:
     handles: List[NullHandle]
@@ -125,7 +146,6 @@ class DB:
                 handle = NullHandle(h['source_path'], h['lineno'], h['handle'],
                                     model)
                 handles.append(handle)
-
         return DB(handles)
 
     def __init__(self, handles):
@@ -150,5 +170,10 @@ class DB:
 
     @classmethod
     def deserialize(cls, path):
-        with open(path, 'rb') as f:
-            return pickle.load(f)
+        try:
+            with open(path, 'rb') as f:
+                return pickle.load(f)
+        except AttributeError:
+           print(f'{path}: Could not deserialize DB, check its version!') 
+           os.remove(path)
+           return DB(handles=[])

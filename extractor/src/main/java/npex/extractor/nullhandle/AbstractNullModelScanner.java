@@ -29,6 +29,7 @@ import java.util.List;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
+import spoon.reflect.declaration.CtElement;
 import spoon.reflect.factory.CoreFactory;
 import spoon.reflect.visitor.EarlyTerminatingScanner;
 import spoon.support.DefaultCoreFactory;
@@ -43,9 +44,13 @@ public abstract class AbstractNullModelScanner extends EarlyTerminatingScanner<L
     setResult(models);
   }
 
-  protected boolean isTargetInvocation(CtAbstractInvocation invo) {
-    boolean result = (invo instanceof CtInvocation vInvo && nullExp.equals(vInvo.getTarget()))
-        || invo.getArguments().contains(nullExp);
-    return result;
+
+  protected boolean isTargetInvocation(CtElement el) {
+    if (el instanceof CtAbstractInvocation invo) {
+      boolean result = (invo instanceof CtInvocation vInvo && nullExp.equals(vInvo.getTarget()))
+          || invo.getArguments().contains(nullExp);
+      return result;
+    }
+    return false;
   }
 }

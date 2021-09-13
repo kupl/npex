@@ -28,6 +28,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -35,15 +37,16 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.NPEXException;
 import npex.extractor.nullhandle.AbstractNullHandle;
 import npex.extractor.nullhandle.NullHandleFactory;
 import spoon.processing.AbstractProcessor;
 import spoon.reflect.code.CtCodeElement;
-import npex.common.NPEXException;
+import spoon.reflect.declaration.CtPackage;
 
 public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
   static Logger logger = LoggerFactory.getLogger(NullHandleProcessor.class);
-  final private List<AbstractNullHandle> handles = new ArrayList<>();
+  final private List<AbstractNullHandle> handles = Collections.synchronizedList(new LinkedList<>());
   final private File resultsOut;
 
   public NullHandleProcessor(String resultsPath) {
@@ -56,13 +59,22 @@ public class NullHandleProcessor extends AbstractProcessor<CtCodeElement> {
   }
 
   @Override
+  public boolean isToBeProcessed(CtCodeElement element) {
+    return !element.getParent(CtPackage.class).getQualifiedName().startsWith("java.");
+  }
+
+  @Override
   public void process(CtCodeElement element) {
     logger.info("Processing element whose type is {}", element.getClass().getSimpleName());
-    AbstractNullHandle handle = NullHandleFactory.createNullHandle(element);
-    if (handle != null) {
-      logger.info("-- Extracting handle succeeds: {}", element);
-      handles.add(handle);
-      return;
+    try {
+      AbstractNullHandle handle = NullHandleFactory.createNullHandle(element);
+      if (handle != null) {
+        logger.info("-- Extracting handle succeeds: {}", element);
+        handles.add(handle);
+        return;
+      }
+    } catch (Exception e) {
+      logger.error("-- Extracting handle fails: {}", element);
     }
   }
 

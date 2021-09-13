@@ -26,9 +26,12 @@ package npex.synthesizer.strategy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import npex.common.utils.FactoryUtils;
+import npex.common.utils.TypeUtil;
 import npex.synthesizer.initializer.DefaultValueTable;
+import npex.synthesizer.initializer.ObjectInitializer;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtReturn;
@@ -65,18 +68,21 @@ public class SkipReturnStrategy extends AbstractSkipStrategy {
 
   @Override
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
-    CtTypeReference retTyp = nullExp.getParent(CtConstructor.class) != null ? FactoryUtils.VOID_TYPE
+    CtTypeReference retTyp = nullExp.getParent(CtConstructor.class) != null ? TypeUtil.VOID
         : nullExp.getParent(CtMethod.class).getType();
 
     // In case of void method, we just insert 'return;'
-    if (retTyp.getSimpleName().equals("void")) {
+    if (retTyp.equals(TypeUtil.VOID)) {
       CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
       return (Collections.singletonList(retStmt));
     }
 
+        List<CtExpression> values = ObjectInitializer.enumerate(retTyp).collect(Collectors.toList());
+    values.add(FactoryUtils.createNullLiteral());
+    logger.info("retTyp: {}, Values: {}", retTyp, values);
     List<CtStatement> retStmts = new ArrayList<>();
-    for (CtLiteral l : (List<CtLiteral>) DefaultValueTable.getDefaultValues(retTyp)) {
-      CtReturn retStmt = factory.createReturn().setReturnedExpression(l);
+    for (CtExpression e : values) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(e);
       retStmts.add(retStmt);
     }
     return retStmts;

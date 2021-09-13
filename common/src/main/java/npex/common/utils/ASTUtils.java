@@ -136,6 +136,13 @@ public class ASTUtils {
     return bo.getRightHandOperand()instanceof CtLiteral lit && lit.toString().equals("null");
   }
 
+  /**
+   * Find a null pointer in binary operator if exists.
+   */
+  public static CtExpression findNullPointer(CtBinaryOperator bo) {
+    return TypeUtil.isNullLiteral(bo.getRightHandOperand()) ? bo.getLeftHandOperand() : null;
+  }
+
   public static boolean isChildOf(CtElement el, CtElement root) {
     return !root.filterChildren(new EqualsFilter(el)).list().isEmpty();
   }

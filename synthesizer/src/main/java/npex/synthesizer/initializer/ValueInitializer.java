@@ -39,8 +39,10 @@ import spoon.reflect.code.CtTargetedExpression;
 import spoon.reflect.declaration.CtField;
 import spoon.reflect.declaration.CtTypedElement;
 import spoon.reflect.factory.TypeFactory;
+import spoon.reflect.reference.CtActualTypeContainer;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
+import java.util.Collections;
 
 @SuppressWarnings("rawtypes")
 public abstract class ValueInitializer<T extends CtTypedElement> {
@@ -54,9 +56,23 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
   protected abstract CtExpression convertToCtExpression(T typedElement);
 
   public List<CtExpression> getTypeCompatibleExpressions(CtExpression expr, CtTypeReference typ) {
-    Predicate<T> filter = ty -> {
+    if (typ == null) {
+      return Collections.emptyList();
+    }
+
+    /* We remove the type arguments in a generic type because it disturbs subtpye checking.
+    Simply ignore them and leave it to compiler */
+    final CtTypeReference _typ;
+    if (typ instanceof CtActualTypeContainer container) {
+      _typ = typ.clone();
+      _typ.setActualTypeArguments(new ArrayList<>());
+    } else {
+      _typ = typ;
+    }
+
+    Predicate<T> filter = cand -> {
       try {
-        return ty.getType().toString().endsWith("<>") || ty.getType().isSubtypeOf(typ);
+        return cand.getType().toString().endsWith("<>") || cand.getType().isSubtypeOf(_typ);
       } catch (Exception e) {
         return false;
       }

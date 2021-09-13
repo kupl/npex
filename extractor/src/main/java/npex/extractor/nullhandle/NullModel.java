@@ -23,6 +23,7 @@
  */
 package npex.extractor.nullhandle;
 
+import java.util.Collections;
 import java.util.Map;
 
 import org.json.JSONObject;
@@ -30,7 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.NPEXException;
-import npex.extractor.context.ContextExtractor;
 import npex.extractor.invocation.InvocationKey;
 import spoon.reflect.code.CtAbstractInvocation;
 import spoon.reflect.code.CtConstructorCall;
@@ -56,20 +56,31 @@ public class NullModel {
     sinkBody.accept(scanner);
     this.invo = scanner.getResult();
     this.invoKey = invo != null ? InvocationKey.createKey(invo, nullExp) : null;
-    this.contexts = invoKey != null ? ContextExtractor.extract(invo, invoKey.nullPos) : null;
+    this.contexts = invoKey != null ? invoKey.extract() : null;
     this.nullValue = nullValue;
   }
 
   public JSONObject toJSON() throws NPEXException {
+    if (nullValue != null && nullValue.isNotToLearn()) {
+      var obj = new JSONObject();
+      obj.put("sink_body", JSONObject.NULL);
+      obj.put("null_value", nullValue.toJSON());
+      obj.put("invocation_key", JSONObject.NULL);
+      obj.put("contexts", new JSONObject(Collections.EMPTY_MAP));
+      return obj;
+    }
+
     if (invoKey == null) {
-      throw new NPEXException(
-          String.format("Could not serialize null model at %s: invocation key is NULL", nullExp.getPosition()));
+      throw new NPEXException(nullExp, "Could not serialize null model: invocation key is NULL");
+    }
+
+    if (nullValue == null) {
+      throw new NPEXException(nullExp, "Could not serialize null model: null value is NULL");
     }
 
     var obj = new JSONObject();
     obj.put("sink_body", sinkBody.toString());
     obj.put("null_value", nullValue.toJSON());
-    obj.put("actual_null_value", nullValue.getRawString());
     obj.put("invocation_key", invoKey.toJSON());
     obj.put("contexts", new JSONObject(contexts));
     return obj;

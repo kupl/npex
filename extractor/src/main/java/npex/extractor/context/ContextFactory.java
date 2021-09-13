@@ -39,20 +39,22 @@ public class ContextFactory {
     contexts.add(new LHSIsField());
     contexts.add(new LHSIsPrivate());
     contexts.add(new LHSIsPublic());
+    contexts.add(new LHSIsArray());
+
     contexts.add(new IsField());
     contexts.add(new SinkExprIsAssigned());
     contexts.add(new SinkExprIsExceptionArgument());
-    contexts.add(new ReturnTypeHasDefault());
-    contexts.add(new CallerMethodChecksNull());
+    // contexts.add(new ReturnTypeHasDefault());
+    // contexts.add(new CallerMethodChecksNull());
     contexts.add(new CallerMethodIsConstructor());
     contexts.add(new CallerMethodIsPrivate());
     contexts.add(new CallerMethodIsPublic());
     contexts.add(new CallerMethodIsStatic());
-    contexts.add(new CallerMethodReturnsNull());
+    // contexts.add(new CallerMethodReturnsNull());
     contexts.add(new VariableIsObjectType());
     contexts.add(new VariableIsFinal());
-    contexts.add(new InvocationIsIsolated());
-    contexts.add(new InvocationIsBase());
+    // contexts.add(new InvocationIsIsolated());
+    // contexts.add(new InvocationIsBase());
     contexts.add(new InvocationIsConstructorArgument());
 
     contexts.addAll(NameContext.all);
@@ -61,7 +63,10 @@ public class ContextFactory {
     calleeContexts.add(new CalleeMethodReturnsLiteral());
     calleeContexts.add(new CalleeMethodThrows());
     calleeContexts.add(new CalleeMethodChecksNull());
-    calleeContexts.add(new CalleeMethodChecksNullForNullParameter());
+    // calleeContexts.add(new CalleeMethodChecksNullForNullParameter());
+    calleeContexts.add(new CalleeMethodReturnsNew());
+    calleeContexts.add(new CalleeMethodUsedAsBase());
+    calleeContexts.add(new CalleeMethodReturnsField());
   }
 
   public static List<Context> getAllContexts() {

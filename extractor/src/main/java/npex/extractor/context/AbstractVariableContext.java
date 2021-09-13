@@ -8,7 +8,7 @@ import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtVariableAccess;
 
-public abstract class AbstractVariableContext extends Context {
+public abstract class AbstractVariableContext implements Context {
   final static Logger logger = LoggerFactory.getLogger(AbstractVariableTypeContext.class);
 
   public Boolean extract(CtAbstractInvocation invo, int nullPos) {
