@@ -61,7 +61,7 @@ public class NullModel {
   }
 
   public JSONObject toJSON() throws NPEXException {
-    if (nullValue != null && nullValue.isNotToLearn()) {
+    if (nullValue != null) {
       var obj = new JSONObject();
       obj.put("sink_body", JSONObject.NULL);
       obj.put("null_value", nullValue.toJSON());

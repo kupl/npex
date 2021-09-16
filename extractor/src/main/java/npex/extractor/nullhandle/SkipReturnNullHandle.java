@@ -12,11 +12,12 @@ import spoon.reflect.code.CtReturn;
 import spoon.reflect.visitor.filter.TypeFilter;
 
 /**
- * This class is for collecting null constants. Null models collected with this pattern do not
- * used to learn null model classifiers.
+ * This class is for collecting null constants. Null models collected with this
+ * pattern do not used to learn null model classifiers.
  */
 public class SkipReturnNullHandle extends AbstractNullHandle<CtIf> {
 	CtExpression nullValueExpr;
+
 	public SkipReturnNullHandle(CtIf handle, CtBinaryOperator nullCond, CtExpression nullValueExpr) {
 		super(handle, nullCond);
 		this.nullValueExpr = nullValueExpr;
@@ -56,11 +57,12 @@ public class SkipReturnNullHandle extends AbstractNullHandle<CtIf> {
 		return null;
 	}
 
-	@Override
-	public void collectModels() throws NPEXException {
-		this.models = new ArrayList<>();
-		NullValue nullValue = NullValue.fromRawExpressionOnly(nullValueExpr);
-		this.models.add(new NullModel(nullExp, handle.getThenStatement(), nullValue));
-	}
+	// @Override
+	// public void collectModels() throws NPEXException {
+	// this.models = new ArrayList<>();
+	// NullValue nullValue = NullValue.fromRawExpressionOnly(nullValueExpr);
+	// this.models.add(new NullModel(nullExp, handle.getThenStatement(),
+	// nullValue));
+	// }
 
- }
+}

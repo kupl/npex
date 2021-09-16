@@ -46,10 +46,6 @@ public class NullHandleFactory {
       handle = createTernaryNullHandle(ternary);
     } else if (element instanceof CtIf ifStmt) {
       handle = createSkipNullHandle(ifStmt);
-      // This handle is for constant frequency investigation.
-      if (handle == null) {
-        return SkipReturnNullHandle.collect(ifStmt);
-      }
     }
 
     if (handle == null) {

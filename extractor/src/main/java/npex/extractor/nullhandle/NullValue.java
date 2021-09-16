@@ -43,7 +43,7 @@ public class NullValue {
   static Logger logger = LoggerFactory.getLogger(NullValue.class);
 
   public enum KIND {
-    PLAIN, BINARY, DONT_LEARN
+    PLAIN, BINARY
   }
 
   final private KIND kind;
@@ -101,12 +101,12 @@ public class NullValue {
   }
 
   /**
-   * Decide whether a raw expression for null value is commonly accessible from everywhere: 
-   *  1. any literals,
-   *  2. public static methods with no arguments and fields in public classes (classes under the java package), and 
-   *  3. variables * accessed from a null invocation (e.g., <code>p</code> and <code>q</code> in
-   * <code> p != null ? p.foo(q)</code>), but we do not consider this case here because it is already
-   * converted to the corresponding symbol
+   * Decide whether a raw expression for null value is commonly accessible from
+   * everywhere: 1. any literals, 2. public static methods with no arguments and
+   * fields in public classes (classes under the java package), and 3. variables *
+   * accessed from a null invocation (e.g., <code>p</code> and <code>q</code> in
+   * <code> p != null ? p.foo(q)</code>), but we do not consider this case here
+   * because it is already converted to the corresponding symbol
    */
   public boolean isCommonlyAccessible() {
     if (raw == null)
@@ -116,7 +116,8 @@ public class NullValue {
       return true;
     }
 
-    // '.class' does not has an actual field declaration so we explicitly handle that here
+    // '.class' does not has an actual field declaration so we explicitly handle
+    // that here
     if (raw.toString().endsWith(".class") && raw.toString().startsWith("java.")) {
       return true;
     }
@@ -140,15 +141,11 @@ public class NullValue {
         return false;
       }
     } catch (NullPointerException e) {
-      logger.error("Failed to decide whether {} at {} is commonly accessibile due to an NPE - {}!", raw, raw.getPosition(),
-          e.getMessage());
+      logger.error("Failed to decide whether {} at {} is commonly accessibile due to an NPE - {}!", raw,
+          raw.getPosition(), e.getMessage());
     }
     return false;
 
-  }
-
-  public boolean isNotToLearn() {
-    return kind.equals(kind.DONT_LEARN);
   }
 
   public static NullValue fromExpression(CtAbstractInvocation invo, CtExpression raw) {
@@ -190,11 +187,6 @@ public class NullValue {
       logger.error(e.getMessage());
       return null;
     }
-  }
-
-  public static NullValue fromRawExpressionOnly(CtExpression raw) {
-    String[] exprs = new String[] { raw.toString() };
-    return createDontLearn(exprs, raw, raw.getType(), null);
   }
 
   public static NullValue createSkip(CtAbstractInvocation invo) {
@@ -285,18 +277,16 @@ public class NullValue {
     };
 
     String converted = symbolize.apply(raw);
-    return raw.toString().equals(converted) ? "NPEXNonLiteral" : converted;   
+    return raw.toString().equals(converted) ? "NPEXNonLiteral" : converted;
   }
 
-  private static NullValue createPlain(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+  private static NullValue createPlain(String[] exprs, CtExpression raw, CtTypeReference type,
+      CtAbstractInvocation invo) {
     return new NullValue(KIND.PLAIN, exprs, raw, type, invo);
   }
 
-  private static NullValue createBinary(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+  private static NullValue createBinary(String[] exprs, CtExpression raw, CtTypeReference type,
+      CtAbstractInvocation invo) {
     return new NullValue(KIND.BINARY, exprs, raw, type, invo);
-  }
-
-  private static NullValue createDontLearn(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
-    return new NullValue(KIND.DONT_LEARN, exprs, raw, type, invo);
   }
 }

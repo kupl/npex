@@ -18,7 +18,7 @@ def camel_case_split(identifier):
     return [m.group(0) for m in matches]
 
 
-@dataclass
+@dataclass(frozen=True)
 class JSONData:
     @classmethod
     def from_dict(klass, d):
@@ -82,7 +82,7 @@ class AbstractKey(JSONData):
     invo_kind : str
     callee_defined: bool
 
-@dataclass
+@dataclass(frozen=True)
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
     null_value: Optional[str]
@@ -119,7 +119,7 @@ class NullModel(JSONData):
         return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['raw_type'], d['has_common_access'], d['sink_body'], contexts)
 
 
-@dataclass
+@dataclass(frozen=True)
 class NullHandle(JSONData):
     source_path: str
     lineno: int
