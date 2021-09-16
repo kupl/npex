@@ -35,6 +35,10 @@ public class NPEXException extends RuntimeException {
     super(msg);
   }
 
+  public NPEXException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
+
   public NPEXException(CtElement e, String msg) {
     super(String.format("%s-%s: %s", e != null ? e.getPosition() : SourcePosition.NOPOSITION, e, msg));
   }
