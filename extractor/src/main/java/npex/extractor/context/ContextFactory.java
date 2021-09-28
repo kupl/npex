@@ -29,15 +29,18 @@ import java.util.List;
 public class ContextFactory {
   private final static List<Context> contexts = new ArrayList<>();
   private final static List<Context> calleeContexts = new ArrayList<>();
-  static {
-    // AST context features
-    contexts.add(new CallerMethodIsPrivate());
-    contexts.add(new LHSIsArray());
-    contexts.add(new LHSIsField());
-    contexts.add(new LHSIsPublic());
 
+  static {
+    // 20 name features
     contexts.addAll(NameContext.all);
 
+    // 4 context features
+    contexts.add(new CallerMethodIsPrivate());
+    contexts.add(new LHSIsField());
+    contexts.add(new LHSIsPublic());
+    contexts.add(new LHSIsArray());
+
+    /* 7 method body features */
     calleeContexts.add(new CalleeMethodReturnsVoid());
     calleeContexts.add(new CalleeMethodReturnsLiteral());
     calleeContexts.add(new CalleeMethodThrows());
@@ -45,6 +48,7 @@ public class ContextFactory {
     calleeContexts.add(new CalleeMethodReturnsNew());
     calleeContexts.add(new CalleeMethodUsedAsBase());
     calleeContexts.add(new CalleeMethodReturnsField());
+
   }
 
   public static List<Context> getAllContexts() {
