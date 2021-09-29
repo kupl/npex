@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
@@ -34,25 +35,34 @@ import npex.common.filters.ClassOrInterfaceFilter;
 import spoon.reflect.declaration.CtElement;
 
 public class Misc {
-  public static File getSourceFile(CtElement element) {
-    return element.getFactory().CompilationUnit().getOrCreate(element.getParent(new ClassOrInterfaceFilter()))
-        .getFile();
-  }
+	public static File getSourceFile(CtElement element) {
+		return element.getFactory().CompilationUnit().getOrCreate(element.getParent(new ClassOrInterfaceFilter()))
+				.getFile();
+	}
 
-  public static void serialize(Object obj, String path) throws IOException {
-    FileOutputStream fos = new FileOutputStream(path);
-			ObjectOutputStream oos = new ObjectOutputStream(fos);
-			oos.writeObject(obj);
-			oos.close();
-			fos.close();
-  }
+	public static void serialize(Object obj, String path) throws IOException {
+		FileOutputStream fos = new FileOutputStream(path);
+		ObjectOutputStream oos = new ObjectOutputStream(fos);
+		oos.writeObject(obj);
+		oos.close();
+		fos.close();
+	}
 
 	public static Object deserialize(String path) throws ClassNotFoundException, IOException {
-			FileInputStream fis = new FileInputStream(path);
-			ObjectInputStream ois = new ObjectInputStream(fis);
-			Object obj = ois.readObject();
-			ois.close();
-			fis.close();
-			return obj;
-  }
+		FileInputStream fis = new FileInputStream(path);
+		ObjectInputStream ois = new ObjectInputStream(fis);
+		Object obj = ois.readObject();
+		ois.close();
+		fis.close();
+		return obj;
+	}
+
+	public static Object deserialize(InputStream is) throws ClassNotFoundException, IOException {
+		ObjectInputStream ois = new ObjectInputStream(is);
+		Object obj = ois.readObject();
+		ois.close();
+		is.close();
+		return obj;
+	}
+
 }

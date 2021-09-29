@@ -25,6 +25,7 @@ package npex.driver;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,17 +33,18 @@ import org.slf4j.LoggerFactory;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import npex.common.Configs;
 import npex.common.DefaultNPEXLauncher;
 import npex.common.NPEXLauncher;
 import npex.extractor.invocation.InvocationContextExtractorLauncher;
 import npex.extractor.nullhandle.NullHandleExtractorLauncher;
+import npex.extractor.runtime.RuntimeMethodInfo;
 import npex.extractor.runtime.RuntimeMethodInfoExtractorLauncher;
 import npex.synthesizer.SynthesizerLauncher;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.ArgSpec;
 import picocli.CommandLine.Model.CommandSpec;
-import spoon.MavenLauncher.SOURCE_TYPE;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Parameters;
@@ -50,7 +52,7 @@ import picocli.CommandLine.ParseResult;
 import picocli.CommandLine.Spec;
 
 @Command(name = "npex", subcommands = { BuildCommand.class, PatchCommand.class, HandleExtractorCommand.class,
-    InvocationExtractor.class, RuntimeMethodInfoExtractor.class, CommandLine.HelpCommand.class }, mixinStandardHelpOptions = true)
+    InvocationExtractor.class, CommandLine.HelpCommand.class }, mixinStandardHelpOptions = true)
 
 public class Main {
   final static Logger rootLogger = (Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
@@ -174,24 +176,6 @@ class InvocationExtractor extends SpoonCommand {
 
     NPEXLauncher launcher = new InvocationContextExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
         resultsPath, trace);
-    launcher.run();
-  }
-}
-
-@Command(name = "rt-method")
-class RuntimeMethodInfoExtractor extends SpoonCommand {
-  static final String defaultResultsName = "";
-  @Option(names = { "-r",
-      "--results" }, paramLabel = "<RESULTS_JSON>", defaultValue = defaultResultsName, description = "path for results JSON file where collected handles information to be stored (default:<PROJECT_ROOT>/${DEFAULT-VALUE})")
-  String resultsPath;
-
-  public void launch(ParseResult pr) throws IOException {
-    if (!pr.hasMatchedOption("--results")) {
-      spec.findOption("--results").setValue(new File(projectRoot, resultsPath).getAbsolutePath());
-    }
-
-    NPEXLauncher launcher = new RuntimeMethodInfoExtractorLauncher(projectRoot, loadSpoonModelFromCache, classpath,
-        resultsPath);
     launcher.run();
   }
 }
