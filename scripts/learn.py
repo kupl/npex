@@ -1,15 +1,15 @@
 #!/usr/bin/python3.8
 from re import I
 from scipy.sparse import construct
-import sklearn  #type: ignore
+import sklearn  # type: ignore
 import os
 from functools import partial
 from collections import defaultdict
 
 import pickle
 import glob
-from sklearn.ensemble import RandomForestClassifier  #type: ignore
-from data import InvocationKey, DB, JSONData
+from sklearn.ensemble import RandomForestClassifier  # type: ignore
+from data import InvocationKey, Context, DB, JSONData
 from typing import Dict, Tuple, List
 import json
 import gc
@@ -53,25 +53,26 @@ class Model:
         print(f"{time.time() - _time} elapsed to deserialize to {path}")
         return ret
 
+
 def construct_training_data(db, is_data_for_null_classifier):
-    models = [h.model for h in db.handles if h.model.null_value_kind != "DONT_LEARN"]
-    
     # Data cleansing: exclude non-void SKIP models
-    models = [m for m in models if not (m.invocation_key.return_type != 'void' and m.null_value == 'NPEX_SKIP_VALUE')]
+    models = [h.model for h in db.handles if not (
+        h.model.invocation_key.return_type != 'void' and h.model.null_value == 'NPEX_SKIP_VALUE')]
 
     if is_data_for_null_classifier:
         data = defaultdict(lambda: defaultdict(list))
 
-        # Filter out models with non-object type values 
-        object_types = ['java.lang.String', 'java.lang.Object', 'java.util.Collection', 'java.lang.Class', 'OTHERS']
+        # Filter out models with non-object type values
+        object_types = ['java.lang.String', 'java.lang.Object',
+                        'java.util.Collection', 'java.lang.Class', 'OTHERS']
         models = [m for m in models if m.invocation_key.return_type in object_types]
 
         for m in models:
-            category ='wcallee' if m.invocation_key.callee_defined else 'wocallee'
+            category = 'wcallee' if m.invocation_key.callee_defined else 'wocallee'
             data[category]['X'].append(m.contexts)
             data[category]['Y'].append(0 if m.null_value == "null" else 1)
         return data
-    
+
     else:
         data = defaultdict(lambda: defaultdict(list))
 
@@ -88,10 +89,12 @@ def train_classifiers(db, model_output_dir, classifier_out_path, keys=set()):
     model = Model()
     args = []
 
-    ### Train non-null classifiers
-    training_data = construct_training_data(db, is_data_for_null_classifier=False)
+    # Train non-null classifiers
+    training_data = construct_training_data(
+        db, is_data_for_null_classifier=False)
     if len(keys) > 0:
-        training_data = { key: training_data[key] for key in training_data.keys() if key in keys }
+        training_data = {key: training_data[key]
+                         for key in training_data.keys() if key in keys}
 
     for key, d in training_data.items():
         X, Y = [], []
@@ -102,15 +105,14 @@ def train_classifiers(db, model_output_dir, classifier_out_path, keys=set()):
 
         args.append([key, X, Y, model_output_dir])
 
-    #TODO: n_cpus from argument
+    # TODO: n_cpus from argument
     # results = multiprocess(train_classifier, args, n_cpus=40)
     results = [train_classifier(arg) for arg in args]
 
     for key, classifier, labels in results:
         model.classifiers[key], model.labels[key] = classifier, labels
 
-
-    ### Train null classifiers
+    # Train null classifiers
     datasets = construct_training_data(db, is_data_for_null_classifier=True)
     cls_wcallee, cls_wocallee = RandomForestClassifier(), RandomForestClassifier()
     cls_wcallee.fit(datasets['wcallee']['X'], datasets['wcallee']['Y'])
@@ -118,7 +120,7 @@ def train_classifiers(db, model_output_dir, classifier_out_path, keys=set()):
     model.null_classifier_wcallee = cls_wcallee
     model.null_classifier_wocallee = cls_wocallee
 
-    ### Serialize classifiers
+    # Serialize classifiers
     model.serialize(classifier_out_path)
 
 
@@ -140,21 +142,25 @@ def model_keys_match_up_to_sub_camel_case(arg):
     else:
         return key, [model_key for model_key in model_keys if key.matches_up_to_sub_camel_case(model_key)]
 
+
 def generate_answer_sheet(project_dir, model_path, outpath):
     # model : AbstractKey -> classifier
     # invo_contexts : InvocationKey -> Contexts list
     # inputs: (entry, key_contexts, key, contexts, classifier) list
 
     model = Model.deserialize(model_path)
-    invo_contexts = JSONData.read_json_from_file(f'{project_dir}/invo-ctx.npex.json')
+    invo_contexts = JSONData.read_json_from_file(
+        f'{project_dir}/invo-ctx.npex.json')
     inputs = []
     answers = []
     for entry in invo_contexts:
         for key_contexts in entry['keycons']:
-            key, contexts = InvocationKey.from_dict(key_contexts['key']), [ 1 if v else 0 for v in key_contexts['contexts'].values()]
-           
+            key, contexts = InvocationKey.from_dict(
+                key_contexts['key']), Context.to_feature_vector(key_contexts['contexts'])
+
             if key.abstract() in model.classifiers:
-                inputs.append((entry, key_contexts, key, contexts, model.classifiers[key.abstract()]))
+                inputs.append((entry, key_contexts, key, contexts,
+                               model.classifiers[key.abstract()]))
 
     # For optimization, collect contexts to predict for each classifier
     # to_computes : classifier -> context list
@@ -178,7 +184,7 @@ def generate_answer_sheet(project_dir, model_path, outpath):
 
     # Final output: (site * pos * key * (value -> prob)) list
     for (entry, key_contexts, key, contexts, classifier) in inputs:
-        ### Non-null classifier prediction
+        # Non-null classifier prediction
         abs_src_path = entry['site']['source_path']
         rel_src_path = os.path.relpath(abs_src_path, start=project_dir)
         d_site = {
@@ -187,16 +193,16 @@ def generate_answer_sheet(project_dir, model_path, outpath):
             'deref_field': entry['site']['deref_field']
         }
 
-        d = {'site': d_site, 'null_pos': key.null_pos, 'key': key_contexts['key']}
+        d = {'site': d_site, 'null_pos': key.null_pos,
+             'key': key_contexts['key']}
 
         # proba : Label -> float
         proba = {model.labels[key.abstract()][idx]: prob
-                   for (idx, prob) in enumerate(outputs[classifier][str(contexts)])}
-                 
+                 for (idx, prob) in enumerate(outputs[classifier][str(contexts)])}
+
         d['proba'] = proba
 
-
-        ### Null classifier prediction
+        # Null classifier prediction
         clf = model.null_classifier_wcallee if key.callee_defined else model.null_classifier_wocallee
         proba = clf.predict_proba([contexts])[0]
         labeled_proba = {

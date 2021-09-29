@@ -41,11 +41,13 @@ class JSONData:
     def asdict(self):
         return dataclasses.asdict(self)
 
+
 @dataclass(frozen=True)
 class MethodSignature(JSONData):
     method_name: str
     return_type: str
     null_pos: int
+
 
 @dataclass(frozen=True)
 class InvocationKey(JSONData):
@@ -75,12 +77,24 @@ class InvocationKey(JSONData):
         return AbstractKey(null_pos_is_base, self.return_type, self.invo_kind, self.callee_defined)
 
 # A classifier identifes abstract keys only
+
+
+class Context:
+    ordered_context_names = ["StringInMethodName", "LHSIsArray", "CalleeMethodUsedAsBase", "NameInMethodName", "setInMethodName", "addInMethodName", "ClassInMethodName", "<init>InMethodName", "getInMethodName", "CalleeMethodReturnsNew", "equalsInMethodName", "CalleeMethodReturnsLiteral", "hashInMethodName", "ValueInMethodName", "toInMethodName",
+                             "CalleeMethodReturnsVoid", "CalleeMethodThrows", "CallerMethodIsPrivate", "LHSIsField", "stopInMethodName", "CalleeMethodReturnsField", "EmptyInMethodName", "LHSIsPublic", "isInMethodName", "writeInMethodName", "cloneInMethodName", "CodeInMethodName", "closeInMethodName", "CalleeMethodChecksNull", "containsInMethodName", "removeInMethodName"]
+
+    @classmethod
+    def to_feature_vector(cls, context_map):
+        return [1 if context_map[k] else 0 for k in cls.ordered_context_names if k in context_map.keys()]
+
+
 @dataclass(frozen=True)
 class AbstractKey(JSONData):
-    nullpos_is_base : bool # is null_pos base?
-    return_type : str
-    invo_kind : str
+    nullpos_is_base: bool  # is null_pos base?
+    return_type: str
+    invo_kind: str
     callee_defined: bool
+
 
 @dataclass
 class NullModel(JSONData):
@@ -89,7 +103,6 @@ class NullModel(JSONData):
     null_value_kind: str
     raw: Optional[str]
     raw_type: Optional[str]
-    has_common_access: bool
     sink_body: Optional[str]
     contexts: List[int]
 
@@ -108,15 +121,12 @@ class NullModel(JSONData):
         d['null_value_kind'] = nvd['kind']
         d['raw'] = nvd['raw']
         d['raw_type'] = nvd['raw_type']
-        d['has_common_access'] = nvd['has_common_access']
         return klass.from_dict(d)
-
 
     @classmethod
     def from_dict(klass, d):
         invocation_key = InvocationKey.from_dict(d['invocation_key'])
-        contexts = [ 1 if v else 0 for v in d['contexts'].values()]
-        return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['raw_type'], d['has_common_access'], d['sink_body'], contexts)
+        return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['raw_type'], d['sink_body'], Context.to_feature_vector(d['contexts']))
 
 
 @dataclass
@@ -174,6 +184,6 @@ class DB:
             with open(path, 'rb') as f:
                 return pickle.load(f)
         except AttributeError:
-           print(f'{path}: Could not deserialize DB, check its version!') 
-           os.remove(path)
-           return DB(handles=[])
+            print(f'{path}: Could not deserialize DB, check its version!')
+            os.remove(path)
+            return DB(handles=[])
