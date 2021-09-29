@@ -81,7 +81,6 @@ public class NullValue {
     obj.put("exprs", new JSONArray(exprs));
     obj.put("raw", raw == null ? JSONObject.NULL : (negated ? String.format("!(%s)", raw.toString()) : raw.toString()));
     obj.put("raw_type", type == null ? JSONObject.NULL : type.toString());
-    obj.put("has_common_access", isCommonlyAccessible());
     return obj;
   }
 
@@ -98,57 +97,6 @@ public class NullValue {
       logger.error("Could not negate null value: {}", toJSON().toString());
       return null;
     }
-  }
-
-  /**
-   * Decide whether a raw expression for null value is commonly accessible from everywhere: 
-   *  1. any literals,
-   *  2. public static methods with no arguments and fields in public classes (classes under the java package), and 
-   *  3. variables * accessed from a null invocation (e.g., <code>p</code> and <code>q</code> in
-   * <code> p != null ? p.foo(q)</code>), but we do not consider this case here because it is already
-   * converted to the corresponding symbol
-   */
-  public boolean isCommonlyAccessible() {
-    if (raw == null)
-      return false;
-
-    if (raw instanceof CtLiteral || raw instanceof CtUnaryOperator un && un.getOperand() instanceof CtLiteral) {
-      return true;
-    }
-
-    // '.class' does not has an actual field declaration so we explicitly handle that here
-    if (raw.toString().endsWith(".class") && raw.toString().startsWith("java.")) {
-      return true;
-    }
-
-    try {
-      if (raw instanceof CtAbstractInvocation invo && invo.getArguments().isEmpty()) {
-        CtExecutableReference ref = invo.getExecutable();
-        CtTypeReference declType = ref.getDeclaringType();
-        if (declType.getPackage().getQualifiedName().startsWith("java") && declType.getTypeDeclaration().isTopLevel()) {
-          return ref.getExecutableDeclaration()instanceof CtModifiable mod && mod.isPublic() && mod.isStatic();
-        }
-        return false;
-      }
-
-      if (raw instanceof CtFieldRead fr) {
-        CtTypeReference declType = fr.getVariable().getDeclaringType();
-        if (declType.getPackage().getQualifiedName().startsWith("java") && declType.getTypeDeclaration().isTopLevel()) {
-          CtField field = fr.getVariable().getDeclaration();
-          return field.isPublic() && field.isStatic();
-        }
-        return false;
-      }
-    } catch (NullPointerException e) {
-      logger.error("Failed to decide whether {} at {} is commonly accessibile due to an NPE - {}!", raw, raw.getPosition(),
-          e.getMessage());
-    }
-    return false;
-
-  }
-
-  public boolean isNotToLearn() {
-    return kind.equals(kind.DONT_LEARN);
   }
 
   public static NullValue fromExpression(CtAbstractInvocation invo, CtExpression raw) {
@@ -192,10 +140,6 @@ public class NullValue {
     }
   }
 
-  public static NullValue fromRawExpressionOnly(CtExpression raw) {
-    String[] exprs = new String[] { raw.toString() };
-    return createDontLearn(exprs, raw, raw.getType(), null);
-  }
 
   public static NullValue createSkip(CtAbstractInvocation invo) {
     return SKIP;
