@@ -54,10 +54,6 @@ public class NullValue {
   private boolean negated;
 
   private static final HashMap<CtExecutable, Boolean> builderPatternTable = new HashMap<>();
-  private static final List<String> emptyCollections = Arrays.asList(new String[] { "java.util.Collections.EMPTY_LIST",
-      "java.util.Collections.EMPTY_MAP", "java.util.Collections.EMPTY_SET" });
-  private static final List<String> defaultValues = Arrays
-      .asList(new String[] { "0", "0L", "0.0F", "false", "java.lang.Boolean.FALSE", "\"\"", "'\\u0000'" });
 
   private static final NullValue SKIP = createPlain(new String[] { "NPEX_SKIP_VALUE" }, null, null, null);
   private static final NullValue THIS = createPlain(new String[] { "$(-1)" }, null, null, null);
