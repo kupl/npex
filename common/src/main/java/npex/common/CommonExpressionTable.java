@@ -1,27 +1,31 @@
 package npex.common;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-import npex.common.helper.TypeHelper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import npex.common.utils.TypeUtil;
+import spoon.reflect.code.CtCodeSnippetExpression;
 import spoon.reflect.code.CtExpression;
+import spoon.reflect.factory.Factory;
 import spoon.reflect.reference.CtTypeReference;
 
 /**
  * This class contains a map from commonly accessible java types including primitives and those are defined under
- * the java packages (e.g., java.lang.Collections) to top-3 frequent constant values in the learning DB.
- * Former value has a high rank.
+ * the java packages (e.g., java.lang.Collections), to the top-3 frequent expressions in the learning DB.
  */
 public class CommonExpressionTable {
+	final static Logger logger = LoggerFactory.getLogger(CommonExpressionTable.class);
 
 	static private Map<CtTypeReference, List<String>> map = new HashMap<>();
 
 	static {
-		// constants for primitives
+		// primitives
 		map.put(TypeUtil.BYTE_PRIMITIVE, Arrays.asList(new String[] {"0"}));
 		map.put(TypeUtil.SHORT_PRIMITIVE, Arrays.asList(new String[] {"0"}));
 		map.put(TypeUtil.INTEGER_PRIMITIVE, Arrays.asList(new String[] {"0", "-1", "1"}));
@@ -31,26 +35,35 @@ public class CommonExpressionTable {
 		map.put(TypeUtil.BOOLEAN_PRIMITIVE, Arrays.asList(new String[] {"false", "true"}));
 		map.put(TypeUtil.CHAR_PRIMITIVE, Arrays.asList(new String[] {"'\u0000'", "'0'"}));
 
-		// constants for String
+		// String
 		map.put(TypeUtil.STRING, Arrays.asList(new String[] {"\"\"", "\"null\"", "\"NULL\""}));
 
-		// constants for Class
+		// BOOLEAN
+    map.put(TypeUtil.BOOLEAN, Arrays.asList(new String[] { "java.lang.Boolean.TRUE", "java.lang.Boolean.FALSE" }));
+
+		// Class
 		map.put(TypeUtil.CLASS, Arrays.asList(new String[] {"java.lang.Object.class"}));
 
-		// constants for Collection
-		map.put(TypeUtil.COLLECTION, Arrays.asList(new String[] {"java.util.Collections.emptyList()", "java.util.Collections.emptyMap()", "java.util.Collections.emptySet()"}));
+		// collcetions
+		map.put(TypeUtil.LIST, Arrays.asList(new String[] {"java.util.Collections.emptyList()"}));
+		map.put(TypeUtil.MAP, Arrays.asList(new String[] {"java.util.Collections.emptyMap()"}));
+		map.put(TypeUtil.SET, Arrays.asList(new String[] { "java.util.Collections.emptySet()" }));
 
-		// constants for Enumeration
+		// Enumeration
 		map.put(TypeUtil.ENUMERATION, Arrays.asList(new String[] { "java.util.Collections.emptyEnumeration()" }));
 	}
 
-	public static boolean isCommon(CtExpression e) {
-		CtTypeReference etyp = TypeHelper.getType(e);
-		Optional<CtTypeReference> matchedTyp = map.keySet().stream().filter(ty -> etyp.isSubtypeOf(ty)).findFirst();
-		if (matchedTyp.isPresent() && map.get(matchedTyp.get()).contains(e.toString())) {
-			return true;
-		}
-		return false;
-	}
+	public static List<CtExpression> find(CtTypeReference type) {
+		List<CtExpression> exprs = new ArrayList<>();
+		Factory factory = type.getFactory();
+		CtTypeReference key = map.keySet().stream().filter(k -> type.getTypeDeclaration() != null && type.isSubtypeOf(k)).findAny().orElse(type);
 
+		for (String s : map.getOrDefault(type, new ArrayList<String>())) {
+      CtCodeSnippetExpression e = factory.createCodeSnippetExpression(s);
+			e.setType(type);
+			exprs.add(e.compile());
+		}
+
+		return exprs;
+	}
 }

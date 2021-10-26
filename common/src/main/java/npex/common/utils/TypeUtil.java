@@ -33,6 +33,9 @@ public class TypeUtil {
   public static final CtTypeReference<java.lang.Object> OBJECT = f.OBJECT;
   
 	public static final CtTypeReference<java.util.Collection> COLLECTION = f.COLLECTION;
+	public static final CtTypeReference<java.util.List> LIST = f.LIST;
+	public static final CtTypeReference<java.util.Map> MAP = f.MAP;
+	public static final CtTypeReference<java.util.Set> SET = f.SET;
 	public static final CtTypeReference<java.util.Enumeration> ENUMERATION = f.createReference(java.util.Enumeration.class);
   public static final CtTypeReference<java.lang.Class> CLASS = f.createReference(java.lang.Class.class);
 
