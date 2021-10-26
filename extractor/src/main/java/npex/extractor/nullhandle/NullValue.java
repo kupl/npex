@@ -196,10 +196,6 @@ public class NullValue {
       }
     }
 
-    if (CommonExpressionTable.isCommon(raw)) {
-      return raw.toString();
-    }
-
     // deal with literal NULL
     if (TypeUtil.isNullLiteral(raw)) {
       return "null";
@@ -236,7 +232,4 @@ public class NullValue {
     return new NullValue(KIND.BINARY, exprs, raw, type, invo);
   }
 
-  private static NullValue createDontLearn(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
-    return new NullValue(KIND.DONT_LEARN, exprs, raw, type, invo);
-  }
 }
