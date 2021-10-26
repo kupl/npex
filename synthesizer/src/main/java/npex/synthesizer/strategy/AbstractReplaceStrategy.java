@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import npex.common.utils.ASTUtils;
-import npex.synthesizer.initializer.ValueInitializer;
 import npex.synthesizer.template.PatchTemplateTernary;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.reference.CtTypeReference;
@@ -38,12 +37,6 @@ import spoon.reflect.reference.CtTypeReference;
 abstract public class AbstractReplaceStrategy implements PatchStrategy<PatchTemplateTernary> {
   static Logger logger = LoggerFactory.getLogger(AbstractSkipStrategy.class);
   static private int idx = 0;
-
-  final protected ValueInitializer initializer;
-
-  public AbstractReplaceStrategy(ValueInitializer initializer) {
-    this.initializer = initializer;
-  }
 
   public String getName() {
     return this.getClass().getSimpleName();

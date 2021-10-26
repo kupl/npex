@@ -26,7 +26,7 @@ package npex.synthesizer.strategy;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import npex.synthesizer.initializer.ValueInitializer;
+import npex.synthesizer.enumerator.ExpressionEnumerator;
 import spoon.reflect.code.CtAssignment;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtStatement;
@@ -34,19 +34,14 @@ import spoon.reflect.code.CtVariableAccess;
 
 @SuppressWarnings("rawtypes")
 public class InitPointerStrategy extends AbstractSkipStrategy {
-  final protected ValueInitializer initializer;
-
-  public InitPointerStrategy(ValueInitializer initializer) {
-    this.initializer = initializer;
-  }
-
   public String getName() {
-    return this.getClass().getName() + initializer.getName();
+    return this.getClass().getSimpleName();
   }
 
   @SuppressWarnings("unchecked")
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
-    List<CtExpression> values = initializer.getTypeCompatibleExpressions(nullExp, nullExp.getType());
+    List<CtExpression> values = ExpressionEnumerator.enumTypeCompatibleExpressions(nullExp, nullExp.getType());
+    // List<CtExpression> values = initializer.getTypeCompatibleExpressions(nullExp, nullExp.getType());
     return values.stream().map(v -> {
       CtAssignment assignment = nullExp.getFactory().createAssignment();
       assignment.setAssigned(nullExp.clone());

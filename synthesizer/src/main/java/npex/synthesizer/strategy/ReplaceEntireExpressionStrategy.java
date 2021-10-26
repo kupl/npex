@@ -27,18 +27,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import npex.common.utils.ASTUtils;
-import npex.common.utils.FactoryUtils;
-import npex.synthesizer.initializer.ValueInitializer;
+import npex.synthesizer.enumerator.ExpressionEnumerator;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtInvocation;
 import spoon.reflect.path.CtRole;
 
 public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
-
-  public ReplaceEntireExpressionStrategy(ValueInitializer initializer) {
-    super(initializer);
-  }
-
   public boolean isApplicable(CtExpression nullExp) {
     return !nullExp.toString().equals("null");
   }
@@ -59,15 +52,6 @@ public class ReplaceEntireExpressionStrategy extends AbstractReplaceStrategy {
   }
 
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression expr) {
-    List<CtExpression> exprs = new ArrayList<>();
-    exprs.addAll(initializer.getTypeCompatibleExpressions(expr, expr.getType()));
-    /*
-     * TODO: this part should go to PrimitiveInitializer, which currently can
-     * introduce ill-typed patches due to incomplete AST models
-     */
-    if (!(expr.getParent() instanceof CtInvocation) && expr.getType() != null && !expr.getType().isPrimitive()) {
-      exprs.add(FactoryUtils.createNullLiteral());
-    }
-    return exprs;
+    return ExpressionEnumerator.enumTypeCompatibleExpressions(expr, expr.getType());
   }
 }
