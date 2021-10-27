@@ -12,13 +12,7 @@ from re import finditer
 from dacite.exceptions import MissingValueError
 
 
-def camel_case_split(identifier):
-    matches = finditer('.+?(?:(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])|$)',
-                       identifier)
-    return [m.group(0) for m in matches]
-
-
-@dataclass
+@dataclass(frozen=True)
 class JSONData:
     @classmethod
     def from_dict(klass, d):
@@ -29,14 +23,6 @@ class JSONData:
     def read_json_from_file(json_filename: str):
         with open(json_filename, "r") as f:
             return json.load(f)
-
-    @classmethod
-    def __get_primitive_fields(cls):
-        fields = set()
-        for (k, v) in cls.__annotations__:
-            if type(v) in ['int', 'str']:
-                fields.add(k)
-        return fields
 
     def asdict(self):
         return dataclasses.asdict(self)
@@ -58,19 +44,6 @@ class InvocationKey(JSONData):
     invo_kind: str
     callee_defined: bool
     method_signature: MethodSignature
-
-    def matches_up_to_sub_camel_case(self, key):
-        if self.null_pos != key.null_pos or self.actuals_length != key.actuals_length or self.return_type != key.return_type or self.callee_defined != key.callee_defined:
-            return False
-
-        lhs_camels = camel_case_split(self.method_name)
-        rhs_camels = camel_case_split(key.method_name)
-
-        for i in range(0, min(len(lhs_camels), len(rhs_camels))):
-            if lhs_camels[i] == rhs_camels[i]:
-                return True
-
-        return False
 
     def abstract(self):
         null_pos_is_base = self.null_pos == -1
@@ -96,7 +69,7 @@ class AbstractKey(JSONData):
     callee_defined: bool
 
 
-@dataclass
+@dataclass(frozen=True)
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
     null_value: Optional[str]

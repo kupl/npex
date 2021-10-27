@@ -135,13 +135,6 @@ def train_classifier(arg):
     return (key, clf, list(labeldict.keys()))
 
 
-def model_keys_match_up_to_sub_camel_case(arg):
-    model_keys, key = arg
-    if key in model_keys:
-        return key, [key]
-    else:
-        return key, [model_key for model_key in model_keys if key.matches_up_to_sub_camel_case(model_key)]
-
 
 def generate_answer_sheet(project_dir, model_path, outpath):
     # model : AbstractKey -> classifier
