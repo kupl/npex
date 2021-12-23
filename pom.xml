@@ -5,11 +5,11 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <modules>
-        <module>common</module>
-        <module>synthesizer</module>
-        <module>extractor</module>
-        <module>errortracer</module>
-        <module>driver</module>
+        <module>npex-common</module>
+        <module>npex-synthesizer</module>
+        <module>npex-extractor</module>
+        <module>npex-errortracer</module>
+        <module>npex-driver</module>
     </modules>
     <dependencies>
         <dependency>
