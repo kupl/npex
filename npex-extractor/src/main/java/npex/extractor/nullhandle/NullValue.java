@@ -43,7 +43,7 @@ public class NullValue {
   static Logger logger = LoggerFactory.getLogger(NullValue.class);
 
   public enum KIND {
-    PLAIN, BINARY, DONT_LEARN
+    PLAIN, BINARY
   }
 
   final private KIND kind;
@@ -136,7 +136,6 @@ public class NullValue {
     }
   }
 
-
   public static NullValue createSkip(CtAbstractInvocation invo) {
     return SKIP;
   }
@@ -221,15 +220,16 @@ public class NullValue {
     };
 
     String converted = symbolize.apply(raw);
-    return raw.toString().equals(converted) ? "NPEXNonLiteral" : converted;   
+    return raw.toString().equals(converted) ? "NPEXNonLiteral" : converted;
   }
 
-  private static NullValue createPlain(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+  private static NullValue createPlain(String[] exprs, CtExpression raw, CtTypeReference type,
+      CtAbstractInvocation invo) {
     return new NullValue(KIND.PLAIN, exprs, raw, type, invo);
   }
 
-  private static NullValue createBinary(String[] exprs, CtExpression raw, CtTypeReference type, CtAbstractInvocation invo) {
+  private static NullValue createBinary(String[] exprs, CtExpression raw, CtTypeReference type,
+      CtAbstractInvocation invo) {
     return new NullValue(KIND.BINARY, exprs, raw, type, invo);
   }
-
 }

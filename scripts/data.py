@@ -68,7 +68,6 @@ class AbstractKey(JSONData):
     invo_kind: str
     callee_defined: bool
 
-
 @dataclass(frozen=True)
 class NullModel(JSONData):
     invocation_key: Optional[InvocationKey]
@@ -102,7 +101,7 @@ class NullModel(JSONData):
         return NullModel(invocation_key, d['null_value'], d['null_value_kind'], d['raw'], d['raw_type'], d['sink_body'], Context.to_feature_vector(d['contexts']))
 
 
-@dataclass
+@dataclass(frozen=True)
 class NullHandle(JSONData):
     source_path: str
     lineno: int
