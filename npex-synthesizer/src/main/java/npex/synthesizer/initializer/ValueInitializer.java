@@ -24,6 +24,7 @@
 package npex.synthesizer.initializer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -32,6 +33,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import npex.common.utils.FactoryUtils;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtFieldAccess;
 import spoon.reflect.code.CtInvocation;
@@ -42,7 +44,6 @@ import spoon.reflect.factory.TypeFactory;
 import spoon.reflect.reference.CtActualTypeContainer;
 import spoon.reflect.reference.CtFieldReference;
 import spoon.reflect.reference.CtTypeReference;
-import java.util.Collections;
 
 @SuppressWarnings("rawtypes")
 public abstract class ValueInitializer<T extends CtTypedElement> {
@@ -91,12 +92,15 @@ public abstract class ValueInitializer<T extends CtTypedElement> {
   }
 
   private List<CtExpression> enumerate(CtExpression expr, Predicate<T> pred) {
+    List<CtExpression> lst = new ArrayList<>();
+    lst.add(FactoryUtils.createNullLiteral());
     if (expr.getType() == null) {
       logger.error("Could not find type of {}", expr);
-      return new ArrayList<>();
+      return lst;
     }
     Stream<T> candidates = this.enumerate(expr).filter(c -> !c.equals(expr));
-    return candidates.filter(pred).map(c -> convertToCtExpression(c)).collect(Collectors.toList());
+    lst.addAll(candidates.filter(pred).map(c -> convertToCtExpression(c)).collect(Collectors.toList()));
+    return lst;
   }
 
   private boolean isTargetedExpressionAccessible(T candidate, CtTargetedExpression target) {

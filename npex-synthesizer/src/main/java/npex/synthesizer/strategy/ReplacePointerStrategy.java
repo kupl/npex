@@ -24,24 +24,18 @@
 package npex.synthesizer.strategy;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import npex.synthesizer.initializer.ValueInitializer;
+import npex.synthesizer.enumerator.ExpressionEnumerator;
 import spoon.reflect.code.CtAssignment;
-import spoon.reflect.code.CtConstructorCall;
 import spoon.reflect.code.CtExpression;
 import spoon.reflect.code.CtInvocation;
 import spoon.reflect.code.CtLocalVariable;
-import spoon.reflect.code.CtTargetedExpression;
 import spoon.reflect.declaration.CtElement;
 import spoon.reflect.path.CtRole;
 import spoon.reflect.reference.CtTypeReference;
 
 public class ReplacePointerStrategy extends AbstractReplaceStrategy {
-  public ReplacePointerStrategy(ValueInitializer initializer) {
-    super(initializer);
-  }
 
   @Override
   protected List<CtExpression> extractExprToReplace(CtExpression nullExp) {
@@ -68,13 +62,8 @@ public class ReplacePointerStrategy extends AbstractReplaceStrategy {
   }
 
   protected List<CtExpression> enumerateAvailableExpressions(CtExpression nullExp) {
-    CtTypeReference nullExpTyp = !isLiteralNull(nullExp) ? nullExp.getType() : getNullValueType(nullExp);
-    List<CtExpression> typeCompatibleExprs = initializer.getTypeCompatibleExpressions(nullExp, nullExpTyp);
-    if (nullExp.getParent() instanceof CtTargetedExpression && !(nullExp.getParent() instanceof CtConstructorCall)) {
-      List<CtExpression> replaceableExprs = initializer.getReplaceableExpressions(nullExp);
-      return Stream.concat(typeCompatibleExprs.stream(), replaceableExprs.stream()).collect(Collectors.toList());
-    }
-
+    CtTypeReference typ = !isLiteralNull(nullExp) ? nullExp.getType() : getNullValueType(nullExp);
+    List<CtExpression> typeCompatibleExprs = ExpressionEnumerator.enumTypeCompatibleExpressions(nullExp, typ);
     return typeCompatibleExprs;
   }
 }

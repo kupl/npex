@@ -25,24 +25,25 @@ package npex.synthesizer.initializer;
 
 import java.util.stream.Stream;
 
+import npex.common.CommonExpressionTable;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtLiteral;
 import spoon.reflect.reference.CtTypeReference;
 
-public class PrimitiveInitializer extends ValueInitializer<CtLiteral> {
+public class PrimitiveInitializer extends ValueInitializer<CtExpression> {
   public String getName() {
     return "Literal";
   }
 
-  protected CtExpression convertToCtExpression(CtLiteral literal) {
-    return literal;
+  public CtExpression convertToCtExpression(CtExpression e) {
+    return e;
   }
 
-  protected Stream<CtLiteral> enumerate(CtExpression expr) {
+  protected Stream<CtExpression> enumerate(CtExpression expr) {
     CtTypeReference typ = expr.getType();
-    if (!DefaultValueTable.hasDefaultValue(typ))
-      return Stream.empty();
+    if (typ != null && typ.isPrimitive()) {
+      return CommonExpressionTable.find(typ).stream();
+    }
 
-    return DefaultValueTable.getDefaultValues(typ).stream();
+    return Stream.empty();
   }
 }

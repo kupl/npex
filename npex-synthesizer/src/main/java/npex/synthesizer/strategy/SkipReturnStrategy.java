@@ -26,18 +26,14 @@ package npex.synthesizer.strategy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import npex.common.utils.FactoryUtils;
 import npex.common.utils.TypeUtil;
-import npex.synthesizer.initializer.DefaultValueTable;
-import npex.synthesizer.initializer.ObjectInitializer;
+import npex.synthesizer.enumerator.ExpressionEnumerator;
 import spoon.reflect.code.CtExpression;
-import spoon.reflect.code.CtLiteral;
 import spoon.reflect.code.CtReturn;
 import spoon.reflect.code.CtStatement;
 import spoon.reflect.declaration.CtConstructor;
-import spoon.reflect.declaration.CtExecutable;
 import spoon.reflect.declaration.CtMethod;
 import spoon.reflect.reference.CtTypeReference;
 
@@ -48,43 +44,30 @@ public class SkipReturnStrategy extends AbstractSkipStrategy {
     return true;
   }
 
-  protected List<CtReturn> createReturnStmts(CtMethod sinkMethod) {
-    final CtTypeReference retTyp = sinkMethod.getType();
-
-    // In case of void method, we just insert 'return;'
-    if (retTyp.getSimpleName().equals("void")) {
-      CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
-      return (Collections.singletonList(retStmt));
-    }
-
-    List<CtReturn> retStmts = new ArrayList<>();
-    for (CtLiteral l : (List<CtLiteral>) DefaultValueTable.getDefaultValues(retTyp)) {
-      CtReturn retStmt = factory.createReturn().setReturnedExpression(l);
-      retStmts.add(retStmt);
-    }
-
-    return retStmts;
-  }
-
   @Override
   protected List<CtStatement> createNullExecStatements(CtExpression nullExp) {
-    CtTypeReference retTyp = nullExp.getParent(CtConstructor.class) != null ? TypeUtil.VOID
+    spoon.reflect.factory.Factory factory = nullExp.getFactory();
+    CtTypeReference retTyp = nullExp.getParent(CtConstructor.class) != null ? TypeUtil.VOID_PRIMITIVE
         : nullExp.getParent(CtMethod.class).getType();
 
-    // In case of void method, we just insert 'return;'
-    if (retTyp.equals(TypeUtil.VOID)) {
-      CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
+    // In case that return type is missing which means that the type is a custom class type.
+    if (retTyp == null) {
+      CtReturn retStmt = factory.createReturn().setReturnedExpression(FactoryUtils.createNullLiteral());
       return (Collections.singletonList(retStmt));
     }
 
-        List<CtExpression> values = ObjectInitializer.enumerate(retTyp).collect(Collectors.toList());
-    values.add(FactoryUtils.createNullLiteral());
-    logger.info("retTyp: {}, Values: {}", retTyp, values);
-    List<CtStatement> retStmts = new ArrayList<>();
-    for (CtExpression e : values) {
+      // In case of void method, we just insert 'return;'
+      if (retTyp.equals(TypeUtil.VOID_PRIMITIVE)) {
+        CtReturn retStmt = factory.createReturn().setReturnedExpression(null);
+        return Collections.singletonList(retStmt);
+      }
+      
+      List<CtStatement> retStmts = new ArrayList<>();
+      List<CtExpression> exprs = ExpressionEnumerator.enumTypeCompatibleExpressions(nullExp, retTyp);
+      for (CtExpression e : exprs) {
       CtReturn retStmt = factory.createReturn().setReturnedExpression(e);
       retStmts.add(retStmt);
-    }
+      }
     return retStmts;
   }
 }

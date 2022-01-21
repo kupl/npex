@@ -27,13 +27,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import npex.synthesizer.initializer.ValueInitializer;
-import npex.synthesizer.initializer.ValueInitializerFactory;
-
 @SuppressWarnings("rawtypes")
 public class PatchStrategyFactory {
   private static Map<String, PatchStrategy> strategies = new HashMap<>();
-  private static Collection<ValueInitializer> initializers = ValueInitializerFactory.getAllInitializers();
   static {
     strategies.put("SkipBlock", new SkipBlockStrategy());
     strategies.put("SkipBreak", new SkipBreakStrategy());
@@ -42,13 +38,10 @@ public class PatchStrategyFactory {
     strategies.put("SkipReturn", new SkipReturnStrategy());
     strategies.put("SkipReturnParam", new SkipReturnParam());
     strategies.put("SkipThrow", new SkipThrowStrategy());
-    for (ValueInitializer i : initializers) {
-      strategies.put("InitPointer" + i.getName().replace("Initializer", ""), new InitPointerStrategy(i));
-      strategies.put("ReplacePointer" + i.getName().replace("Initializer", ""), new ReplacePointerStrategy(i));
-      strategies.put("ReplaceEntireExpression" + i.getName().replace("Initializer", ""),
-          new ReplaceEntireExpressionStrategy(i));
-    }
-  }
+    strategies.put("InitPointer", new InitPointerStrategy());
+    strategies.put("ReplacePointer", new ReplacePointerStrategy());
+    strategies.put("ReplaceEntireExpression", new ReplaceEntireExpressionStrategy());
+   }
 
   public static Collection<PatchStrategy> getAllStrategies() {
     return strategies.values();

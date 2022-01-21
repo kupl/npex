@@ -61,15 +61,6 @@ public class NullModel {
   }
 
   public JSONObject toJSON() throws NPEXException {
-    if (nullValue != null) {
-      var obj = new JSONObject();
-      obj.put("sink_body", JSONObject.NULL);
-      obj.put("null_value", nullValue.toJSON());
-      obj.put("invocation_key", JSONObject.NULL);
-      obj.put("contexts", new JSONObject(Collections.EMPTY_MAP));
-      return obj;
-    }
-
     if (invoKey == null) {
       throw new NPEXException(nullExp, "Could not serialize null model: invocation key is NULL");
     }
