@@ -8,7 +8,6 @@
         <module>npex-common</module>
         <module>npex-synthesizer</module>
         <module>npex-extractor</module>
-        <module>npex-errortracer</module>
         <module>npex-driver</module>
     </modules>
     <dependencies>
