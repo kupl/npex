@@ -32,48 +32,18 @@
             <artifactId>jcl-over-slf4j</artifactId>
             <version>1.7.25</version>
         </dependency>
-
     </dependencies>
     <build>
         <plugins>
             <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>3.8.0</version>
-            <configuration>
-                <release>15</release> <!-- <release>13/14/15</release> -->
-                <compilerArgs>--enable-preview</compilerArgs>
-            </configuration>
-        </plugin>
-              <plugin>
-                <groupId>com.mycila.maven-license-plugin</groupId>
-                <artifactId>maven-license-plugin</artifactId>
-                <version>1.9.0</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.0</version>
                 <configuration>
-                    <header>LICENSE</header>
-                    <includes>
-                        <include>**/*.java</include>
-                    </includes>
-                    <excludes>
-                        <exclude>**/.*/**</exclude>
-                        <exclude>**/target/**</exclude>
-                        <exclude>**/resources/**</exclude>
-                    </excludes>
-                    <useDefaultExcludes>true</useDefaultExcludes>
-                    <strictCheck>true</strictCheck>
+                    <release>15</release>
+                    <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>check-headers</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+            </plugin>   
         </plugins>
     </build>
-    <profiles></profiles>
 </project>
