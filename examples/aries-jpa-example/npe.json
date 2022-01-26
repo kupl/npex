@@ -1,0 +1,7 @@
+{
+  "filepath": "src/main/java/hello/Example.java",
+  "deref_field": "cl",
+  "line": 19,
+  "npe_method": "parseClass",
+  "npe_class": "Example"
+}
