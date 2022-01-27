@@ -1,0 +1,22 @@
+[
+    {
+        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/main/java/hello/Example.java",
+        "line": 19,
+        "method_name": "parseClass"
+    },
+    {
+        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/main/java/hello/Example.java",
+        "line": 14,
+        "method_name": "getJpaAnnotatedMembers"
+    },
+    {
+        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/main/java/hello/Example.java",
+        "line": 33,
+        "method_name": "goo"
+    },
+    {
+        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/test/java/hello/ExampleTest.java",
+        "line": 12,
+        "method_name": "test"
+    }
+]
