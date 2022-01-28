@@ -1,22 +1,17 @@
 [
     {
-        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/main/java/hello/Example.java",
-        "line": 19,
+        "filepath": "jpa-blueprint/src/main/java/org/apache/aries/jpa/blueprint/impl/AnnotationScanner.java",
+        "line": 39,
         "method_name": "parseClass"
     },
     {
-        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/main/java/hello/Example.java",
-        "line": 14,
+        "filepath": "jpa-blueprint/src/main/java/org/apache/aries/jpa/blueprint/impl/AnnotationScanner.java",
+        "line": 33,
         "method_name": "getJpaAnnotatedMembers"
     },
     {
-        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/main/java/hello/Example.java",
-        "line": 33,
-        "method_name": "goo"
-    },
-    {
-        "filepath": "/home/junhee/npex/examples/aries-jpa-example/src/test/java/hello/ExampleTest.java",
-        "line": 12,
-        "method_name": "test"
+        "filepath": "jpa-blueprint/src/test/java/org/apache/aries/jpa/blueprint/impl/AnnotationScannerTest.java",
+        "line": 96,
+        "method_name": "getFactoryTest"
     }
 ]

@@ -1,0 +1,22 @@
+{
+    "repo": "aries-jpa",
+    "commit_id": "7712046",
+    "commit_url": "https://github.com/apache/aries-jpa/commit/7712046a1e16b65dc1ad2b2dcc0a019c21d78336",
+    "parent_url": "https://github.com/apache/aries-jpa/commit/97cb979df9d1672edc14aad00bd412943de34a5f",
+    "date": "2016-04-18",
+    "changed_files": [
+        "jpa-blueprint/src/main/java/org/apache/aries/jpa/blueprint/impl/AnnotationScanner.java",
+        "jpa-blueprint/src/test/java/org/apache/aries/jpa/blueprint/impl/AnnotationScannerTest.java",
+        "jpa-blueprint/src/test/java/org/apache/aries/jpa/blueprint/impl/TestInterface.java"
+    ],
+    "patch_files": [
+        "jpa-blueprint/src/main/java/org/apache/aries/jpa/blueprint/impl/AnnotationScanner.java"
+    ],
+    "test_files": [
+        "jpa-blueprint/src/test/java/org/apache/aries/jpa/blueprint/impl/AnnotationScannerTest.java",
+        "jpa-blueprint/src/test/java/org/apache/aries/jpa/blueprint/impl/TestInterface.java"
+    ],
+    "size": 5105,
+    "is_maven": true,
+    "is_java": true
+}

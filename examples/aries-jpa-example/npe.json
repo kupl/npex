@@ -1,7 +1,10 @@
 {
-  "filepath": "src/main/java/hello/Example.java",
-  "deref_field": "cl",
-  "line": 19,
-  "npe_method": "parseClass",
-  "npe_class": "Example"
+    "filepath": "jpa-blueprint/src/main/java/org/apache/aries/jpa/blueprint/impl/AnnotationScanner.java",
+    "line": 39,
+    "sink_field": "getDeclaredFields",
+    "npe_class": "AnnotationScanner",
+    "npe_method": "parseClass",
+    "jvmti_identify_succeed": true,
+    "deref_field": "cl",
+    "nullpointer": "cl"
 }
