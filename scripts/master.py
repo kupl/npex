@@ -23,6 +23,7 @@ if os.path.isfile(f"{NPEX_JAR}") is False:
   print(f"no jar in {NPEX_JAR}")
   exit(1)
 NPEX_SCRIPT = f"{NPEX_DIR}/scripts/main.py"
+CLASSIFIER = f"{NPEX_DIR}/examples/classifier-example"
 
 JDK_15 = os.getenv("JDK15")
 JAVA_15 = f"{JDK_15}/bin/java"
@@ -91,7 +92,8 @@ if __name__ == '__main__':
     run_cmd = subparsers.add_parser('run', help="run npex")
     run_cmd.add_argument("--localize", action="store_true", help="#1: run fault-localization")
     run_cmd.add_argument("--enumerate", action="store_true", help="#2: enumerate patch candidates")
-    run_cmd.add_argument("--predict", help="#3: predict null handles with the specified classifier")
+    run_cmd.add_argument("--predict", action='store_true', help="#3: predict null handles with the specified classifier")
+    run_cmd.add_argument("--classifier", default=CLASSIFIER, help="#3: specifiy classifier, default is example/classifier-example")
     run_cmd.add_argument("--validate", action="store_true", help="#4: infer specs & validate patches")
     run_cmd.add_argument("--all", action="store_true", help="do all")
 
@@ -125,9 +127,9 @@ if __name__ == '__main__':
         for report in error_reports:
           subprocess.run(f"{NPEX_CMD} patch {bug.project_root_dir} --cached --report={report}", shell=True, cwd=bug.project_root_dir)
 
-      if args.predict != None:
-        pprint(f"Predict null handlings by {args.predict}")
-        bug.generate_model(args.predict)
+      if args.all or args.predict:
+        pprint(f"Predict null handlings by {args.classifier}")
+        bug.generate_model(args.classifier)
 
       # if args.all or args.infer:
       if args.all or args.validate:
