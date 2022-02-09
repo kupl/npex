@@ -121,6 +121,8 @@ if __name__ == '__main__':
         pprint(f"localize faulty null expressions by npe.json")
         bug.capture_all(False)
         bug.localize(False)
+        error_reports = glob.glob("npe*.json") 
+        bug = Bug(ROOT_DIR, error_reports)
 
       if args.all or args.enumerate:
         pprint(f"Enumerate patch candidates for {error_reports}")
