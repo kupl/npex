@@ -25,7 +25,7 @@ if os.path.isfile(f"{NPEX_JAR}") is False:
 NPEX_SCRIPT = f"{NPEX_DIR}/scripts/main.py"
 CLASSIFIER = f"{NPEX_DIR}/examples/classifier-example"
 
-JDK_15 = os.getenv("JDK15")
+JDK_15 = "/usr/lib/jvm/jdk-15.0.1"
 JAVA_15 = f"{JDK_15}/bin/java"
 NPEX_CMD = f"{JAVA_15} --enable-preview -cp {NPEX_JAR} npex.driver.Main"
 
